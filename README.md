@@ -1,6 +1,6 @@
-**Beamline Ophyd Devices** 
+**bessyii_devices** 
 
-This contains Opyhd Devices that can be used at any beamline or end station at BESSY II. For an example of how to use it see [emilOphyd](https://gitlab.helmholtz-berlin.de/sissy/experiment-control/emilOphyd) 
+A collection of ophyd devices for use at BESSY II
 
 This work is based heavily on work at LCLS and their [PCDSDevices](https://github.com/pcdshub/pcdsdevices) repository.
 
