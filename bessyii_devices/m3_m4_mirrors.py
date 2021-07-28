@@ -1,0 +1,64 @@
+from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import Component as Cpt
+from ophyd import FormattedComponent as FCpt
+from .axes import HexapodAxis
+
+        
+# This class can be used for any M3 and M4 mirror of U17 and Ue48 CAT, SISSY I and SISSY II
+
+#prefix list U17
+# M3 SISSY: HEX3OS12L
+# M3 CAT: HEX3OS12L
+# for M3 same as for M4:
+# HEX3OS12L:hexapod:mbboMirrorChoicerRun
+
+# M4 SISSY I-II: HEX5OS12L
+# to choose M4 SISSY II or II I have to write and read to this pv
+# HEX5OS12L:hexapod:mbboMirrorChoicerRun,
+# it takes ascii charcater either "SISSY I", or "SISSY II"
+
+# M4 CAT: HEX8OS12L
+
+#prefix list UE48
+# prefix list UE48 # to be reviewed with ELA
+# M3 SISSY: HEX1OS12L:
+# M4 SISSY: HEX6OS12L # this could be I, and I miss II
+# M3 CAT: HEX4OS12L
+# M4 CAT: HEX7OS12L
+
+#HEX3OS12L:hexapod:mbboMirrorChoicerRun
+
+
+
+class SMUChoice(PVPositioner):
+
+    
+    setpoint = Cpt(EpicsSignal,    'hexapod:mbboMirrorChoicerRun'               )                   
+    readback = Cpt(EpicsSignalRO,  'hexapod:mbboMirrorChoicerRun',string='True', kind='hinted', labels={"mirrors", "SMU"})
+    done     = Cpt(EpicsSignalRO,  'multiaxis:running'                  )
+    
+    done_value = 0
+
+                
+class M3M4(Device):
+#move simulataneously does not work unless you activate the start_immediately PV        
+    r_x = Cpt(HexapodAxis, '', ch_name='A', labels={"mirrors"})
+    r_y = Cpt(HexapodAxis, '', ch_name='B', labels={"mirrors"})
+    r_z = Cpt(HexapodAxis, '', ch_name='C', labels={"mirrors"})
+    t_x = Cpt(HexapodAxis, '', ch_name='X', labels={"mirrors"})
+    t_y = Cpt(HexapodAxis, '', ch_name='Y', labels={"mirrors"})
+    t_z = Cpt(HexapodAxis, '', ch_name='Z', labels={"mirrors"})
+    start_immediately = Cpt(EpicsSignal, 'hexapod:mbboRunAfterValue')
+    
+class SMU(M3M4):
+
+    choice = Cpt(SMUChoice,'')
+    
+    
+
+
+    
+    
+
+
+
