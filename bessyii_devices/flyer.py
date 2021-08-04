@@ -38,44 +38,6 @@ class BasicFlyer(Device):
         self._acquiring = False
         self.t0 = 0
         
-        
-    def my_activity(self):
-        """
-        start the "fly scan" here, could wait for completion
-        
-        It's OK to use blocking calls here 
-        since this is called in a separate thread
-        from the Bluesky RunEngine.
-        """
-        
-        
-        
-        if self.complete_status is None:
-            logger.info("leaving activity() - not complete")
-            return
-        
-        if self.init_cmd is not None:
-            self.init_cmd.put(1)
-        
-        def check_value(*,old_value, value, **kwargs):
-            #Return True when the acquisition is complete, False otherwise.   
-            if not self._acquiring:  #But only report done if acquisition was already started 
-                return False
-            return (value != 0)
-        
-        wait(SubscriptionStatus(self.ready, check_value,settle_time=0.2))
-        
-        
-        # TODO: do the activity here
-        if self.start_cmd is not None:
-            self.start_cmd.put(1)
-        # once started, we notify by updating the status object
-        self.kickoff_status._finished(success=True)
-
-        # TODO: wait for completion
-        self.complete_status = SubscriptionStatus(self.done,check_value)
-        
-        #logger.info("activity() complete. status = " + str(self.complete_status))
 
     def kickoff(self):
         """
@@ -86,9 +48,24 @@ class BasicFlyer(Device):
         self.complete_status = DeviceStatus(self)
         self._acquiring = True
         self.t0 = time.time()
-        thread = threading.Thread(target=self.my_activity, daemon=True)
-        thread.start()
+
+        if self.init_cmd is not None:
+            self.init_cmd.put(1)
+
+        def check_value(*,old_value, value, **kwargs):
+            #Return True when the acquisition is complete, False otherwise.   
+            if not self._acquiring:  #But only report done if acquisition was already started 
+                return False
+            return (value != 0)
         
+        wait(SubscriptionStatus(self.ready, check_value,settle_time=0.2))
+
+        if self.start_cmd is not None:
+            self.start_cmd.put(1)
+        
+        # once started, we notify by updating the status object
+        self.kickoff_status._finished(success=True)
+
         return self.kickoff_status
 
     def pause(self):
@@ -119,10 +96,18 @@ class BasicFlyer(Device):
         """
         Wait for flying to be complete, get the status object that will tell us when we are done
         """
-        #logger.info("complete()")
+        print("we've be asked to complete")
+
+        def check_value(*,old_value, value, **kwargs):
+            #Return True when the acquisition is complete, False otherwise.   
+            if not self._acquiring:  #But only report done if acquisition was already started 
+                return False
+            return (value != 0)
+
         if self.complete_status is None:
             raise RuntimeError("No collection in progress")
-
+        
+        self.complete_status = SubscriptionStatus(self.done,check_value)
         return self.complete_status
 
     def collect(self):
