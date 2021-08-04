@@ -111,13 +111,12 @@ class PGM(BasicFlyer, PVPositioner):
         Start this Flyer, return a status object that sets finished once we have started
         """
         self.complete_status = DeviceStatus(self)
-        self.kickoff_status = DeviceStatus(self)
         self._acquiring = True
         self.t0 = time.time()
 
         if self.aktion is not None:
             self.aktion.put(20)     # init
-            print("Moving to start position")
+            print("put init")
         
         def check_ready(*,old_value, value, **kwargs):
             #Return True when the acquisition is complete, False otherwise.   
@@ -132,14 +131,12 @@ class PGM(BasicFlyer, PVPositioner):
             return (value == 64) #Running, Sweeping within start and end energy
 
         wait(SubscriptionStatus(self.sweep_status, check_ready))
+        
         # TODO: do the activity here
         if self.aktion is not None:
             self.aktion.put(21)
 
-        print("Accelerating")
-        wait(SubscriptionStatus(self.sweep_status, check_started))
-        print("Running")
-        self.kickoff_status._finished(success=True)
+        self.kickoff_status = SubscriptionStatus(self.sweep_status, check_started)
 
         return self.kickoff_status
 
@@ -174,16 +171,4 @@ class PGM(BasicFlyer, PVPositioner):
 
         return self.complete_status
        
-
-class PGMSoft(PGM):
-    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', labels={'pgm'})
-    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', labels={'pgm'})
-    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1', labels={'pgm'})
-
-
-
-class PGMHard(PGM):
-    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', labels={'pgm'})
-    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating2T1', labels={'pgm'})
-    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1', labels={'pgm'})
 

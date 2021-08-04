@@ -1,9 +1,10 @@
 import pytest
 import sys
-sys.path.append('/home/will/.ipython/profile_test/startup/beamlineOphydDevices/')
-from flyer import BasicFlyer, MyMotor, MyDetector
+import bessyii_devices
+from bessyii_devices.flyer import BasicFlyer, MyMotor, MyDetector
 from ophyd import status, DeviceStatus, Signal
 from ophyd.status import wait
+
 fdev = MyMotor('EMILEL:TestIOC00:', name='fdev')
 fdev.wait_for_connection()
 
