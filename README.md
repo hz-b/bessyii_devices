@@ -18,3 +18,12 @@ Many motion systems at BESSY II do not use the [EPICS Motor Record](https://gith
 
 Various classes based on the PVPositoner are useful for other devices. These are collected together in the **positioners.py** file.
 
+** Instalation **
+
+To install pull this repo and then use
+
+`python3 -m pip install .`
+
+If working in a development environment use
+
+`python3 setup.py develop`
