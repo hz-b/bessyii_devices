@@ -96,7 +96,7 @@ class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
   
     
     
-class Detector_stream(SingleTrigger, URLDetector):
+class DetectorStream(SingleTrigger, URLDetector):
         
     image = Cpt(ImagePlugin, 'image1:')
     cam = Cpt(URLDetectorCam, 'cam1:')
@@ -163,16 +163,16 @@ class Detector_stream(SingleTrigger, URLDetector):
     #stats2 = Component(StatsPlugin, 'Stats2:')
     
     #stats3 = Component(StatsPlugin, 'Stats3:')
-    #stats4 = Component(StatsPlugin, 'Stats4:')
-    #stats5 = Component(StatsPlugin, 'Stats5:')
-    #roi1 = Component(ROIPlugin, 'ROI1:')
+    #stats4 = ComponentPlugin, 'ROI1:')
     #roi2 = Component(ROIPlugin, 'ROI2:')
     #roi3 = Component(ROIPlugin, 'ROI3:')
-    #roi4 = Component(ROIPlugin, 'ROI4:')
+    #roi4 = Component(ROIPlu(StatsPlugin, 'Stats4:')
+    #stats5 = Component(StatsPlugin, 'Stats5:')
+    #roi1 = Component(ROIgin, 'ROI4:')
     #proc1 = Component(ProcessPlugin, 'Proc1:')
 
 
-class Detector_tiff(Detector_stream, SingleTrigger, URLDetector):
+class DetectorTiff(DetectorStream, SingleTrigger, URLDetector):
         tiff = Cpt(TIFFPluginWithFileStore,
            suffix="TIFF1:",        
            write_path_template="/home/emil/Apps/autosave/images/"        
@@ -236,16 +236,41 @@ class MySimCamSigmaY(PVPositionerComparator):
     def done_comparator(self, readback, setpoint):
         return setpoint-self.atol < readback < setpoint+self.atol
 
-
+class SetImageBkgThreshold(PVPositionerComparator):
+    
+    setpoint = Cpt(EpicsSignal, 'Stats1:BgdWidth')
+    readback = Cpt(EpicsSignalRO, 'Stats1:BgdWidth_RBV')
+    
+    atol = 0.1
+    
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+        
+class SetCentroidThreshold(PVPositionerComparator):
+    
+    setpoint = Cpt(EpicsSignal, 'Stats1:CentroidThreshold')
+    readback = Cpt(EpicsSignalRO, 'Stats1:CentroidThreshold_RBV')
+    
+    atol = 0.1
+    
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol        
         
 # the signals   
-class Detector_stream_Signals(Detector_stream):
+class DetectorStreamSignals(DetectorStream):
     #PV list: 
     # its an array that need to be reshaped as a matrix !
     stream_image_array = Cpt(EpicsSignalRO,'image1:ArrayData', name= 'singal_image') 
     
+    # center of mass
+    cm_x = Cpt(EpicsSignalRO,'Stats1:MaxX_RBV', name= 'cm_x', kind = 'hinted') 
+    cm_y = Cpt(EpicsSignalRO,'Stats1:MaxY_RBV', name= 'cm_y', kind = 'hinted') 
+    
+    # center of mass centroid
+    cm_c_x = Cpt(EpicsSignalRO,'Stats1:CentroidX_RBV', name= 'signal_cen_x', kind = 'hinted') 
+    cm_c_y = Cpt(EpicsSignalRO,'Stats1:CentroidY_RBV', name= 'signal_cen_y', kind = 'hinted') 
     # PV list: 
-    MaxCounts = Cpt(EpicsSignalRO,'Stats1:MaxValue_RBV', name= 'signal_peak_maximum_counts', kind = 'hinted')  
+    Max_Intensity = Cpt(EpicsSignalRO,'Stats1:MaxValue_RBV', name= 'signal_peak_maximum_counts', kind = 'hinted')  
     #MaxCounts = Cpt(EpicsSignalRO,'Stats1:CentroidTotal_RBV', name= 'signal_centroid_total', kind = 'hinted')  
     orientation = Cpt(EpicsSignalRO,'Stats1:Orientation_RBV', name= 'signal_orientation', kind = 'hinted') 
     spot_sigma_x = Cpt(EpicsSignalRO,'Stats1:SigmaX_RBV', name= 'signal_sigma_x', kind = 'hinted') 
@@ -258,30 +283,41 @@ class Detector_stream_Signals(Detector_stream):
   
     # Calculate the FWHM 
     FWHM_scaling_factor = 2.355
+    #FWHM_sigma_x
+    FWHM_x = Cpt(ScaleSignal, derived_from="spot_sigma_x", factor=FWHM_scaling_factor, kind="hinted")
+    #FWHM_sigma_y
+    FWHM_y = Cpt(ScaleSignal, derived_from="spot_sigma_y", factor=FWHM_scaling_factor, kind="hinted")
     
-    FWHM_sigma_x = Cpt(ScaleSignal, derived_from="spot_sigma_x", factor=FWHM_scaling_factor, kind="hinted")
-    FWHM_sigma_y = Cpt(ScaleSignal, derived_from="spot_sigma_y", factor=FWHM_scaling_factor, kind="hinted")
     # needs to be connected in IOC
     #FWHM_width = Cpt(ScaleSignal, derived_from="spot_width",  factor=FWHM_scaling_factor, kind="hinted")
     #FWHM_height = Cpt(ScaleSignal, derived_from="spot_height", factor=FWHM_scaling_factor, kind="hinted")
     
     #Reshaped_image =  Cpt(reshape_image_array_to_matrix, derived_from="stream_image_array", DimX=1024, DimY = 1024, kind="hinted")
     #Analyse_image =  Cpt(calcFWHM_by_script, derived_from="stream_image_array", DimX=1280, DimY = 720, orientation_angle = orientation, kind="hinted")  
-
-class Detector_tiff_Signals(Detector_stream_Signals, Detector_stream): 
+    
+        
+    #BgdWidth BgdWidth_RBV
+    #CentroidThreshold CentroidThreshold_RBV
+    
+class DetectorTiffSignals(DetectorStreamSignals, DetectorStream): 
      tiff = Cpt(TIFFPluginWithFileStore,
            suffix="TIFF1:",        
            write_path_template="/home/emil/Apps/autosave/images/"        
            )
         
 def set_detector_tiff(det):
-    det.tiff.kind = 'normal' 
-    det.stats.kind = 'hinted'
-    det.colour.kind = 'normal'
-    det.image.kind = 'hinted'
+    #det.FWHM_x.kind = 'hinted'
+    #det.FWHM_y.kind = 'hinted'
+    #det.cm_x.kind = 'hinted'
+    #det.cm_y.kind = 'hinted'
+    
+    #det.tiff.kind = 'normal' 
+    #det.stats.kind = 'hinted'
+    #det.colour.kind = 'normal'
+    #det.image.kind = 'hinted'
     det.stats.total.kind = 'hinted'
-    det.stats.centroid.x.kind = 'hinted' 
-    det.stats.centroid.y.kind = 'hinted' 
+    #det.stats.centroid.x.kind = 'hinted' 
+    #det.stats.centroid.y.kind = 'hinted' 
     #det.cam.ensure_nonblocking()
     det.tiff.nd_array_port.put(det.colour.port_name.get()) # makes the tiff plugin take the output of the colour change plugin
     det.stats.nd_array_port.put(det.colour.port_name.get())
@@ -304,10 +340,12 @@ def set_detector_stream(det):
 
     
 def set_detector_stream_Signals(det):
-    det.spot_sigma_x.kind = 'hinted'
+    #det.spot_sigma_x.kind = 'hinted'
     #det.spot_sigma_y.kind = 'hinted'
-    det.FWHM_sigma_x.kind = 'hinted'
-    det.FWHM_sigma_y.kind = 'hinted'
+    det.FWHM_x.kind = 'hinted'
+    det.FWHM_y.kind = 'hinted'
+    det.cm_x.kind = 'hinted'
+    det.cm_y.kind = 'hinted'
     
     #det.FWHM_width.kind = 'hinted'
     #det.FWHM_height.kind = 'hinted'
@@ -322,3 +360,29 @@ def set_detector_stream_Signals(det):
 
     det.stats.nd_array_port.put(det.colour.port_name.get())
     det.trans.nd_array_port.put(det.colour.port_name.get())
+    
+def set_detector_tiff_Signals(det):
+    #det.spot_sigma_x.kind = 'hinted'
+    #det.spot_sigma_y.kind = 'hinted'
+    det.FWHM_x.kind = 'hinted'
+    det.FWHM_y.kind = 'hinted'
+    det.cm_x.kind = 'hinted'
+    det.cm_y.kind = 'hinted'
+    det.cm_c_x.kind = 'hinted'
+    det.cm_c_y.kind = 'hinted'
+    
+    #det.FWHM_width.kind = 'hinted'
+    #det.FWHM_height.kind = 'hinted'
+    #det.centroid_total.kind = 'hinted'
+    
+    det.Max_Intensity.kind = 'hinted' 
+    det.orientation.kind = 'hinted' 
+    #det.spot_width.kind = 'hinted'
+    #det.spot_height.kind = 'hinted'
+    #det.FWHM_sigma_x.kind = 'hinted'
+    #det.FWHM_sigma_x.kind = 'hinted'
+
+    det.tiff.nd_array_port.put(det.colour.port_name.get()) # makes the tiff plugin take the output of the colour change plugin
+    det.stats.nd_array_port.put(det.colour.port_name.get())
+    det.trans.nd_array_port.put(det.colour.port_name.get())
+    
