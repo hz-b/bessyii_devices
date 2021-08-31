@@ -9,5 +9,5 @@ class OAESE(Device):
     y = Cpt(EpicsMotor, 'motor0:my')
     z = Cpt(EpicsMotor, 'motor0:mz')
     kth00 = Cpt(Keithley6514, 'Keithley00:')
-    kth01 = Cpt(Keithley6514, 'Keithley00:')
+    kth01 = Cpt(Keithley6514, 'Keithley01:')
 
