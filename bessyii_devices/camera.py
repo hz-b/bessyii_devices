@@ -277,8 +277,8 @@ class DetectorStreamSignals(DetectorStream):
     spot_sigma_y = Cpt(EpicsSignalRO,'Stats1:SigmaY_RBV', name= 'signal_sigma_y', kind = 'hinted') 
     
     # PV list: https://areadetector.github.io/master/ADSimDetector/simDetector.html?highlight=adbase 
-    spot_width = Cpt(EpicsSignalRO,'cam1:PeakWidthX_RBV', name= 'signal_spot_width') 
-    spot_height = Cpt(EpicsSignalRO,'cam1:PeakWidthY_RBV', name= 'signal_spot_height') 
+    #spot_width = Cpt(EpicsSignalRO,'cam1:PeakWidthX_RBV', name= 'signal_spot_width') 
+    #spot_height = Cpt(EpicsSignalRO,'cam1:PeakWidthY_RBV', name= 'signal_spot_height') 
 
   
     # Calculate the FWHM 
