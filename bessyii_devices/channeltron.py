@@ -6,7 +6,12 @@ import time
 from types import SimpleNamespace
 
 class Channeltron(Device):
-    
+
+
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
     #Define the signals in our component
     
     read_cmd    = Cpt(EpicsSignal,  'Start-CMD')         # Starts a read

@@ -8,6 +8,10 @@ import time
 from types import SimpleNamespace
  
 class Keithley6514(Device):
+
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
     
     # Ophyd Device for https://gitlab.helmholtz-berlin.de/sissy/support/keithley/-/blob/master/keithleyApp/Db/Keithley6514Main.template
     

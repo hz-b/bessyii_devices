@@ -71,6 +71,9 @@ value   description
 class PGM(BasicFlyer, PVPositioner):
 
 
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
 
     setpoint            = Cpt(EpicsSignal,      'monoSetEnergy'                                      )
     readback            = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"motors"},     kind='hinted') # the main output
@@ -116,7 +119,6 @@ class PGM(BasicFlyer, PVPositioner):
 
         if self.aktion is not None:
             self.aktion.put(20)     # init
-            print("put init")
         
         def check_ready(*,old_value, value, **kwargs):
             #Return True when the acquisition is complete, False otherwise.   
@@ -132,7 +134,6 @@ class PGM(BasicFlyer, PVPositioner):
 
         wait(SubscriptionStatus(self.sweep_status, check_ready))
         
-        # TODO: do the activity here
         if self.aktion is not None:
             self.aktion.put(21)
 
@@ -149,13 +150,15 @@ class PGM(BasicFlyer, PVPositioner):
 
     def resume(self):
 
-        self.start_cmd.put(21) # not sure if this will work
+        self.aktion.put(21) # not sure if this will work
 
-    def stop(self):
+    def stop(self,*, success=False):
 
-        self.stop_cmd.put(0)
-        self.complete_status._finished(success=False)
-        
+        self.aktion.put(0)
+
+        if self.complete_status != None:
+            self.complete_status._finished(success=False)
+
 
     def complete(self):
         """
