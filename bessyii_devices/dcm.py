@@ -100,11 +100,20 @@ class DCMEnergy(PVPositioner):
     readback        = Cpt(EpicsSignalRO,    'monoGetEnergy',    kind='hinted', labels={"dcm", "motors"}) 
     done            = Cpt(EpicsSignalRO,    'GK_STATUS'                  )
     
-class DCM(Device):
-    
+class DCM(PVPositioner):
+
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
     prefix_1 = 'u171dcm1:'
     prefix_2 = 'MONOY01U112L:'
-    energy = Cpt(DCMEnergy, prefix_1)
+
+    #prefix at emil: MONOY01U112L
+    setpoint        = Cpt(EpicsSignal,     prefix_1+'monoSetEnergy'                  )
+    readback        = Cpt(EpicsSignalRO,    prefix_1+'monoGetEnergy',    kind='hinted', labels={"dcm", "motors"}) 
+    done            = Cpt(EpicsSignalRO,    prefix_1+'GK_STATUS'                  )
+
 
     # horizontal translation to select the Si 111,311,422 crystal 
     # Si111: 108 +/- 10, Si311: 66  +/- 10, Si 422: 24  +/- 10
