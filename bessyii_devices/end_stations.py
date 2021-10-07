@@ -2,6 +2,7 @@
 from ophyd import Device, EpicsMotor
 from ophyd import Component as Cpt
 from .keithley import Keithley6514
+from .bruker import MyEpicsMCA
 
 
 class OAESE(Device):
@@ -10,4 +11,5 @@ class OAESE(Device):
     z = Cpt(EpicsMotor, 'motor0:mz')
     kth00 = Cpt(Keithley6514, 'Keithley00:')
     kth01 = Cpt(Keithley6514, 'Keithley01:')
+    bruker = Cpt(MyEpicsMCA,'SDD00:mca1')
 
