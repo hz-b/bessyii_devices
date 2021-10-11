@@ -12,8 +12,7 @@ import math
 
 
 class AxisPositioner(PVPositionerDone):
-    
-  
+      
     setpoint = FCpt(EpicsSignal,    '{self._pre_volt}Piezo{self._pz_num}U1') 
     readback = FCpt(EpicsSignalRO,  '{self._pre_enc}dcm:cr2{self._ch_name}Encoder', kind='hinted')
    
@@ -129,7 +128,7 @@ class DCM(PVPositioner):
     crystal         = Cpt(EpicsSignalRO,  prefix_1+'SetGratingNo',  string='True',    kind='config', labels={"dcm", "motors"})                 # In reality this is a rw pv
     bw              = Cpt(EpicsSignalRO,  prefix_1+'crystal_bw' )
     dspacing        = Cpt(EpicsSignalRO,  prefix_1+'d_hkl' )
-    
+    channelcut      = Cpt(EpicsSignal,  prefix_1+'disableCT' )   
     # Temperature
     temp1_111           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T1', labels={"dcm"})
     temp2_111           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T1', labels={"dcm"})
