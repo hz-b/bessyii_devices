@@ -10,7 +10,7 @@ from .positioners import PVPositionerDone
 
 class Valve(PVPositionerDone):
     setpoint    = Cpt(EpicsSignal, 'SetTa', string='True') 
-    readback    = Cpt(EpicsSignalRO, 'State1', string='True', kind='hinted', labels={"motors","valves"}) 
+    readback    = Cpt(EpicsSignalRO, 'State1', string='True', kind='hinted', labels={"valves"}) 
     #done       = Cpt(EpicsSignalRO, '_REF_STAT' )  # where to find?
     
     done_value = 0 
