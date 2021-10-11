@@ -23,10 +23,10 @@ from .axes import AxisTypeA, AxisTypeB
 
 class AU13(Device):
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
-    top         = Cpt(AxisTypeA, '', ch_name='M1', labels={"motors", "apertures"})
-    bottom      = Cpt(AxisTypeA, '', ch_name='M2', labels={"motors", "apertures"})
-    left        = Cpt(AxisTypeA, '', ch_name='M3', labels={"motors", "apertures"}) # wall in old convention
-    right       = Cpt(AxisTypeA, '', ch_name='M4', labels={"motors", "apertures"}) #ring in old convention
+    top         = Cpt(AxisTypeA, '', ch_name='M1', labels={"apertures"})
+    bottom      = Cpt(AxisTypeA, '', ch_name='M2', labels={"apertures"})
+    left        = Cpt(AxisTypeA, '', ch_name='M3', labels={"apertures"}) # wall in old convention
+    right       = Cpt(AxisTypeA, '', ch_name='M4', labels={"apertures"}) #ring in old convention
     
 
 #prefix list U17
@@ -40,7 +40,7 @@ class AU13(Device):
 class AU2(Device):
     
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
-    top         = Cpt(AxisTypeB,      'PH_2', labels={"motors", "apertures"})
-    bottom      = Cpt(AxisTypeB,      'PH_3', labels={"motors", "apertures"})
-    left        = Cpt(AxisTypeB,      'PH_5', labels={"motors", "apertures"}) # wall in old convention
-    right       = Cpt(AxisTypeB,      'PH_4', labels={"motors", "apertures"}) #ring in old convention
+    top         = Cpt(AxisTypeB,      'PH_2', labels={"apertures"})
+    bottom      = Cpt(AxisTypeB,      'PH_3', labels={"apertures"})
+    left        = Cpt(AxisTypeB,      'PH_4', labels={"apertures"}) # wall in old convention
+    right       = Cpt(AxisTypeB,      'PH_5', labels={"apertures"}) #ring in old convention
