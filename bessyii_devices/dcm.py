@@ -24,6 +24,25 @@ class AxisPositioner(PVPositionerDone):
         self._pre_enc = pre_enc
         super().__init__(prefix, **kwargs)
 
+
+class AxisTableDcm(PVPositionerComparator):
+    
+    setpoint = FCpt(EpicsSignal,    'u171dcm1:idFilename', string='True') 
+    readback = FCpt(EpicsSignalRO,  'u171dcm1:idMbboIndex', string='True')
+   
+#    def __init__(self,prefix,**kwargs):
+
+#        super().__init__(prefix, **kwargs)
+
+    def done_comparator(self, readback, setpoint):
+        return 1
+
+
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+
+
+
 class DCMTranslationAxis(PVPositionerComparator):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}PH_{self._ch_num}_SET')
@@ -123,7 +142,7 @@ class DCM(PVPositioner):
 
     ct1             = Cpt(DCMTranslationAxis, prefix_1, ch_num='0',labels={"motors"},kind='config')
 
-    
+    table           = Cpt(AxisTableDcm,   prefix_1)  
     ID_on           = Cpt(EpicsSignal,    prefix_1+'SetIdOn', string='True',kind='config')
     theta           = Cpt(EpicsSignal,    prefix_1+'Theta', write_pv = prefix_1+'SetTheta', kind='config', labels={"dcm", "motors"})
     crystal         = Cpt(EpicsSignalRO,  prefix_1+'SetGratingNo',  string='True',    kind='config', labels={"dcm", "motors"})                 # In reality this is a rw pv
