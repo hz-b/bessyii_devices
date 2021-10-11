@@ -12,8 +12,7 @@ import math
 
 
 class AxisPositioner(PVPositionerDone):
-    
-  
+      
     setpoint = FCpt(EpicsSignal,    '{self._pre_volt}Piezo{self._pz_num}U1') 
     readback = FCpt(EpicsSignalRO,  '{self._pre_enc}dcm:cr2{self._ch_name}Encoder', kind='hinted')
    
