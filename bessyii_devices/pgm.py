@@ -10,6 +10,16 @@ from .flyer import BasicFlyer
 from ophyd import FormattedComponent as FCpt
 from .positioners import PVPositionerComparator
 
+class PGMPM4(PVPositioner):
+    
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
+    setpoint            = Cpt(EpicsSignal,      'monoSetEnergy'                                      )
+    readback            = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"motors"},     kind='hinted') # the main output
+    done                = Cpt(EpicsSignalRO,    'GK_STATUS'                                          )
+
 # Note that changing the grating translation DOES NOT change the MONO calculation parameters
 class PGMTranslationAxis(PVPositionerComparator):
 

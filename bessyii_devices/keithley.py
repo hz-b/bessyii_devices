@@ -107,3 +107,35 @@ class Keithley6517(Keithley6514):
     vsrc_ena            = Cpt(EpicsSignal, 'cmdVoltSrcEna', kind='config')
     vsrc                = Cpt(EpicsSignal, 'rbkVoltSrc' , write_pv='setVoltSrc',       kind='config')
     trig_mode    		= Cpt(EpicsSignal, 'rbkTrigCont', write_pv='setTrigCont',        string='True',      kind='config')    #single or continuous mode. Bypasses event detection (trig_src)
+
+class KeithleyPM4(Device):
+
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+    
+    # Ophyd Device for https://gitlab.helmholtz-berlin.de/sissy/support/keithley/-/blob/master/keithleyApp/Db/Keithley6514Main.template
+
+    trigger_cmd         = Cpt(EpicsSignal, 'DOREAD')
+    readback            = Cpt(EpicsSignalRO, 'READOUT', kind='hinted', labels={"detectors", "keithley"})
+  
+    def trigger(self):
+           
+        #Create a callback called if count is processed
+        def new_value(*,old_value,value,**kwargs):          #MDEL of $(P):rdCur must be set to -1
+
+            status.set_finished()
+            
+            # Clear the subscription.
+            self.readback.clear_sub(new_value)
+
+        #Create the status object
+        status = DeviceStatus(self.readback,timeout = 10.0)
+
+        #Connect the callback that will set finished and clear sub
+        self.readback.subscribe(new_value,event_type=Signal.SUB_VALUE,run=False)
+        
+        #Start the acquisition
+        self.trigger_cmd.put(1)     # will have started anyway since we set scan to .1 second
+        
+        return status
