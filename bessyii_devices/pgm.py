@@ -98,7 +98,8 @@ class PGM(BasicFlyer, PVPositioner):
     
     ID_on           = Cpt(EpicsSignal, 'SetIdOn', string='True',kind='config')
     mode            = Cpt(EpicsSignal, 'GetFormulaMode', write_pv = 'SetFormulaMode', string='True',kind='config') 
-    table           = Cpt(EpicsSignal, 'idFilename', write_pv = 'idMbboIndex', string='True',kind='config') 
+    table           = Cpt(EpicsSignal, 'idMbboIndex', string='True',kind='config') 
+    table_filename  = Cpt(EpicsSignalRO, 'idFilename', string='True',kind='config') 
     harmonic        = Cpt(EpicsSignal, 'GetIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
     eMin_eV         = Cpt(EpicsSignalRO, 'minEnergy', kind='hinted')
     eMax_eV         = Cpt(EpicsSignalRO, 'maxEnergy', kind='hinted')
