@@ -1,5 +1,6 @@
 from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
+from ophyd import FormattedComponent as FCpt
 from .positioners import PVPositionerComparator
 
 
@@ -23,4 +24,18 @@ class ExitSlit(PVPositionerComparator):
         super().__init__(prefix, **kwargs)
 
 
+class ExitSlit_withDone(PVPositioner):
+    '''
+    This would be the correct way to do it but the done signal oscillates.
+    '''
+    setpoint         = FCpt(EpicsSignal,   '{self.prefix}ES_{self._ch_number}_Input'           ) # in micrometer
+    readback         = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_SW',kind='hinted', labels={"motors", "exitslits"}) # in micrometer
+    done             = FCpt(EpicsSignalRO, '{self.prefix}axis{self._axis_number}:running' )
+    
+    bandwidth        = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_BW') # in meV
+    resolving_power  = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_ResPow') 
 
+    def __init__(self, prefix, ch_number=None, axis_number=None, **kwargs):
+        self._ch_number = ch_number
+        self._axis_number=axis_number
+        super().__init__(prefix, **kwargs)
