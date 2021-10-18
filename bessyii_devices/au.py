@@ -10,39 +10,24 @@ from .axes import AxisTypeA, AxisTypeB
 # we look downstream and use top/bottom/left/right
 
 
-#prefix list U17
-# AU1: WAUY02U012L
-# AU3: AUY01U212L
+#prefix list 
+#prefix: AUYU15L
 
-
-# prefix list UE48:
-# AU1: WAUY01U012L
-# AU3 SISSY: AUY02U112L   
-# AU3 CAT: AUY02U212L
+#Readback 		AUYU15L:Top.RBV
+#Set			AUYU15L:Top.VAL
+#Set range		AUYU15L:Top.TWV
+#Status 			AUYU15L:Top.STOP
+#Stop			AUYU15L:Top.stMotor
 
 
 class AU13(Device):
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
-    top         = Cpt(AxisTypeA, '', ch_name='M1')
-    bottom      = Cpt(AxisTypeA, '', ch_name='M2')
-    left        = Cpt(AxisTypeA, '', ch_name='M3') # wall in old convention
-    right       = Cpt(AxisTypeA, '', ch_name='M4') #ring in old convention
+    top         = Cpt(AxisTypeA, 'Top')
+    bottom      = Cpt(AxisTypeA, 'Bottom')
+    left        = Cpt(AxisTypeA, 'Left') 
+    right       = Cpt(AxisTypeA, 'Right') 
     
 
-#prefix list U17
-# AU2: u171pgm1
 
-
-# prefix list UE48
-# AU2: ue481pgm1
-
-    
-class AU2(Device):
-    
-    _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
-    top         = Cpt(AxisTypeB,      'PH_2')
-    bottom      = Cpt(AxisTypeB,      'PH_3')
-    left        = Cpt(AxisTypeB,      'PH_5') # wall in old convention
-    right       = Cpt(AxisTypeB,      'PH_4') #ring in old convention
     
  
