@@ -9,11 +9,11 @@ from .axes import M1Axis
 
 class M1(Device):
 
-    t_x   = Cpt(M1Axis, '', ch_name='Tx', labels={"mirrors"})
-    t_y   = Cpt(M1Axis, '', ch_name='Ty', labels={"mirrors"})
-    r_x   = Cpt(M1Axis, '', ch_name='Rx', labels={"mirrors"})
-    r_y   = Cpt(M1Axis, '', ch_name='Ry', labels={"mirrors"})
-    r_z   = Cpt(M1Axis, '', ch_name='Rz', labels={"mirrors"})
+    tx   = Cpt(M1Axis, '', ch_name='Tx', labels={"mirrors"})
+    ty   = Cpt(M1Axis, '', ch_name='Ty', labels={"mirrors"})
+    rx   = Cpt(M1Axis, '', ch_name='Rx', labels={"mirrors"})
+    ry   = Cpt(M1Axis, '', ch_name='Ry', labels={"mirrors"})
+    rz   = Cpt(M1Axis, '', ch_name='Rz', labels={"mirrors"})
 
 class M1SoftEmil(M1):
     temp1 = FCpt(EpicsSignalRO, 'MIRRORY02U012L:T1')
