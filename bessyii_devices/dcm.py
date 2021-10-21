@@ -121,21 +121,21 @@ class DCM(PVPositioner):
     
     cr1             = Cpt(EpicsSignal,    prefix_1+'dcm:CR1',   write_pv =  prefix_1+'dcm:setCR1',    kind='config', labels={"dcm", "motors"})
     cr2             = Cpt(EpicsSignal,    prefix_1+'dcm:CR2',   write_pv =  prefix_1+'dcm:setCR2',    kind='config', labels={"dcm", "motors"})
-
     ct1             = Cpt(DCMTranslationAxis, prefix_1, ch_num='0',labels={"motors"},kind='config')
 
-    #table           = Cpt(AxisTableDcm,   prefix_1)  
-    
-    table           = Cpt(EpicsSignal, 'idMbboIndex', string='True',kind='config') 
-    table_filename  = Cpt(EpicsSignalRO, 'idFilename', string='True',kind='config')
+    table           = Cpt(EpicsSignal,    prefix_1+'idMbboIndex', string='True',kind='config') 
+    table_filename  = Cpt(EpicsSignalRO,  prefix_1+'idFilename', string='True',kind='config')
     channelcut      = Cpt(EpicsSignal,    prefix_1+'disableCT')
+    harmonic        = Cpt(EpicsSignal,    prefix_1+'GetIdHarmonic', write_pv=prefix_1+'Harmonic', string='True', kind='config')
     ID_on           = Cpt(EpicsSignal,    prefix_1+'SetIdOn', string='True',kind='config')
     theta           = Cpt(EpicsSignal,    prefix_1+'Theta', write_pv = prefix_1+'SetTheta', kind='config', labels={"dcm", "motors"})
-    crystal         = Cpt(EpicsSignalRO,  prefix_1+'SetGratingNo',  string='True',    kind='config', labels={"dcm", "motors"})                 # In reality this is a rw pv
+    crystal         = Cpt(EpicsSignal,  prefix_1+'SetGratingNo',  string='True',    kind='config', labels={"dcm", "motors"})                 # In reality this is a rw pv
     bw              = Cpt(EpicsSignalRO,  prefix_1+'crystal_bw' )
     dspacing        = Cpt(EpicsSignalRO,  prefix_1+'d_hkl' )
-    
-    # Temperature
+    slope           = Cpt(EpicsSignal,  prefix_1+'aiIdSlope', write_pv=prefix_1+'aoIdSlope' )
+    offset          = Cpt(EpicsSignal,  prefix_1+'siIdOffset', write_pv=prefix_1+'aoIdOffset'  )
+   
+     # Temperature
     temp1_111           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T1', labels={"dcm"})
     temp2_111           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T1', labels={"dcm"})
     temp1_311           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T2', labels={"dcm"})

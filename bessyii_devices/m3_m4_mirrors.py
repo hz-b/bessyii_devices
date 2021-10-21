@@ -42,12 +42,12 @@ class SMUChoice(PVPositioner):
                 
 class M3M4(Device):
 #move simulataneously does not work unless you activate the start_immediately PV        
-    r_x = Cpt(HexapodAxis, '', ch_name='A', labels={"mirrors"})
-    r_y = Cpt(HexapodAxis, '', ch_name='B', labels={"mirrors"})
-    r_z = Cpt(HexapodAxis, '', ch_name='C', labels={"mirrors"})
-    t_x = Cpt(HexapodAxis, '', ch_name='X', labels={"mirrors"})
-    t_y = Cpt(HexapodAxis, '', ch_name='Y', labels={"mirrors"})
-    t_z = Cpt(HexapodAxis, '', ch_name='Z', labels={"mirrors"})
+    rx = Cpt(HexapodAxis, '', ch_name='A', labels={"mirrors"})
+    ry = Cpt(HexapodAxis, '', ch_name='B', labels={"mirrors"})
+    rz = Cpt(HexapodAxis, '', ch_name='C', labels={"mirrors"})
+    tx = Cpt(HexapodAxis, '', ch_name='X', labels={"mirrors"})
+    ty = Cpt(HexapodAxis, '', ch_name='Y', labels={"mirrors"})
+    tz = Cpt(HexapodAxis, '', ch_name='Z', labels={"mirrors"})
     start_immediately = Cpt(EpicsSignal, 'hexapod:mbboRunAfterValue')
     
 class SMU(M3M4):

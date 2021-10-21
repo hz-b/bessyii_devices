@@ -14,7 +14,7 @@ class ExitSlit(PVPositionerComparator):
     bandwidth        = Cpt(EpicsSignalRO, '_BW') # in meV
     resolving_power  = Cpt(EpicsSignalRO, '_ResPow') 
 
-    atol = 0.5  # tolerance before we set done to be 1 (in um) we should check what this should be!
+    atol = 1  # tolerance before we set done to be 1 (in um) we should check what this should be!
 
     def done_comparator(self, readback, setpoint):
         return setpoint-self.atol < readback < setpoint+self.atol
