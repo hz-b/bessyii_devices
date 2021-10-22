@@ -105,10 +105,13 @@ class PGM(BasicFlyer, PVPositioner):
     eMax_eV         = Cpt(EpicsSignalRO, 'maxEnergy', kind='hinted')
     positioning     = Cpt(EpicsSignalRO, 'multiaxis:mbbiMoveMode', string='True',kind='hinted')
 
-    m2_translation    = Cpt(PGMTranslationAxis, '', ch_num='0',labels={"motors"},kind='config')
+    m2_translation      = Cpt(PGMTranslationAxis, '', ch_num='0',labels={"motors"},kind='config')
     grating_translation = Cpt(PGMTranslationAxis, '', ch_num='1',labels={"motors"},kind='config')
                                              
-    set_branch          = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
+    set_branch       = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
+    alpha            = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
+    beta             = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
+    theta            = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
 
     def kickoff(self):
         """
