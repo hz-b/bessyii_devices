@@ -81,9 +81,9 @@ class SoftMonoBase(PVPositioner):
     * choose diffration order
     * ....
     """
-    def __init__(self, prefix, *args, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
+    #def __init__(self, prefix, *args, **kwargs):
+    #    super().__init__(prefix, **kwargs)
+    #    self.readback.name = self.name 
 
     # this is an initial API 
     setpoint        = Cpt(EpicsSignal,      'monoSetEnergy'                                      )
