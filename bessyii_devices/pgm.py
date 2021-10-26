@@ -227,7 +227,7 @@ class FlyingPGM(BasicFlyer):
 
         return self.complete_status
        
-class PGMEmil(SoftMonoBase,UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
+class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     
     # might this stuff go in PGM class?
     diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
@@ -248,14 +248,14 @@ class PGMEmil(SoftMonoBase,UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     theta            = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
     
 # the name of these two classe has to be changed to be EMIL specific
-class PGMSoft(PGM):
+class PGMSoft(PGMEmil):
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1', labels={'pgm'})
 
 
 
-class PGMHard(PGM):
+class PGMHard(PGMEmil):
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating2T1', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1', labels={'pgm'})
