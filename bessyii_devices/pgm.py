@@ -109,9 +109,6 @@ class UndulatorMonoBase(Device):
     UndulatorMonoBase contains all additional signals used for monochromators at undulator beamlines. 
     It is intended to be used together with SoftMonoBase class
     """
-    def __init__(self, prefix, *args, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
 
     ID_on           = Cpt(EpicsSignal, 'SetIdOn', string='True',kind='config')
     mode            = Cpt(EpicsSignal, 'GetFormulaMode', write_pv = 'SetFormulaMode', string='True',kind='config') 
