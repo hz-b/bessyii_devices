@@ -128,7 +128,7 @@ class PGM(BasicFlyer, PVPositioner):
     alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
     beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config')
     theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config')
-
+    fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
     def kickoff(self):
         """
         Start this Flyer, return a status object that sets finished once we have started
