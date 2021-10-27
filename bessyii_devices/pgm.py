@@ -31,6 +31,25 @@ class PGMTranslationAxis(PVPositionerComparator):
     def __init__(self, prefix, ch_num=None, **kwargs):
         self._ch_num = ch_num
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+
+class PGMScannableAxis(PVPositionerComparator):
+
+    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
+
+      # tolerance before we set done to be 1 (in um) we should check what this should be!
+
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+
+
+    def __init__(self, prefix, ch_name=None,atol=0.01, **kwargs):
+        self._ch_name = ch_name
+        self.atol = atol
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+
 
 
 
@@ -110,8 +129,8 @@ class PGM(BasicFlyer, PVPositioner):
                                              
     set_branch       = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
     alpha            = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
-    beta             = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
-    theta            = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
+    beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',settle_time=5.0,atol=0.02, kind='config')
+    theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta',settle_time=5.0,atol=0.02, kind='config')
 
     def kickoff(self):
         """
