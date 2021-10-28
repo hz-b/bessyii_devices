@@ -31,6 +31,22 @@ class PGMTranslationAxis(PVPositionerComparator):
     def __init__(self, prefix, ch_num=None, **kwargs):
         self._ch_num = ch_num
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+
+
+
+class PGMScannableAxis(PVPositioner):
+
+    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
+    done     = FCpt(EpicsSignalRO,'{self.prefix}Status')
+    
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+
+
 
 
 
@@ -109,10 +125,10 @@ class PGM(BasicFlyer, PVPositioner):
     grating_translation = Cpt(PGMTranslationAxis, '', ch_num='1',labels={"motors"},kind='config')
                                              
     set_branch       = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
-    alpha            = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
-    beta             = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
-    theta            = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
-
+    alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
+    beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config')
+    theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config')
+    fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
     def kickoff(self):
         """
         Start this Flyer, return a status object that sets finished once we have started
