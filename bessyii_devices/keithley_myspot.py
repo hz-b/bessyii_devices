@@ -275,7 +275,7 @@ def hw(save_path=None):
     #sissy2_chan0        = channeltron(sys + 'Channeltron0:', name='sissy2_chan', read_attrs=['count'],configuration_attrs=['interval','deadTime','highVoltage', 'threshold'])
     #sissy2_keithley0    = keithley6514(sys + 'Keithley0:', name='sissy2_keithley0', read_attrs=['readback'])
     
-    #u171_mono = mono('u171dcm1:', name='u171_mono', read_attrs=['readback']) 
+    #u171_mono = mono('u171dcm1:', name='u171_mono', read_attrs=['readback'])  
     #u481_mono = mono('ue481pgm1:', name='u481_mono', read_attrs=['readback'])
     #u481_mono.done_value = 0
 
