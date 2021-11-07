@@ -72,3 +72,16 @@ class AxisTypeB(PVPositionerComparator):
         super().__init__(prefix, **kwargs)
 
    
+class AxisTypeFoil(PVPositionerComparator):
+
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}_SET{self._ch_name}'               )                   
+    readback = FCpt(EpicsSignalRO,  '{self.prefix}_GET{self._ch_name}', kind='hinted')
+
+    atol = 0.005  # tolerance before we set done to be 1 (in um) we should check what this should be!
+
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+    
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
