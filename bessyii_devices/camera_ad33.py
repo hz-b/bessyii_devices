@@ -88,6 +88,49 @@ class MyURLDetectorV33(SingleTriggerV33, URLDetector):
     image = Cpt(ImagePlugin, 'image1:')
     colour = Cpt(ColorConvPlugin, 'CC1:')
 
+    
+    
+#FLIR Camera for PMFC at OAESE
+
+from ophyd.areadetector import PointGreyDetector, PointGreyDetectorCam
+
+class PointGreyDetectorCamV33(PointGreyDetectorCam):
+    '''This is used to update the URLDetectorCam to AD33.'''
+
+    wait_for_plugins = Cpt(EpicsSignal, 'WaitForPlugins',
+                           string=True, kind='config')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stage_sigs['wait_for_plugins'] = 'Yes'
+
+    def ensure_nonblocking(self):
+        self.stage_sigs['wait_for_plugins'] = 'Yes'
+        for c in self.parent.component_names:
+            cpt = getattr(self.parent, c)
+            if cpt is self:
+                continue
+            if hasattr(cpt, 'ensure_nonblocking'):
+                cpt.ensure_nonblocking()
+    
+
+
+class PointGreyDetector(PointGreyDetector):
+    cam = Cpt(PointGreyDetectorCamV33, 'cam1:')
+
+
+
+class MyPointGreyDetectorV33(SingleTriggerV33, PointGreyDetector):
+    tiff = Cpt(TIFFPluginWithFileStore,
+               suffix="TIFF1:",
+               write_path_template="/home/emil/Apps/autosave/images/")
+    stats = Cpt(StatsPluginV33, 'Stats1:')
+    image = Cpt(ImagePlugin, 'image1:')
+    colour = Cpt(ColorConvPlugin, 'CC1:')
+
+    
+    
+# General method
 
 def set_detectorV33(det):
 
