@@ -24,6 +24,29 @@ class M1Axis(PVPositionerComparator):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
 
+
+# Used only for M1 uses Software done signal
+class M1AxisAquarius(PVPositionerComparator):
+
+    setpoint = FCpt(EpicsSignal, '{self.prefix}.VAL'                 ) 
+    stop_setpoint = FCpt(EpicsSignal, '{self.prefix}.STOP'                    )      
+    setpoint_relative = FCpt(EpicsSignal, '{self.prefix}.TWV'        )                  
+    readback = FCpt(EpicsSignalRO, '{self.prefix}.RBV', kind='hinted')
+
+            
+    atol = 1.0  # tolerance before we set done to be 1 (in um) we should check what this should be!
+
+
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+        
+        
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
+
+
+
 # Used for hexapods
 class HexapodAxis(PVPositioner):
 
@@ -70,6 +93,45 @@ class AxisTypeB(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
+
+# Aquarius
+#Set			AUYU15L:Top.VAL
+#Set range		AUYU15L:Top.TWV
+#Status 			AUYU15L:Top.STOP
+#Stop			AUYU15L:Top.stMotor
+
+class AxisTypeC(PVPositionerComparator):
+
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}.VAL{self._ch_name}'                 )                   
+    readback = FCpt(EpicsSignalRO,  '{self.prefix}.RBV{self._ch_name}', kind='hinted')
+    #done     = FCpt(EpicsSignalRO,  '{self.prefix}State{self._ch_name}'               )
+    
+   # done_value = 0          #Need to test this
+    atol = 0.005  # tolerance before we set done to be 1 (in um) we should check what this should be!
+
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+    
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
+        
+class AxisTypeD(PVPositionerComparator):
+
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}.VAL'               )
+    readback = FCpt(EpicsSignalRO,  '{self.prefix}.RBV', kind='hinted')
+    #done     = FCpt(EpicsSignalRO,  '{self.prefix}State{self._ch_name}'               )
+    
+   # done_value = 0          #Need to test this
+    atol = 0.005  # tolerance before we set done to be 1 (in um) we should check what this should>
+
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+    
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
+
 
    
 class AxisTypeFoil(PVPositionerComparator):
