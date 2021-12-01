@@ -3,7 +3,7 @@ from ophyd.signal import Signal, SignalRO
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 #from .positioners import *
-from .axes import M1Axis,M1AxisAquarius
+from .axes import M1Axis, M1AxisAquarius
 
 
 
@@ -22,16 +22,6 @@ class M1SoftEmil(M1):
 class M1HardEmil(M1):
 
     temp = FCpt(EpicsSignalRO, 'MIRRORY01U012L:T1')
-
-class M1Aquarius(Device):
-
-    tx   = Cpt(M1AxisAquarius, '', ch_name='Tx', labels={"mirrors"})
-    ty   = Cpt(M1AxisAquarius, '', ch_name='Ty', labels={"mirrors"})
-    rx   = Cpt(M1AxisAquarius, '', ch_name='Rx', labels={"mirrors"})
-    ry   = Cpt(M1AxisAquarius, '', ch_name='Ry', labels={"mirrors"})
-    rz   = Cpt(M1AxisAquarius, '', ch_name='Rz', labels={"mirrors"})
-
-
 
 class M1Aquarius(Device):
 
