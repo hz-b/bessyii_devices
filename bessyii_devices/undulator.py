@@ -3,7 +3,9 @@ from ophyd import Component as Cpt
 
 
 # Based on U17IT6R. See http://wiki.trs.bessy.de/pub/IDs/WebHome/UserPanelsEnglisch.pdf for notes
+# prefix: U49ID8R:
 
+# this is for emil
 class Undulator(Device):
 
     """

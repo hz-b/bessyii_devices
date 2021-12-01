@@ -3,8 +3,6 @@ from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from .axes import AxisTypeA, AxisTypeD 
 
-#prefix list U17
-# PHY01U012L:
 
 class Pinhole(Device):
     
