@@ -147,7 +147,7 @@ class SGM(SoftMonoBase):
 
 
 
-class FlyingPGM(BasicFlyer):
+class FlyingPGM(BasicFlyer, SoftMonoBase):
 
     #status is an mbbo record, I need to know what the different states are. 
     sweep_status    = Cpt(EpicsSignalRO, 'GetSweepState')
