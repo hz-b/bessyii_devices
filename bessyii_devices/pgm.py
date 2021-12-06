@@ -90,8 +90,6 @@ class SoftMonoBase(PVPositioner):
     readback        = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"motors"},     kind='hinted') # the main output
     done            = Cpt(EpicsSignalRO,    'GK_STATUS'                                          )
 
-    # AFAIK, for some monochromators cff is not a free choice parameter and can not be set.
-    #cff             = Cpt(EpicsSignal, 'cff', write_pv='SetCff', kind='config')
     diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
     grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='config')
     grating         = Cpt(EpicsSignalRO, 'lineDensity', kind='hinted') 
@@ -226,14 +224,10 @@ class FlyingPGM(BasicFlyer):
        
 class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     
-    # might this stuff go in PGM class?
-    diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
-    grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='config')
-    grating         = Cpt(EpicsSignalRO, 'lineDensity', kind='hinted') 
+    # en parameter is alread y available, but they want to have it called "en"
+    en             = Cpt(EpicsSignal, 'monoGetEnergy', write_pv='monoSetEnergy', kind='config')
     
     
-    eMin_eV         = Cpt(EpicsSignalRO, 'minEnergy', kind='hinted')
-    eMax_eV         = Cpt(EpicsSignalRO, 'maxEnergy', kind='hinted')
     positioning     = Cpt(EpicsSignalRO, 'multiaxis:mbbiMoveMode', string='True',kind='hinted')
 
     m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"motors"},kind='config')
