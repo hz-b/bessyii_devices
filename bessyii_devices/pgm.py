@@ -206,3 +206,23 @@ class PGMHard(PGM):
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating2T1', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1', labels={'pgm'})
+    
+    
+    
+class PGM_Aquarius(PVPositioner):
+
+
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
+    setpoint            = Cpt(EpicsSignal,      'monoSetEnergy'                                      )
+    readback            = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"motors"},     kind='hinted') # the main output
+    done                = Cpt(EpicsSignalRO,    'GK_STATUS'                                          )
+    done_value          = 0
+    cff             = Cpt(EpicsSignal, 'cff', write_pv='SetCff', kind='config')
+    diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
+    alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
+    beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config')
+    theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config')
+    fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
