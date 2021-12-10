@@ -11,6 +11,9 @@ class Undulator(PVPositioner):
     """
     Object to query undulator status
     """
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
     
     setpoint        = Cpt(EpicsSignal,    'BaseParGapsel.B',kind = 'hinted')
     readback        = Cpt(EpicsSignalRO,  'BaseIPmGap.A',kind = 'hinted', labels={"motors", "undulators"})
