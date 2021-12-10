@@ -31,43 +31,24 @@ class MonoTranslationAxis(PVPositionerComparator):
     def __init__(self, prefix, ch_num=None, **kwargs):
         self._ch_num = ch_num
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
 
 
 
-"""
-for notes on multiple inheritance see https://stackoverflow.com/a/3277407/14795659 
-class Third(First, Second):
-    ...
+class PGMScannableAxis(PVPositioner):
 
-The class below says Python will start by looking at BasicFlyer Class first, and, if BasicFlyer doesn't have the attribute, then it will look at PVPositioner.
-"""
+    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
+    done     = FCpt(EpicsSignalRO,'{self.prefix}Status')
+    
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
 
-"""
-:MonoAktion.PROC
-    Command Code    Comment
-===============================================================================
-0               Stop all motors
-1               Save monochromator configuration to file (MONO.CFG)
-2               Go to zero order
-3               Save as zero order (B. Zader Knopf)
-5               Zero order step move up
-6               Zero order step move down
-10              Clear errors on blue panel
-20              Sweep init
-21              Sweep run
-37              Use current position for zero order correction of grating offset.
-60              Move to last energy.
 
-:GetSweepState
-value   description
-==========================
-0x02    Go to start of acceleration ramp    
-0x04    Ready   -  Standing at the beginning of the ramp, Ready to start
-0x20    Started  - Started and on the way to startenergy
-0x40    Sweeping  - Running within start- and endenergy    
-0xFF    Ready  -   Finished or error.
 
-"""
+
 
 
 class SoftMonoBase(PVPositioner):
@@ -81,9 +62,9 @@ class SoftMonoBase(PVPositioner):
     * choose diffration order
     * ....
     """
-    #def __init__(self, prefix, *args, **kwargs):
-    #    super().__init__(prefix, **kwargs)
-    #    self.readback.name = self.name 
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
 
     # this is an initial API 
     setpoint        = Cpt(EpicsSignal,      'monoSetEnergy'                                      )
@@ -98,14 +79,10 @@ class SoftMonoBase(PVPositioner):
     eMax_eV         = Cpt(EpicsSignalRO, 'maxEnergy', kind='hinted')
 
 
-    # slit driving is different at different monos
-    #slitwidth       = Cpt(EpicsSignal,  'slitwidth', write_pv = 'SlitInput',     kind='config')
 
-
-class UndulatorMonoBase(Device):
+class UndulatorMonoBase(SoftMonoBase):
     """
     UndulatorMonoBase contains all additional signals used for monochromators at undulator beamlines. 
-    It is intended to be used together with SoftMonoBase class
     """
 
     ID_on           = Cpt(EpicsSignal, 'SetIdOn', string='True',kind='config')
@@ -114,7 +91,6 @@ class UndulatorMonoBase(Device):
     table_filename  = Cpt(EpicsSignalRO, 'idFilename', string='True',kind='config') 
     harmonic        = Cpt(EpicsSignal, 'GetIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
     
-
 class ExitSlitBase(Device):
     """
     Base class stub (also standard API for many soft x-ray monos) for monochromator exit slit control
@@ -146,7 +122,32 @@ class SGM(SoftMonoBase):
     cff             = Cpt(EpicsSignalRO, 'cff', kind='hinted')
 
 
+"""
+:MonoAktion.PROC
+    Command Code    Comment
+===============================================================================
+0               Stop all motors
+1               Save monochromator configuration to file (MONO.CFG)
+2               Go to zero order
+3               Save as zero order (B. Zader Knopf)
+5               Zero order step move up
+6               Zero order step move down
+10              Clear errors on blue panel
+20              Sweep init
+21              Sweep run
+37              Use current position for zero order correction of grating offset.
+60              Move to last energy.
 
+:GetSweepState
+value   description
+==========================
+0x02    Go to start of acceleration ramp    
+0x04    Ready   -  Standing at the beginning of the ramp, Ready to start
+0x20    Started  - Started and on the way to startenergy
+0x40    Sweeping  - Running within start- and endenergy    
+0xFF    Ready  -   Finished or error.
+
+"""
 class FlyingPGM(BasicFlyer, SoftMonoBase):
 
     #status is an mbbo record, I need to know what the different states are. 
@@ -156,7 +157,6 @@ class FlyingPGM(BasicFlyer, SoftMonoBase):
     end_pos         = Cpt(EpicsSignal, 'SetSweepEnd'   , kind='config')
     velocity        = Cpt(EpicsSignal, 'SetSweepVel', kind='config')
   
-
     def kickoff(self):
         """
         Start this Flyer, return a status object that sets finished once we have started
@@ -224,15 +224,11 @@ class FlyingPGM(BasicFlyer, SoftMonoBase):
        
 class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     
-    # en parameter is alread y available, but they want to have it called "en"
+    # en parameter is already available, but they want to have it called "en"
     en             = Cpt(EpicsSignal, 'monoGetEnergy', write_pv='monoSetEnergy', kind='config')
-    
-    
     positioning     = Cpt(EpicsSignalRO, 'multiaxis:mbbiMoveMode', string='True',kind='hinted')
-
     m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"motors"},kind='config')
     grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"motors"},kind='config')
-                                             
     set_branch       = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
     alpha            = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
     beta             = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')

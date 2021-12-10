@@ -142,4 +142,3 @@ class AxisTypeFoil(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
-
