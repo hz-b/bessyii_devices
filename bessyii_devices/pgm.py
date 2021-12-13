@@ -220,9 +220,20 @@ class PGM_Aquarius(PVPositioner):
     readback            = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"motors"},     kind='hinted') # the main output
     done                = Cpt(EpicsSignalRO,    'GK_STATUS'                                          )
     done_value          = 0
+    
+    en             = Cpt(EpicsSignal, 'monoGetEnergy', write_pv='monoSetEnergy', kind='config')
+    
+    ID_on           = Cpt(EpicsSignal, 'SetIdOn', string='True',kind='config')
     cff             = Cpt(EpicsSignal, 'cff', write_pv='SetCff', kind='config')
     diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
     alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
     beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config')
     theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config')
     fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
+    
+    mode            = Cpt(EpicsSignal, 'GetFormulaMode', write_pv = 'SetFormulaMode', string='True',kind='config') 
+    table           = Cpt(EpicsSignal, 'idMbboIndex', string='True',kind='config') 
+    table_filename  = Cpt(EpicsSignal, 'idFilename', write_pv = 'strID_Table',string='True',kind='config') 
+    harmonic        = Cpt(EpicsSignal, 'GetIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
+    eMin_eV         = Cpt(EpicsSignalRO, 'minEnergy', kind='hinted')
+    eMax_eV         = Cpt(EpicsSignalRO, 'maxEnergy', kind='hinted')
