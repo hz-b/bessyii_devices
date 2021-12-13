@@ -22,6 +22,7 @@ class M1Axis(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
 
 
 # Used only for M1 uses Software done signal
@@ -57,6 +58,7 @@ class HexapodAxis(PVPositioner):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
 
 # EMIL
 # Used on AU1, AU3 and Pinhole
@@ -73,23 +75,21 @@ class AxisTypeA(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
 
 # Used on AU2 and Diamond Filter        
-class AxisTypeB(PVPositionerComparator):
+class AxisTypeB(PVPositioner):
 
     setpoint = Cpt(EpicsSignal,    '_SET'              )
     readback = Cpt(EpicsSignalRO,  '_GET',kind='hinted')
-    #done     = Cpt(EpicsSignalRO,  '_REF_STAT'             )
+    done     = Cpt(EpicsSignalRO,  '_STATUS'             )
     
-    #done_value = 0 
-    atol = 0.005  # tolerance before we set done to be 1 (in um) we should check what this should be!
-
-    def done_comparator(self, readback, setpoint):
-        return setpoint-self.atol < readback < setpoint+self.atol
+    done_value = 0 
     
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
 
 # Aquarius
 #Set			AUYU15L:Top.VAL
@@ -112,6 +112,7 @@ class AxisTypeC(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
         
 class AxisTypeD(PVPositionerComparator):
 
@@ -128,6 +129,7 @@ class AxisTypeD(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
 
 class AxisTypeFoil(PVPositionerComparator):
 
@@ -142,3 +144,4 @@ class AxisTypeFoil(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
