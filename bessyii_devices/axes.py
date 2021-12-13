@@ -44,8 +44,7 @@ class M1AxisAquarius(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
-
+        self.readback.name = self.name
 
 
 # Used for hexapods
