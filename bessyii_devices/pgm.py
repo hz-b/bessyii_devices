@@ -225,14 +225,14 @@ class FlyingPGM(BasicFlyer, SoftMonoBase):
 class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     
     # en parameter is already available, but they want to have it called "en"
-    en             = Cpt(EpicsSignal, 'monoGetEnergy', write_pv='monoSetEnergy', kind='config')
-    positioning     = Cpt(EpicsSignalRO, 'multiaxis:mbbiMoveMode', string='True',kind='hinted')
+    en                  = Cpt(EpicsSignal, 'monoGetEnergy', write_pv='monoSetEnergy', kind='config')
+    positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='hinted')
     m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"motors"},kind='config')
     grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"motors"},kind='config')
-    set_branch       = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
-    alpha            = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
-    beta             = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
-    theta            = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
+    set_branch          = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
+    alpha               = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
+    beta                = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
+    theta               = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
     
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
