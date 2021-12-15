@@ -69,7 +69,7 @@ class SoftMonoBase(PVPositioner):
     # this is an initial API 
     setpoint        = Cpt(EpicsSignal,      'monoSetEnergy'                                      )
     readback        = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"motors"},     kind='hinted') # the main output
-    done            = Cpt(EpicsSignalRO,    'GK_STATUS'                                          )
+    done            = Cpt(EpicsSignalRO,    'IStatus'                                          )
 
     diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
     grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='config')
