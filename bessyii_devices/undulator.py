@@ -16,12 +16,13 @@ class Undulator(PVPositioner):
         self.readback.name = self.name 
     
     setpoint        = Cpt(EpicsSignal,    'BaseParGapsel.B',kind = 'hinted')
-    readback        = Cpt(EpicsSignalRO,  'BaseIPmGap.A',kind = 'hinted', labels={"motors", "undulators"})
+    readback        = Cpt(EpicsSignalRO,  'BaseIPmGap.A',kind = 'hinted')
     done            = Cpt(EpicsSignalRO,  'BaseStatISLbl' ,string='True'    ,kind = 'config' )
     actuate         = Cpt(EpicsSignal,    'BaseCmdCalc.PROC'                                 )
     done_value      = 'STOP'
     # Setpoint and Config
-    gap_velocity    = Cpt(EpicsSignal,    'DiagPhyVelSet'                   ,kind = 'config' )
+    gap             = Cpt(EpicsSignalRO,  'BaseIPmGap.A',     labels={"motors", "undulators"})
+    gap_velocity    = Cpt(EpicsSignal,    'DiagPhyVelSet',     labels={"motors", "undulators"}                   ,kind = 'config' )
     gap_delta       = Cpt(EpicsSignal,    'BaseParGapTrs'                   ,kind = 'config' )
     return_pos      = Cpt(EpicsSignal,    'BaseHomeRPos.A'                  ,kind = 'config' )
     
