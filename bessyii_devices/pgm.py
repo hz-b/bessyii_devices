@@ -68,11 +68,11 @@ class SoftMonoBase(PVPositioner):
 
     # this is an initial API 
     setpoint        = Cpt(EpicsSignal,      'monoSetEnergy'                                      )
-    readback        = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"motors"},     kind='hinted') # the main output
+    readback        = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"pgm"},     kind='hinted') # the main output
     done            = Cpt(EpicsSignalRO,    'IStatus'                                          )
 
     diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
-    grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='config')
+    grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='hinted', labels={"pgm"})
     grating         = Cpt(EpicsSignalRO, 'lineDensity', kind='hinted') 
 
     eMin_eV         = Cpt(EpicsSignalRO, 'minEnergy', kind='hinted')
@@ -85,7 +85,7 @@ class UndulatorMonoBase(SoftMonoBase):
     UndulatorMonoBase contains all additional signals used for monochromators at undulator beamlines. 
     """
 
-    ID_on           = Cpt(EpicsSignal, 'SetIdOn', string='True',kind='config')
+    ID_on           = Cpt(EpicsSignal, 'SetIdOn', string='True',kind='config', labels={"pgm"})
     mode            = Cpt(EpicsSignal, 'GetFormulaMode', write_pv = 'SetFormulaMode', string='True',kind='config') 
     table           = Cpt(EpicsSignal, 'idMbboIndex', string='True',kind='config')
     table_filename  = Cpt(EpicsSignalRO, 'idFilename', string='True',kind='config') 
@@ -227,8 +227,8 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     # en parameter is already available, but they want to have it called "en"
     en                  = Cpt(EpicsSignal, 'monoGetEnergy', write_pv='monoSetEnergy', kind='config')
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='hinted')
-    m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"motors"},kind='config')
-    grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"motors"},kind='config')
+    m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"},kind='config')
+    grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"},kind='config')
     set_branch          = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
     alpha               = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
     beta                = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
@@ -236,9 +236,9 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
-    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', labels={'pgm'})
-    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', labels={'pgm'})
-    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1', labels={'pgm'})
+    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1')
+    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1')
+    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1')
 
 
 

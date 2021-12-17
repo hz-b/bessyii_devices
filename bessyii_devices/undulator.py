@@ -21,7 +21,7 @@ class Undulator(PVPositioner):
     actuate         = Cpt(EpicsSignal,    'BaseCmdCalc.PROC'                                 )
     done_value      = 'STOP'
     # Setpoint and Config
-    gap             = Cpt(EpicsSignalRO,  'BaseIPmGap.A',     labels={"motors", "undulators"})
+    gap             = Cpt(EpicsSignalRO,  'BaseIPmGap.A',   kind='hinted',  labels={"motors", "undulators"})
     gap_velocity    = Cpt(EpicsSignal,    'DiagPhyVelSet',     labels={"motors", "undulators"}                   ,kind = 'config' )
     gap_delta       = Cpt(EpicsSignal,    'BaseParGapTrs'                   ,kind = 'config' )
     return_pos      = Cpt(EpicsSignal,    'BaseHomeRPos.A'                  ,kind = 'config' )
