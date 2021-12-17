@@ -236,16 +236,16 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
-    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1')
-    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1')
-    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1')
+    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', kind='hinted', labels={'pgm'})
+    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', kind='hinted', labels={'pgm'})
+    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1',   kind='hinted', labels={'pgm'})
 
 
 
 class PGMHard(PGMEmil):
-    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', labels={'pgm'})
-    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating2T1', labels={'pgm'})
-    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1', labels={'pgm'})
+    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', kind='hinted', labels={'pgm'})
+    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating2T1', kind='hinted', labels={'pgm'})
+    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1',   kind='hinted', labels={'pgm'})
     
     
     
