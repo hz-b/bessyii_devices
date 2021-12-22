@@ -3,10 +3,7 @@ from ophyd import Component as Cpt
 
 
 # Based on U17IT6R. See http://wiki.trs.bessy.de/pub/IDs/WebHome/UserPanelsEnglisch.pdf for notes
-# prefix: U49ID8R:
-
-# this is for emil
-class Undulator(PVPositioner):
+class UndulatorGap(PVPositioner):
 
     """
     Object to query undulator status
@@ -16,15 +13,56 @@ class Undulator(PVPositioner):
         self.readback.name = self.name 
     
     setpoint        = Cpt(EpicsSignal,    'BaseParGapsel.B',kind = 'hinted')
-    readback        = Cpt(EpicsSignalRO,  'BaseIPmGap.A',kind = 'hinted')
+    readback        = Cpt(EpicsSignalRO,  'BaseIPmGap.A',labels={"motors", "undulators"},kind = 'hinted')
     done            = Cpt(EpicsSignalRO,  'BaseStatISLbl' ,string='True'    ,kind = 'config' )
     actuate         = Cpt(EpicsSignal,    'BaseCmdCalc.PROC'                                 )
     done_value      = 'STOP'
-    # Setpoint and Config
-    gap             = Cpt(EpicsSignalRO,  'BaseIPmGap.A',   kind='hinted',  labels={"motors", "undulators"})
-    gap_velocity    = Cpt(EpicsSignal,    'DiagPhyVelSet',     labels={"motors", "undulators"}                   ,kind = 'config' )
-    gap_delta       = Cpt(EpicsSignal,    'BaseParGapTrs'                   ,kind = 'config' )
-    return_pos      = Cpt(EpicsSignal,    'BaseHomeRPos.A'                  ,kind = 'config' )
+    cmd             = Cpt(EpicsSignal,    'BaseCmdMcmd',string ='True', kind ='config' )
+    
+        
+    # Readback
+    harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'hinted' )   # approximated energy of the 1stharmonic with standard electron beam condition
+    harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'hinted' )   
+
+    read_attrs=['readback']
+    
+    def stage(self):
+
+        self.cmd.set('START')      # update the EPICS PV as quick as we can
+        
+        super().stage()
+
+
+class UndulatorShift(PVPositioner):
+    
+    
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+    
+    setpoint        = Cpt(EpicsSignal,    'SBaseParGapsel.B',kind = 'hinted')
+    readback        = Cpt(EpicsSignalRO,  'SBaseIPmGap.E',kind = 'hinted') # parrallel
+    done            = Cpt(EpicsSignalRO,  'SBaseStatISLbl' ,string='True' )
+    actuate         = Cpt(EpicsSignal,    'SBaseCmdCalc.PROC'                                 ) # this will only work if the command is set to "START"
+    done_value      = 'STOP'
+    
+    readback_anti   = Cpt(EpicsSignalRO,  'SBaseIPmGap.F',kind = 'hinted') # anti_parrallel
+    cmd             = Cpt(EpicsSignal,    'SBaseCmdMcmd',string ='True', kind ='config' )
+    
+    vel = Cpt(EpicsSignal,    'SDiagPhyVelSet', kind ='config' )
+    delta = Cpt(EpicsSignal,    'SBaseParGapTrs', kind ='config' )
+    
+    read_attrs=['readback']
+    
+    def stage(self):
+
+        self.cmd.set('START')      # update the EPICS PV as quick as we can
+        
+        super().stage()
+
+class UndulatorBase(Device): # PlanarDevice
+    
+    gap = Cpt(UndulatorGap, '')
     
     # Commands
     id_control      = Cpt(EpicsSignal,    'BaseCmdLswitch'                  ,kind = 'config' )   # allows us to select control from the panel or from the monochromator panel
@@ -34,8 +72,16 @@ class Undulator(PVPositioner):
     # Readback
     harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'hinted' )   # approximated energy of the 1stharmonic with standard electron beam condition
     harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'hinted' )   
+    
+    read_attrs = ['gap','harmonic_01_eV']
+    
+class HelicalUndulator(UndulatorBase):
+    
+    shift = Cpt(UndulatorShift, '') # include it as a device
+    
+    read_attrs = ['gap','shift','harmonic_01_eV']
 
-
+    
 
 
 
