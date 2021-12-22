@@ -10,28 +10,43 @@ from .flyer import BasicFlyer
 from ophyd import FormattedComponent as FCpt
 from .positioners import PVPositionerComparator
 
+class MonoTranslationAxisSelect(PVPositioner):
+
+    """
+    This axis is used for moving things inside the mono. It does not change the calc params. They must be changed seperately
+    
+    This axis is not intended to be, and cannot be scanned. It's used so that we have a status object to know when the move is complete
+    """
+    
+    def __init__(self, prefix, ch_num=None, **kwargs):
+        self._ch_num = ch_num
+        super().__init__(prefix, **kwargs)
+        
+    setpoint = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_GON')
+    readback = FCpt(EpicsSignalRO, '{self.prefix}PH_{self._ch_num}_GETN',string='True', kind='hinted')
+    done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS.RVAL')
+    done_value = 0.0
+       
+      
+        
+        
 # Note that changing the grating translation DOES NOT change the MONO calculation parameters
-class MonoTranslationAxis(PVPositionerComparator):
+class MonoTranslationAxis(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,'{self.prefix}PH_{self._ch_num}_SET')
-    readback = FCpt(EpicsSignalRO,'{self.prefix}PH_{self._ch_num}_GET')
-
-    #Can't make this one signal because one half is a string
-    select    = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_GON', kind='config')
-    selected  = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_GETN', string='True', kind='hinted')
-    relative  = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_SETSTEP')
-    jog       = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_SETJOGSPEED')
-
-    atol = 0.1  # tolerance before we set done to be 1 (in um) we should check what this should be!
-
-    def done_comparator(self, readback, setpoint):
-        return setpoint-self.atol < readback < setpoint+self.atol
-        
-        
     def __init__(self, prefix, ch_num=None, **kwargs):
         self._ch_num = ch_num
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
+    """
+    This axis is used for moving things inside the mono. It does not change the calc params. They must be changed seperate
+    """
+    setpoint = FCpt(EpicsSignal,'{self.prefix}PH_{self._ch_num}_SET')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}PH_{self._ch_num}_GET')
+
+    relative  = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_SETSTEP')
+    jog       = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_SETJOGSPEED')
+    done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS.RVAL')
+    done_value = 0.0
 
 
 
@@ -242,10 +257,25 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='hinted')
     m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"},kind='config')
     grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"},kind='config')
+    grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"},kind='config')
     set_branch          = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
     alpha               = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
     beta                = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
     theta               = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
+    
+    def set_grating_400(self):
+                
+        status = self.grating_trans_sel.move(1)
+        self.grating_no.set(0)
+        
+        return(status)
+    
+    def set_grating_800(self):
+                
+        status = self.grating_trans_sel.move(2)
+        self.grating_no.set(1)
+        
+        return(status)
     
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
@@ -262,7 +292,7 @@ class PGMHard(PGMEmil):
     
     
     
-class PGM_Aquarius(UndulatorMonoBase):
+class PGM_Aquarius(UndulatorMonoBase, PGM):
 
     # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
     alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
