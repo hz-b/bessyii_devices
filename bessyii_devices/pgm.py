@@ -263,16 +263,16 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     beta                = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
     theta               = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
     
-    def set_grating_400(self):
+    def set_grating_400(self, wait=False):
                 
-        status = self.grating_trans_sel.move(1)
+        status = self.grating_trans_sel.move(1, wait=wait)
         self.grating_no.set(0)
         
         return(status)
     
-    def set_grating_800(self):
+    def set_grating_800(self,wait=False):
                 
-        status = self.grating_trans_sel.move(2)
+        status = self.grating_trans_sel.move(2, wait=wait)
         self.grating_no.set(1)
         
         return(status)
