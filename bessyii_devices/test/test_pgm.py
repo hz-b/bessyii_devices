@@ -27,6 +27,13 @@ def check_en_get(device):
 
     return isinstance(device.en.get(),float)
 
+#check that the positioner readback name is the same as the name of the positioner
+
+def check_positioner_readback_struct(axis):
+    
+    return axis.name == axis.readback.name
+
+
 #### Check that the axis can move
 def check_moves(axis):
     
@@ -78,3 +85,15 @@ def test_en_exists_u49_2_pgm():
 def test_en_get_u49_2_pgm():
     
     assert check_en_get(u49_2_pgm) == True
+    
+def test_en_readback_struct():
+    
+    assert check_positioner_readback_struct(ue48_pgm.en) == True
+
+def test_grating_readback_struct():
+    
+    assert check_positioner_readback_struct(ue48_pgm.grating_translation) == True
+    
+def test_m2_readback_struct():
+    
+    assert check_positioner_readback_struct(ue48_pgm.m2_translation) == True
