@@ -48,10 +48,32 @@ class PGMScannableAxis(PVPositioner):
 
 
 
+class Energy(PVPositioner):
+
+    """
+    Energy is a PVPositioner which also reimplements the get() method
+    It is intended that this class is included as a component to monochromators
+    
+    """
+
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
+    # this is an initial API 
+    setpoint        = Cpt(EpicsSignal,      'monoSetEnergy'                                  )
+    readback        = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"pgm"},     kind='hinted') # the main output
+    done            = Cpt(EpicsSignalRO,    'IStatus'                                          )
+    done_value      = 0
+    egu = 'eV'  
+    
+    # so that you can do for example ue48_pgm.en.get() rather than ue48_pgm.en.readback.get()
+    def get(self):
+        
+        return self.readback.get()
 
 
-
-class SoftMonoBase(PVPositioner):
+class SoftMonoBase(Device):
     """
     SoftMonoBase is a core class which provides controls which are the same for all 
     standard BESSY soft x-ray monochromator, for both dipole and undulator beamlines.
@@ -62,15 +84,7 @@ class SoftMonoBase(PVPositioner):
     * choose diffration order
     * ....
     """
-    def __init__(self, prefix, *args, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
-
-    # this is an initial API 
-    setpoint        = Cpt(EpicsSignal,      'monoSetEnergy'                                      )
-    readback        = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"pgm"},     kind='hinted') # the main output
-    done            = Cpt(EpicsSignalRO,    'IStatus'                                          )
-
+    en              = Cpt(Energy, '')
     diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
     grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='hinted', labels={"pgm"})
     grating         = Cpt(EpicsSignalRO, 'lineDensity', kind='hinted') 
@@ -224,8 +238,7 @@ class FlyingPGM(BasicFlyer, SoftMonoBase):
        
 class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     
-    # en parameter is already available, but they want to have it called "en"
-    en                  = Cpt(EpicsSignal, 'monoGetEnergy', write_pv='monoSetEnergy', kind='config')
+  
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='hinted')
     m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"},kind='config')
     grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"},kind='config')
@@ -249,31 +262,10 @@ class PGMHard(PGMEmil):
     
     
     
-class PGM_Aquarius(PVPositioner):
+class PGM_Aquarius(UndulatorMonoBase):
 
-
-    def __init__(self, prefix, *args, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
-
-    setpoint            = Cpt(EpicsSignal,      'monoSetEnergy'                                      )
-    readback            = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"motors"},     kind='hinted') # the main output
-    done                = Cpt(EpicsSignalRO,    'GK_STATUS'                                          )
-    done_value          = 0
-    
-    en             = Cpt(EpicsSignal, 'monoGetEnergy', write_pv='monoSetEnergy', kind='config')
-    
-    ID_on           = Cpt(EpicsSignal, 'SetIdOn', string='True',kind='config')
-    cff             = Cpt(EpicsSignal, 'cff', write_pv='SetCff', kind='config')
-    diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
+    # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
     alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
     beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config')
     theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config')
     fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
-    
-    mode            = Cpt(EpicsSignal, 'GetFormulaMode', write_pv = 'SetFormulaMode', string='True',kind='config') 
-    table           = Cpt(EpicsSignal, 'idMbboIndex', string='True',kind='config') 
-    table_filename  = Cpt(EpicsSignal, 'idFilename', write_pv = 'strID_Table',string='True',kind='config') 
-    harmonic        = Cpt(EpicsSignal, 'GetIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
-    eMin_eV         = Cpt(EpicsSignalRO, 'minEnergy', kind='hinted')
-    eMax_eV         = Cpt(EpicsSignalRO, 'maxEnergy', kind='hinted')
