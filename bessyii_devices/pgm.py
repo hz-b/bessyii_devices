@@ -262,7 +262,7 @@ class PGMHard(PGMEmil):
     
     
     
-class PGM_Aquarius(UndulatorMonoBase):
+class PGM_Aquarius(UndulatorMonoBase, PGM):
 
     # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
     alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
