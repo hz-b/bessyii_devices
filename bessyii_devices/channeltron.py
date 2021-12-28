@@ -16,8 +16,8 @@ class Channeltron(Device):
  
     interval    = Cpt(EpicsSignal,  'Interval-SP',      kind='config')
     threshold   = Cpt(EpicsSignal,  'Threshold-SP',     kind='config')
-    highVoltage = Cpt(EpicsSignal,  'HighVoltage-SP',   kind='config')
-    deadTime    = Cpt(EpicsSignal,  'DeadTime-SP',      kind='config')
+    high_voltage = Cpt(EpicsSignal,  'HighVoltage-SP',   kind='config')
+    dead_time    = Cpt(EpicsSignal,  'DeadTime-SP',      kind='config')
     
     
     
