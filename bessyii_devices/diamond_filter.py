@@ -13,7 +13,7 @@ class DiamondFilterSub(Device):
 
 
     
-class DiamondFilter(DiamondFilterSub):
+class DiamondFilter(Device):
     h = Cpt(DiamondFilterSub,     'PH_1') 
     v = Cpt(DiamondFilterSub,     'PH_2')
     

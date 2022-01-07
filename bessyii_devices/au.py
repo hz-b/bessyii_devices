@@ -1,7 +1,7 @@
 from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
-from .axes import AxisTypeA, AxisTypeB
+from .axes import AxisTypeA, AxisTypeB, AxisTypeD
 
 # This class can be used for the motorized aperture (SLITS) AU1 and AU3
 # Starting from those motors we shoudl define gap and offset as pseudo motors
@@ -9,6 +9,8 @@ from .axes import AxisTypeA, AxisTypeB
 # BlueSky should follow always the same conventions for the slits: 
 # we look downstream and use top/bottom/left/right
 
+
+# EMIL
 
 #prefix list U17
 # AU1: WAUY02U012L
@@ -44,3 +46,32 @@ class AU2(Device):
     bottom      = Cpt(AxisTypeB,      'PH_3', labels={"apertures"})
     left        = Cpt(AxisTypeB,      'PH_4', labels={"apertures"}) # wall in old convention
     right       = Cpt(AxisTypeB,      'PH_5', labels={"apertures"}) #ring in old convention
+
+# EMIL STXM 
+class STXM(Device):
+    
+    _default_read_attrs = ['h_trans.readback', 'h_sw.readback', 'v_sw.readback', 'b_axis.readback', 'piezo.readback']
+    h_trans   = Cpt(AxisTypeB,      'PH_0', labels={"slit"}) # horizontal translation
+    h_sw      = Cpt(AxisTypeB,      'PH_1', labels={"slit"}) # horizontal slitwidth
+    v_sw      = Cpt(AxisTypeB,      'PH_2', labels={"slit"}) # vertical slitwidth
+    b_axis    = Cpt(AxisTypeB,      'PH_3', labels={"slit"}) # beam-axis
+    piezo     = Cpt(AxisTypeB,      'PH_4', labels={"slit"}) # piezo
+
+
+#AQUARIUS
+#prefix list 
+#prefix: AUYU15L
+
+#Readback 		AUYU15L:Top.RBV
+#Set			AUYU15L:Top.VAL
+#Set range		AUYU15L:Top.TWV
+#Status 			AUYU15L:Top.STOP
+#Stop			AUYU15L:Top.stMotor
+
+
+class AU1Aquarius(Device):
+    _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
+    top         = Cpt(AxisTypeD, 'Top')
+    bottom      = Cpt(AxisTypeD, 'Bottom')
+    left        = Cpt(AxisTypeD, 'Left') 
+    right       = Cpt(AxisTypeD, 'Right') 

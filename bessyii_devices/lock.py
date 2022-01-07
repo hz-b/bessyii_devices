@@ -14,3 +14,7 @@ class Lock(Device):
     def unlock(self):
         
         self.clear.put(1)
+
+    def lock(self,name):
+    
+        self.user.set(str(name))
