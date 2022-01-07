@@ -31,11 +31,9 @@ import time
 
 class BasicFlyer(Device):   
 
-    def __init__(self, prefix='', *, limits=None, name=None, read_attrs=None,
-                 configuration_attrs=None, parent=None, egu='', **kwargs):
-        super().__init__(prefix=prefix, read_attrs=read_attrs,
-                         configuration_attrs=configuration_attrs,
-                         name=name, parent=parent, **kwargs)  
+
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, parent=None, **kwargs)
         self.complete_status = None
         self._acquiring = False
         self.t0 = 0

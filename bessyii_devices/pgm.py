@@ -177,8 +177,20 @@ value   description
 0xFF    Ready  -   Finished or error.
 
 """
-class FlyingPGM(BasicFlyer, SoftMonoBase):
+class FlyingEnergy(BasicFlyer, Energy):
 
+    def __init__(self, prefix='', *, limits=None, name=None, read_attrs=None,
+                 configuration_attrs=None, parent=None, egu='', **kwargs):
+        super().__init__(prefix=prefix, read_attrs=read_attrs,
+                         configuration_attrs=configuration_attrs,
+                         name=name, parent=parent, **kwargs)  
+        self.complete_status = None
+        self._acquiring = False
+        self.t0 = 0
+        self.readback.name = self.name
+        
+    read_attrs = ['readback']
+          
     #status is an mbbo record, I need to know what the different states are. 
     sweep_status    = Cpt(EpicsSignalRO, 'GetSweepState')
     aktion          = Cpt(EpicsSignal, 'MonoAktion.PROC') # writing different values to this pv causes different actions like init, start, stop
@@ -235,8 +247,13 @@ class FlyingPGM(BasicFlyer, SoftMonoBase):
 
         if self.complete_status != None:
             self.complete_status._finished(success=False)
+            
+        if self.stop_signal is not None:
+            self.stop_signal.put(self.stop_value, wait=False)
+            
+        #super().stop(success=success)
 
-
+        
     def complete(self):
         """
         Wait for flying to be complete, get the status object that will tell us when we are done
@@ -251,7 +268,7 @@ class FlyingPGM(BasicFlyer, SoftMonoBase):
 
         return self.complete_status
        
-class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
+class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL):
     
   
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='hinted')
@@ -279,6 +296,7 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL,FlyingPGM):
     
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
+    en = Cpt(FlyingEnergy,'')
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', kind='hinted', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', kind='hinted', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1',   kind='hinted', labels={'pgm'})
