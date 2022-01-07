@@ -282,6 +282,7 @@ class PGMSoft(PGMEmil):
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', kind='hinted', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', kind='hinted', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1',   kind='hinted', labels={'pgm'})
+    read_attrs          = ['en.readback']
 
 
 
@@ -289,7 +290,7 @@ class PGMHard(PGMEmil):
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', kind='hinted', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating2T1', kind='hinted', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1',   kind='hinted', labels={'pgm'})
-    
+    read_attrs          = ['en.readback']
     
     
 class PGM_Aquarius(UndulatorMonoBase, PGM):
@@ -299,3 +300,4 @@ class PGM_Aquarius(UndulatorMonoBase, PGM):
     beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config')
     theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config')
     fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
+    read_attrs       = ['en.readback', 'beta.readback', 'theta.readback']
