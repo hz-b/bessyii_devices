@@ -136,6 +136,16 @@ class ExitSlitEMIL(ExitSlitBase):
     """
     slitwidth       = Cpt(EpicsSignal,  'slitwidth', write_pv = 'SlitInput',     kind='config')
 
+# I could not find the PV to set a bandwith. Is it existing? 
+# In case of the slitwist: slitwidth, ES_0_SW is not working 
+class ExitSlitMetrixs(ExitSlitBase):
+    """
+    Metrixs specific exit slit implementation. Metrixs beamlines uses different PV name for setting the slit
+    """
+    slitwidth       = Cpt(EpicsSignal,  'ES_0_SW', write_pv = 'ES_0_SetSW0',     kind='config')
+    bandwidth       = Cpt(EpicsSignal,  'ES_0_BW'                          ,     kind='config')
+
+
 class PGM(SoftMonoBase):
     """
     PGM is a core class for PGM monochromators
@@ -144,11 +154,12 @@ class PGM(SoftMonoBase):
     # PGMs has a full control over cff, so override it here
     cff             = Cpt(EpicsSignal, 'cff', write_pv='SetCff', kind='config')
     
+
 class SGM(SoftMonoBase):
     """
     SGM is a core class for SGM monochromators
     """
-    cff             = Cpt(EpicsSignalRO, 'cff', kind='hinted')
+    cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
 
 
 """
@@ -314,8 +325,30 @@ class PGMHard(PGMEmil):
 class PGM_Aquarius(UndulatorMonoBase, PGM):
 
     # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
+    # the read PV at Aquarius is different compared to UndulatorMonoBase
+    #harmonic        = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config') ? 
+    
     alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
     beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config', labels={'pgm'})
     theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config', labels={'pgm'})
     fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
     read_attrs       = ['en.readback', 'beta.readback', 'theta.readback']
+
+
+# labels need to be changed from pgm to sgm. How can this be done when importing from Energy and UndulatorMonoBase class?  
+class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):    
+    
+    harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
+    #cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
+    
+    mirror_angle     = Cpt(PGMScannableAxis, '',  ch_name='Phi', settle_time=10.0, kind='config')
+    grating_angle    = Cpt(PGMScannableAxis, '',  ch_name='Psi', settle_time=10.0, kind='config')
+    alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
+    beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config', labels={'sgm'})
+    theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config', labels={'sgm'})
+    
+    grating_radius   = Cpt(EpicsSignal, 'RG', write_pv = 'SetRG', string='True',kind='config')
+    entrancearm      = Cpt(EpicsSignal, 'entrancearm', write_pv = 'SetEntrance', string='True',kind='config')
+    zero_order_angle = Cpt(EpicsSignalRO, 'MZeroOrder', string='True',kind='config')
+    position_timer   = Cpt(EpicsSignal, 'PositionTimer', write_pv = 'SetPositionTimer', string='True',kind='config')
+    
