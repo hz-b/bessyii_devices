@@ -322,6 +322,7 @@ class PGMHard(PGMEmil):
     read_attrs          = ['en.readback']
     
     
+    
 class PGM_Aquarius(UndulatorMonoBase, PGM):
 
     # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
