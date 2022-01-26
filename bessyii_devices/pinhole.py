@@ -14,3 +14,9 @@ class Pinhole2(Device):
     
     h = Cpt(AxisTypeD, 'Hor')
     v = Cpt(AxisTypeD, 'Vert')
+    
+    
+class PinholeMetrixs(Device):
+        
+    h = Cpt(AxisTypeD, 'PHHORES6L')  # horizontal
+    v = Cpt(AxisTypeD, 'PHVERES6L') # vertical

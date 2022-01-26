@@ -69,9 +69,21 @@ class STXM(Device):
 #Stop			AUYU15L:Top.stMotor
 
 
+# AQUARIUS
 class AU1Aquarius(Device):
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
     top         = Cpt(AxisTypeD, 'Top')
     bottom      = Cpt(AxisTypeD, 'Bottom')
     left        = Cpt(AxisTypeD, 'Left') 
     right       = Cpt(AxisTypeD, 'Right') 
+
+
+
+
+# METRIXS
+class AU1Metrixs(Device):
+    _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
+    top         = Cpt(AxisTypeD, 'AUTOPES6L')
+    bottom      = Cpt(AxisTypeD, 'AUBOTES6L')
+    left        = Cpt(AxisTypeD, 'AUWALLES6L') 
+    right       = Cpt(AxisTypeD, 'AURINGES6L') 

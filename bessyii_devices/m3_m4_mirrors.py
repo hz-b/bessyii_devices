@@ -1,7 +1,7 @@
 from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
-from .axes import HexapodAxis, M1AxisAquarius
+from .axes import HexapodAxis, M1AxisAquarius, AxisTypeA
 
         
 # This class can be used for any M3 and M4 mirror of U17 and Ue48 CAT, SISSY I and SISSY II
@@ -73,4 +73,10 @@ class SMUAquariusPGM2(Device):
     
 
 
+class SMUMetrixs(Device):
+
+    tx   = Cpt(AxisTypeA, '', ch_name='M2', labels={"mirrors"})
+    rx   = Cpt(AxisTypeA, '', ch_name='M3', labels={"mirrors"})
+    ry   = Cpt(AxisTypeA, '', ch_name='M4', labels={"mirrors"})
+    rz   = Cpt(AxisTypeA, '', ch_name='M5', labels={"mirrors"})
 
