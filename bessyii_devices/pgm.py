@@ -316,6 +316,7 @@ class PGMSoft(PGMEmil):
 
 
 class PGMHard(PGMEmil):
+    en = Cpt(FlyingEnergy,'')
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', kind='hinted', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating2T1', kind='hinted', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1',   kind='hinted', labels={'pgm'})
