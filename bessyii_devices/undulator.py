@@ -84,7 +84,7 @@ class HelicalUndulator(UndulatorBase):
     
 
 
-class UndulatorMetrixs(Undulator):
+class UndulatorMetrixs(UndulatorBase):
 
     gap_velocity    = Cpt(EpicsSignal  , 'DiagVelSet.A'                  , kind = 'config', labels={"motors", "undulators"}) # this is different compared to 
 
