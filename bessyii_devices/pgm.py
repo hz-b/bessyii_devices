@@ -61,7 +61,46 @@ class PGMScannableAxis(PVPositioner):
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
 
+class MonoComparatorAxis(PVPositionerComparator):
 
+    setpoint    = FCpt(EpicsSignal,    '{self.prefix}Set{self._ch_name}'              )
+    readback    = FCpt(EpicsSignalRO,  '{self.prefix}{self._ch_name}', kind='hinted')
+
+
+
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+
+
+    def __init__(self, prefix, ch_name=None, atol=None, **kwargs):
+        self._ch_name = ch_name
+        self.atol = atol
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
+class MonoThetaAxis(PVPositioner):
+
+    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
+    done     = FCpt(EpicsSignalRO,'{self.prefix}mirrorDone')
+    
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+    done_value = 1.0
+
+class MonoAlphaBetaAxis(PVPositioner):
+
+    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
+    done     = FCpt(EpicsSignalRO,'{self.prefix}gratingDone')
+    
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+    done_value = 1.0
 
 class Energy(PVPositioner):
 
@@ -136,14 +175,13 @@ class ExitSlitEMIL(ExitSlitBase):
     """
     slitwidth       = Cpt(EpicsSignal,  'slitwidth', write_pv = 'SlitInput',     kind='config')
 
-# I could not find the PV to set a bandwith. Is it existing? 
-# In case of the slitwist: slitwidth, ES_0_SW is not working 
+
 class ExitSlitMetrixs(ExitSlitBase):
     """
     Metrixs specific exit slit implementation. Metrixs beamlines uses different PV name for setting the slit
     """
-    slitwidth       = Cpt(EpicsSignal,  'ES_0_SW', write_pv = 'ES_0_SetSW0',     kind='config')
-    bandwidth       = Cpt(EpicsSignal,  'ES_0_BW'                          ,     kind='config')
+    slitwidth       = Cpt(EpicsSignal,  'slitwidth', write_pv = 'SlitInput',     kind='config', labels={'pgm'})
+    bandwidth       = Cpt(EpicsSignalRO,  'bandwidth'                       ,     kind='config')
 
 
 class PGM(SoftMonoBase):
@@ -330,14 +368,16 @@ class PGM_Aquarius(UndulatorMonoBase, PGM):
     # the read PV at Aquarius is different compared to UndulatorMonoBase
     #harmonic        = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config') ? 
     
-    alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
-    beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config', labels={'pgm'})
-    theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config', labels={'pgm'})
+    alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
+    beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config', labels={'pgm'})
+    theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=10.0, kind='config', labels={'pgm'})
     fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
     read_attrs       = ['en.readback', 'beta.readback', 'theta.readback']
 
 
 # labels need to be changed from pgm to sgm. How can this be done when importing from Energy and UndulatorMonoBase class?  
+
+
 class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):    
     
     harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
@@ -345,9 +385,9 @@ class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):
     
     mirror_angle     = Cpt(PGMScannableAxis, '',  ch_name='Phi', settle_time=10.0, kind='config')
     grating_angle    = Cpt(PGMScannableAxis, '',  ch_name='Psi', settle_time=10.0, kind='config')
-    alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
-    beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config', labels={'sgm'})
-    theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config', labels={'sgm'})
+    alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=2.0, kind='config')
+    beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=0.1, kind='config', labels={'sgm'})
+    theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=0.1, kind='config', labels={'sgm'})
     
     grating_radius   = Cpt(EpicsSignal, 'RG', write_pv = 'SetRG', string='True',kind='config')
     entrancearm      = Cpt(EpicsSignal, 'entrancearm', write_pv = 'SetEntrance', string='True',kind='config')
