@@ -1,4 +1,3 @@
-
 #
 from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
@@ -29,6 +28,7 @@ class Keithley6514(Device):
     
     # range
     rnge                = Cpt(EpicsSignal, 'rbkRangeCur', write_pv='setRangeCur', string='True', kind='config')
+    auto_rnge           = Cpt(EpicsSignalRO, 'rbkRangeCurAuto', string='True', kind='config')
     auto_rnge_llim      = Cpt(EpicsSignal, 'setRangeCurAutoLLIM', kind='config')
     auto_rnge_ulim      = Cpt(EpicsSignal, 'setRangeCurAutoULIM', kind='config')
     
