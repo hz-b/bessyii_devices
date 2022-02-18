@@ -50,7 +50,7 @@ class AU2(Device):
 # EMIL STXM Horizontal slit
 class STXM_HS(Device):
     
-    _default_read_attrs = ['h_trans.readback', 'h_sw.readback', 'b_axis.readback' ]
+    _default_read_attrs = ['trans.readback', 'width.readback', 'b_axis.readback' ]
     trans   = Cpt(AxisTypeB,      'PH_0', labels={"slit"}) # horizontal translation
     width      = Cpt(AxisTypeB,      'PH_1', labels={"slit"}) # horizontal slitwidth
     b_axis    = Cpt(AxisTypeB,      'PH_3', labels={"slit"}) # beam-axis
