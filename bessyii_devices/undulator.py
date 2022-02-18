@@ -19,6 +19,8 @@ class UndulatorGap(PVPositioner):
     done_value      = 'STOP'
     cmd             = Cpt(EpicsSignal,    'BaseCmdMcmd',string ='True', kind ='config' )
     
+    vel = Cpt(EpicsSignal,    'DiagPhyVelSet', kind ='config' )
+    delta = Cpt(EpicsSignal,    'BaseParGapTrs', kind ='config' )
         
     # Readback
     harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'hinted' )   # approximated energy of the 1stharmonic with standard electron beam condition

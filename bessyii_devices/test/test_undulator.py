@@ -2,12 +2,12 @@
 import pytest
 import bessyii_devices
 from bessyii_devices.undulator import UndulatorGap, UndulatorShift, UndulatorBase, HelicalUndulator
-
+from ophyd import PVPositioner
 ue48 = HelicalUndulator('UE48IT6R:', name='ue48') 
 ue48.wait_for_connection()
 
-u17   = UndulatorBase('U17IT6R:', name='u17')
-u17.wait_for_connection()
+#u17   = UndulatorBase('U17IT6R:', name='u17')
+#u17.wait_for_connection()
 
 
 
@@ -57,33 +57,34 @@ def check_moves(axis):
     #unstage the device
     axis.unstage()
     
-    return mov_status.done and mov_status.sucess
+    return mov_status.done and mov_status.success
 
 
 
 #### Perform the tests ####
 def test_connection_ue48():
     assert ue48.connected == True
-    
+
+"""    
 def test_connection_u17():
     assert u17.connected == True
     
 def test_u17_gap_positioner():
     
     assert is_pvpositioner(u17.gap) == True
-
+"""
 def test_ue48_gap_positioner():
     
-    assert is_pvpositioner(u17.gap) == True
+    assert is_pvpositioner(ue48.gap) == True
     
 def test_ue48_shift_positioner():
     
-    assert is_pvpositioner(u17.shift) == True
-    
+    assert is_pvpositioner(ue48.shift) == True
+"""    
 def test_u17_struct():
     
     assert check_base_struct(u17) == True
-    
+"""    
 def test_ue48_struct():
     
     assert check_helical_struct(ue48) == True
@@ -95,11 +96,11 @@ def test_gap_readback_name():
 def test_shift_readback_name():
     
     assert check_positioner_readback_struct(ue48.shift) == True
-
+"""
 def test_u17_gap_moves():
     
     assert check_moves(u17.gap) == True
-    
+"""    
 def test_ue48_gap_moves():
     
     assert check_moves(ue48.gap) == True
