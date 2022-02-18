@@ -38,25 +38,36 @@ def check_moves(valve):
     
     mov_status = valve.move(not(current_pos), wait=True, timeout=10.0)
     time.sleep(1)
-    
-    #Test trying to move to the same point
-    mov_status = valve.move(not(current_pos), wait=True, timeout=10.0)
-    time.sleep(1)
+
     
     #Move it back
     mov_status = valve.move(current_pos, wait=True)
     time.sleep(1)
     
-    #Test trying to move to the same point
-    mov_status = valve.move(current_pos, wait=True)
-    time.sleep(1)
-    
+   
     #unstage the device
     valve.unstage()
     
     return mov_status.done and mov_status.success
 
+def check_non_moves(valve):
+    
+    #stage the device
+    valve.stage()
+    
+    current_pos = valve.readback.get()
+    current_status = valve.status.get()
+    
+    #attempt to move to the same position
+    mov_status = valve.move(current_pos, wait=True, timeout=10.0)
+    
+    new_status = valve.status.get()
 
+       
+    #unstage the device
+    valve.unstage()
+    
+    return mov_status.done and mov_status.success and current_status == new_status
 
 #### Perform the tests ####
 def test_connection_v11():
@@ -74,4 +85,6 @@ def test_v11_moves():
     
     assert check_moves(v11) == True
 
+def test_v11_doesnt_move():
     
+    assert check_non_moves(v11) == True
