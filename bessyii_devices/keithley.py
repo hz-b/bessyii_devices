@@ -20,6 +20,7 @@ class Keithley6514(Device):
     trigger_cmd         = Cpt(EpicsSignal, 'rdCur.PROC')
     readback            = Cpt(EpicsSignalRO, 'rdCur', kind='hinted', labels={"detectors", "keithley"})
     zero_check  		= Cpt(EpicsSignal, 'cmdZeroCheck', kind='config')
+    mdel                = Cpt(EpicsSignal, 'rdCur.MDEL', kind='config')
     
     mode    		    = Cpt(EpicsSignal, 'rbkFunc', write_pv='setFunc', string='True', kind='config')
     reset               = Cpt(EpicsSignal, 'cmdReset.PROC', kind='config')
@@ -29,6 +30,7 @@ class Keithley6514(Device):
     
     # range
     rnge                = Cpt(EpicsSignal, 'rbkRangeCur', write_pv='setRangeCur', string='True', kind='config')
+    auto_rnge           = Cpt(EpicsSignal, 'rbkRangeCurAuto', string='True', kind='config')
     auto_rnge_llim      = Cpt(EpicsSignal, 'setRangeCurAutoLLIM', kind='config')
     auto_rnge_ulim      = Cpt(EpicsSignal, 'setRangeCurAutoULIM', kind='config')
     
@@ -57,12 +59,13 @@ class Keithley6514(Device):
  
     def stage(self):
 
-        self.scan.put('.1 second')      # update the EPICS PV as quick as we can
+        self.scan.put('Passive')      # update the EPICS PV as quick as we can
         self.front_panel.put('On')      # Turn the front panel on (might be bad for readback)
         self.avg_type.put('Moving')     # Moving average filter, for speed of readback
         self.arm_src.put('Immediate')   # Immediate arm to give the fastest update possible
         self.trig_src.put('Immediate')  # Immediate trigger to give the fastest update possible
-        
+        self.mdel.put(-1)
+
         # deal with zero_check
         if self.zero_check.get() == 1 :
             
@@ -76,8 +79,10 @@ class Keithley6514(Device):
         super().stage()
 
     def unstage(self):
-        
+        self.scan.put('.1 second')
+        self.mdel.put(0) 
         super().unstage()  
+     
 
     def trigger(self):
            
