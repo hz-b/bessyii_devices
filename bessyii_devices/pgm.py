@@ -246,6 +246,28 @@ class FlyingEnergy(BasicFlyer, Energy):
     start_pos       = Cpt(EpicsSignal, 'SetSweepStart'   , kind='config')
     end_pos         = Cpt(EpicsSignal, 'SetSweepEnd'   , kind='config')
     velocity        = Cpt(EpicsSignal, 'SetSweepVel', kind='config')
+    
+    # Expert settings
+    offset = Cpt(EpicsSignal,'SetSweepOffset' , kind='config')
+    vmin_fak = Cpt(EpicsSignal,'SetSweepVminFak' , kind='config')
+    vmax_fak = Cpt(EpicsSignal,'SetSweepVmaxFak' , kind='config')
+    max_gain_output = Cpt(EpicsSignal,'SetSweepOutLim' , kind='config')
+    open_loop_pvt =  Cpt(EpicsSignal,'SetSweepPVTM' , kind='config')
+    hold_start = Cpt(EpicsSignal,'SetSweepSUSSTART1' , kind='config')
+    hold_stop = Cpt(EpicsSignal,'SetSweepSUSSTOP1' , kind='config')
+    hold_vel = Cpt(EpicsSignal,'SetSweepSUSVEL1' , kind='config')
+    hold = Cpt(EpicsSignal,'SetSweepSUSM' , kind='config')
+    filt_phi = Cpt(EpicsSignal,'SetSweepMFDly' , kind='config')
+    filt_phi_ena = Cpt(EpicsSignal,'SetSweepMFOnOff' , kind='config')
+    filt_psi = Cpt(EpicsSignal,'SetSweepGFDly' , kind='config')
+    filt_psi_ena = Cpt(EpicsSignal,'SetSweepGFOnOff' , kind='config')
+    cycle_time = Cpt(EpicsSignal,'SetSweepTics' , kind='config')
+    kp_mirror = Cpt(EpicsSignal,'SetKpMirror' , kind='config')
+    kp_grating = Cpt(EpicsSignal,'SetKpGrating' , kind='config')
+    gap_method = Cpt(EpicsSignal,'SetSweepGapMeth' , kind='config')
+        
+    
+        
   
     def kickoff(self):
         """
