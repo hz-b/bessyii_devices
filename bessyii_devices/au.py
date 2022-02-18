@@ -47,15 +47,14 @@ class AU2(Device):
     left        = Cpt(AxisTypeB,      'PH_4', labels={"apertures"}) # wall in old convention
     right       = Cpt(AxisTypeB,      'PH_5', labels={"apertures"}) #ring in old convention
 
-# EMIL STXM 
-class STXM(Device):
+# EMIL STXM Horizontal slit
+class STXM_HS(Device):
     
-    _default_read_attrs = ['h_trans.readback', 'h_sw.readback', 'v_sw.readback', 'b_axis.readback', 'piezo.readback']
+    _default_read_attrs = ['h_trans.readback', 'h_sw.readback', 'b_axis.readback' ]
     h_trans   = Cpt(AxisTypeB,      'PH_0', labels={"slit"}) # horizontal translation
     h_sw      = Cpt(AxisTypeB,      'PH_1', labels={"slit"}) # horizontal slitwidth
-    v_sw      = Cpt(AxisTypeB,      'PH_2', labels={"slit"}) # vertical slitwidth
     b_axis    = Cpt(AxisTypeB,      'PH_3', labels={"slit"}) # beam-axis
-    piezo     = Cpt(AxisTypeB,      'PH_4', labels={"slit"}) # piezo
+    
 
 
 #AQUARIUS
