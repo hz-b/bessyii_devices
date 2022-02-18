@@ -90,7 +90,7 @@ class AU1Metrixs(Device):
     
     
 # UE52-SGM
-class AU1Metrixs(Device):
+class AU1UE52SGM(Device):
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
     top         = Cpt(AxisTypeD, '0')
     bottom      = Cpt(AxisTypeD, '1')
