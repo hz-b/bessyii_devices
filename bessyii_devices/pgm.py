@@ -394,3 +394,18 @@ class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):
     zero_order_angle = Cpt(EpicsSignalRO, 'MZeroOrder', string='True',kind='config')
     position_timer   = Cpt(EpicsSignal, 'PositionTimer', write_pv = 'SetPositionTimer', string='True',kind='config')
     
+
+
+class SGMUE52(UndulatorMonoBase, ExitSlitMetrixs, SGM):    
+    
+    harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
+    #cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
+    
+    mirror_angle     = Cpt(PGMScannableAxis, '',  ch_name='Phi', settle_time=10.0, kind='config')
+    grating_angle    = Cpt(PGMScannableAxis, '',  ch_name='Psi', settle_time=10.0, kind='config')
+    alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=2.0, kind='config')
+    beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=0.1, kind='config', labels={'sgm'})
+    theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=0.1, kind='config', labels={'sgm'})
+        
+    position_timer   = Cpt(EpicsSignal, 'PositionTimer', write_pv = 'SetPositionTimer', string='True',kind='config')
+    

@@ -60,6 +60,7 @@ class UndulatorShift(PVPositioner):
         
         super().stage()
 
+
 class UndulatorBase(Device): # PlanarDevice
     
     gap = Cpt(UndulatorGap, '')
@@ -75,18 +76,23 @@ class UndulatorBase(Device): # PlanarDevice
     
     read_attrs = ['gap','harmonic_01_eV']
     
+
 class HelicalUndulator(UndulatorBase):
     
     shift = Cpt(UndulatorShift, '') # include it as a device
     
     read_attrs = ['gap','shift','harmonic_01_eV']
 
-    
-
 
 class UndulatorMetrixs(UndulatorBase):
 
     gap_velocity    = Cpt(EpicsSignal  , 'DiagVelSet.A'                  , kind = 'config', labels={"motors", "undulators"}) # this is different compared to 
+    
+
+class UndulatorUE52(HelicalUndulator):
+  
+    gap_velocity = Cpt(EpicsSignal,    'DiagPhyVelSet', kind ='config', labels={"motors", "undulators"})
+    gap_delta = Cpt(EpicsSignal,    'BaseParGapTrs', kind ='config', labels={"motors", "undulators"})
 
 """
 class UndulatorMetrixs(Undulator):

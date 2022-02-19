@@ -72,6 +72,7 @@ class SMUAquariusPGM2(Device):
     rz   = Cpt(M1AxisAquarius, 'M9', labels={"mirrors"})
 
 
+# used for METRIXS and UE52-SGM
 class SMUMetrixs(Device):
 
     tx   = Cpt(AxisTypeA, '', ch_name='M2', labels={"mirrors"})
