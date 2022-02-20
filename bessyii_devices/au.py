@@ -86,3 +86,15 @@ class AU1Metrixs(Device):
     bottom      = Cpt(AxisTypeD, 'AUBOTES6L')
     left        = Cpt(AxisTypeD, 'AUWALLES6L') 
     right       = Cpt(AxisTypeD, 'AURINGES6L') 
+    
+    
+# UE52-SGM
+class AU1UE52SGM(Device):
+    _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
+    top         = Cpt(AxisTypeD, '0')
+    bottom      = Cpt(AxisTypeD, '1')
+    left        = Cpt(AxisTypeD, '4') 
+    right       = Cpt(AxisTypeD, '5') 
+    
+    
+# Note: Shall we add labels here? Then it is easier to read/find the devices using magics

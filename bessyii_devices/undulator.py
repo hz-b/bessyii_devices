@@ -50,7 +50,7 @@ class UndulatorShift(PVPositioner):
     
     readback_anti   = Cpt(EpicsSignalRO,  'SBaseIPmGap.F',kind = 'hinted') # anti_parrallel
     cmd             = Cpt(EpicsSignal,    'SBaseCmdMcmd',string ='True', kind ='config' )
-    
+        
     vel = Cpt(EpicsSignal,    'SDiagPhyVelSet', kind ='config' )
     delta = Cpt(EpicsSignal,    'SBaseParGapTrs', kind ='config' )
     
@@ -61,6 +61,7 @@ class UndulatorShift(PVPositioner):
         self.cmd.set('START')      # update the EPICS PV as quick as we can
         
         super().stage()
+
 
 class UndulatorBase(Device): # PlanarDevice
     
@@ -77,18 +78,28 @@ class UndulatorBase(Device): # PlanarDevice
     
     read_attrs = ['gap','harmonic_01_eV']
     
+
 class HelicalUndulator(UndulatorBase):
     
     shift = Cpt(UndulatorShift, '') # include it as a device
     
     read_attrs = ['gap','shift','harmonic_01_eV']
 
-    
-
 
 class UndulatorMetrixs(UndulatorBase):
 
     gap_velocity    = Cpt(EpicsSignal  , 'DiagVelSet.A'                  , kind = 'config', labels={"motors", "undulators"}) # this is different compared to 
+    
+
+class UndulatorUE52(HelicalUndulator):
+  
+    gap_velocity     = Cpt(EpicsSignal,    'DiagPhyVelSet', kind ='config', labels={"motors", "undulators"}) # shall we put velocity and delta into 'UndulatorGap'?
+    gap_delta        = Cpt(EpicsSignal,    'BaseParGapTrs', kind ='config', labels={"motors", "undulators"})
+    
+    mode             = Cpt(EpicsSignal,  'DiagTmdSet',kind = 'hinted') # where shall this be put? 
+    couple_gap_shift = Cpt(EpicsSignal,  'DiagCplSet',kind = 'hinted') # where shall this be put? Do we need this?
+    dynamic_vel      = Cpt(EpicsSignal,  'SBaseCmdDriveMode',kind = 'hinted') # where shall this be put? Do we need this?
+    
 
 """
 class UndulatorMetrixs(Undulator):
