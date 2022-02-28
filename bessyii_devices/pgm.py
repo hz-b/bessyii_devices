@@ -184,6 +184,26 @@ class ExitSlitMetrixs(ExitSlitBase):
     bandwidth       = Cpt(EpicsSignalRO,  'bandwidth'                       ,     kind='config')
 
 
+class ExitSlitSlitUE52SGM(PVPositioner):
+    """
+    UE52SGM" specific exit slit implementation. 
+    """
+
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
+    # this is an initial API 
+    setpoint        = Cpt(EpicsSignal,      'ES_0_Input'                                  )
+    readback        = Cpt(EpicsSignalRO,    'ES_0_SW', labels={"sgm"},     kind='hinted') # the main output
+    done            = Cpt(EpicsSignalRO,    'ES_0_STATUS'                                          )
+    done_value      = 0
+    
+    # so that you can do for example ue48_pgm.en.get() rather than ue48_pgm.en.readback.get()
+    def get(self):
+        
+        return self.readback.get()
+
 class PGM(SoftMonoBase):
     """
     PGM is a core class for PGM monochromators
@@ -191,7 +211,30 @@ class PGM(SoftMonoBase):
 
     # PGMs has a full control over cff, so override it here
     cff             = Cpt(EpicsSignal, 'cff', write_pv='SetCff', kind='config')
+
+class IdSlopeOffset(Device):
+    """
+    For undulator with ID Slope Offset control
+    """
+    energy1_nominal       = Cpt(EpicsSignal, 'Energy1', kind='config')
+    energy1_measured      = Cpt(EpicsSignal, 'Meas1'  , kind='config')
+    energy2_nominal       = Cpt(EpicsSignal, 'Energy2', kind='config')
+    energy2_measured      = Cpt(EpicsSignal, 'Meas2'  , kind='config')
+
+    IdSlope               = Cpt(EpicsSignalRO, 'aiIdSlope', kind='config')
+    IdSlope_old           = Cpt(EpicsSignal  , 'OldSlope' , kind='config')
+    IdSlope_new           = Cpt(EpicsSignal  , 'NewSlope' , kind='config') 
+
+    IdOffset              = Cpt(EpicsSignalRO, 'aiIdOffset', kind='config')
+    IdOffset_old          = Cpt(EpicsSignal  , 'OldOffset' , kind='config')
+    IdOffset_new          = Cpt(EpicsSignal  , 'NewOffset' , kind='config')
+
+    use_current           = Cpt(EpicsSignal  , 'UseCurSO.PROC' , kind='config')
+    calculate             = Cpt(EpicsSignal  , 'CalcSlope.PROC'   , kind='config')
+    accept                = Cpt(EpicsSignal  , 'AcceptSO.PROC' , kind='config')
+
     
+   
 
 class SGM(SoftMonoBase):
     """
@@ -418,16 +461,17 @@ class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):
     
 
 
-class SGMUE52(UndulatorMonoBase, ExitSlitMetrixs, PGM):    
+class SGMUE52(IdSlopeOffset, UndulatorMonoBase, PGM):    
     
+    slitwidth        = Cpt(ExitSlitSlitUE52SGM,'')
     harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
     #cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
     
-    mirror_angle     = Cpt(PGMScannableAxis, '',  ch_name='Phi', settle_time=10.0, kind='config')
-    grating_angle    = Cpt(PGMScannableAxis, '',  ch_name='Psi', settle_time=10.0, kind='config')
-    alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=2.0, kind='config')
-    beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=0.1, kind='config', labels={'sgm'})
-    theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=0.1, kind='config', labels={'sgm'})
+    mirror_angle     = Cpt(PGMScannableAxis, '',  ch_name='Phi', settle_time=1.0, kind='config')
+    grating_angle    = Cpt(PGMScannableAxis, '',  ch_name='Psi', settle_time=1.0, kind='config')
+    #alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=2.0, kind='config')
+    #beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=0.1, kind='config', labels={'sgm'})
+    #theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=0.1, kind='config', labels={'sgm'})
         
     # neverage ?
     # TouchDiff ?
@@ -435,5 +479,5 @@ class SGMUE52(UndulatorMonoBase, ExitSlitMetrixs, PGM):
     # Diff ?     
     # IdSlope ?
     # IdOffset ? 
-    position_timer   = Cpt(EpicsSignal, 'PositionTimer', write_pv = 'SetPositionTimer', string='True',kind='config')
+    #position_timer   = Cpt(EpicsSignal, 'PositionTimer', write_pv = 'SetPositionTimer', string='True',kind='config')
     
