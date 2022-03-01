@@ -469,6 +469,12 @@ class SGMUE52(IdSlopeOffset, UndulatorMonoBase, PGM):
     
     mirror_angle     = Cpt(PGMScannableAxis, '',  ch_name='Phi', settle_time=1.0, kind='config')
     grating_angle    = Cpt(PGMScannableAxis, '',  ch_name='Psi', settle_time=1.0, kind='config')
+
+    #alpha            = Cpt(MonoComparatorAxis, '',  ch_name='Alpha', settle_time=2.0, kind='config')
+    #beta             = Cpt(MonoComparatorAxis, '',  ch_name='Beta',  settle_time=0.1, kind='config', labels={'sgm'})
+    #theta            = Cpt(MonoComparatorAxis, '',  ch_name='Theta', settle_time=0.1, kind='config', labels={'sgm'})
+    
+    #
     #alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=2.0, kind='config')
     #beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=0.1, kind='config', labels={'sgm'})
     #theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=0.1, kind='config', labels={'sgm'})
