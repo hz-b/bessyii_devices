@@ -291,7 +291,7 @@ class FlyingEnergy(BasicFlyer, Energy):
     velocity        = Cpt(EpicsSignal, 'SetSweepVel', kind='config')
     
     # Expert settings
-    offset = Cpt(EpicsSignal,'SetSweepOffset' , kind='config')
+    '''offset = Cpt(EpicsSignal,'SetSweepOffset' , kind='config')
     vmin_fak = Cpt(EpicsSignal,'SetSweepVminFak' , kind='config')
     vmax_fak = Cpt(EpicsSignal,'SetSweepVmaxFak' , kind='config')
     max_gain_output = Cpt(EpicsSignal,'SetSweepOutLim' , kind='config')
@@ -308,7 +308,7 @@ class FlyingEnergy(BasicFlyer, Energy):
     kp_mirror = Cpt(EpicsSignal,'SetKpMirror' , kind='config')
     kp_grating = Cpt(EpicsSignal,'SetKpGrating' , kind='config')
     gap_method = Cpt(EpicsSignal,'SetSweepGapMeth' , kind='config')
-        
+    ''' 
     
         
   
@@ -376,7 +376,7 @@ class FlyingEnergy(BasicFlyer, Energy):
             #Return True when the acquisition is complete, False otherwise.   
             if not self._acquiring:  #But only report done if acquisition was already started 
                 return False
-            return (value == 128)
+            return (value == 255)
 
         self.complete_status = SubscriptionStatus(self.sweep_status,check_value)
 
@@ -444,7 +444,7 @@ class PGM_Aquarius(UndulatorMonoBase, PGM):
 
 
 class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):    
-    
+
     harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
     #cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
     
@@ -462,7 +462,7 @@ class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):
 
 
 class SGMUE52(IdSlopeOffset, UndulatorMonoBase, PGM):    
-    
+    en = Cpt(FlyingEnergy,'')
     slitwidth        = Cpt(ExitSlitSlitUE52SGM,'')
     harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
     #cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
