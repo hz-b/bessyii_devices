@@ -2,6 +2,9 @@ from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from .axes import AxisTypeA, AxisTypeB, AxisTypeD
+from ophyd import (PseudoPositioner, PseudoSingle, EpicsMotor)
+from ophyd.pseudopos import (pseudo_position_argument,
+                             real_position_argument)
 
 # This class can be used for the motorized aperture (SLITS) AU1 and AU3
 # Starting from those motors we shoudl define gap and offset as pseudo motors
@@ -95,6 +98,43 @@ class AU1UE52SGM(Device):
     bottom      = Cpt(AxisTypeD, '1')
     left        = Cpt(AxisTypeD, '4') 
     right       = Cpt(AxisTypeD, '5') 
+
+class AU1UE52SGM(PseudoPositioner):
+    ''' This class implements apertures with four blades (top, bottom, left, right)
+    and four pseudo motors (htop,hoffset,vgap,voffset)
+    '''
+    # The pseudo positioner axes:
+    hgap    = Cpt(PseudoSingle)
+    vgap    = Cpt(PseudoSingle)
+    hoffset = Cpt(PseudoSingle)
+    voffset = Cpt(PseudoSingle)
+
+    # The real (or physical) positioners:
+    top         = Cpt(AxisTypeD, '0')
+    bottom      = Cpt(AxisTypeD, '1')
+    right       = Cpt(AxisTypeD, '4')
+    left        = Cpt(AxisTypeD, '5')
+    
+    @pseudo_position_argument
+    def forward(self, pseudo_pos):
+        '''Run a forward (pseudo -> real) calculation'''
+        return self.RealPosition(top    = pseudo_pos.voffset+pseudo_pos.vgap/2,
+                                 bottom = pseudo_pos.voffset-pseudo_pos.vgap/2,
+                                 right  = pseudo_pos.hoffset+pseudo_pos.hgap/2,
+                                 left   = pseudo_pos.hoffset-pseudo_pos.hgap/2
+                                 )
+
+    @real_position_argument
+    def inverse(self, real_pos):
+        '''Run an inverse (real -> pseudo) calculation'''
+        return self.PseudoPosition(hgap    = -real_pos.left+real_pos.right,
+                                   hoffset = (real_pos.right+real_pos.left)/2,
+                                   vgap    = real_pos.top-real_pos.bottom,
+                                   voffset = (real_pos.top+real_pos.bottom)/2  
+                                   )
+
+
+
     
     
 # Note: Shall we add labels here? Then it is easier to read/find the devices using magics
