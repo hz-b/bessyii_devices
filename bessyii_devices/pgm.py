@@ -390,9 +390,9 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL):
     grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"},kind='config')
     grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"},kind='config')
     set_branch          = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
-    alpha               = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
-    beta                = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
-    theta               = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
+    alpha               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
+    beta                = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta', settle_time=10.0, kind='config')
+    theta               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Theta', settle_time=10.0, kind='config')
     
     def set_grating_400(self, wait=False):
                 
