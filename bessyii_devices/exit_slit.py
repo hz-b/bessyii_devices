@@ -4,7 +4,7 @@ from ophyd import FormattedComponent as FCpt
 from .positioners import PVPositionerComparator
 
 
-# This class can be used for the Exit Slits
+# Don't use this
 
 class ExitSlit(PVPositionerComparator):
     setpoint         = Cpt(EpicsSignal,   '_Input'           ) # in micrometer
@@ -24,18 +24,15 @@ class ExitSlit(PVPositionerComparator):
         super().__init__(prefix, **kwargs)
 
 
-class ExitSlit_withDone(PVPositioner):
-    '''
-    This would be the correct way to do it but the done signal oscillates.
-    '''
+class ExitSlit(PVPositioner):
+
     setpoint         = FCpt(EpicsSignal,   '{self.prefix}ES_{self._ch_number}_Input'           ) # in micrometer
     readback         = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_SW',kind='hinted', labels={"motors", "exitslits"}) # in micrometer
-    done             = FCpt(EpicsSignalRO, '{self.prefix}axis{self._axis_number}:running' )
+    done             = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_STATUS' )
     
     bandwidth        = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_BW') # in meV
     resolving_power  = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_ResPow') 
 
-    def __init__(self, prefix, ch_number=None, axis_number=None, **kwargs):
+    def __init__(self, prefix, ch_number=None, **kwargs):
         self._ch_number = ch_number
-        self._axis_number=axis_number
         super().__init__(prefix, **kwargs)
