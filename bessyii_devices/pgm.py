@@ -172,8 +172,10 @@ class ExitSlitBase(Device):
 class ExitSlitEMIL(ExitSlitBase):
     """
     EMIL specific exit slit implementation. EMIL beamlines uses different PV name for setting the slit
+
+    Since we always read ue48_pgm.en and not the entire mono device, making it hinted is acceptable for now. Should be a PVPositioner!
     """
-    slitwidth       = Cpt(EpicsSignal,  'slitwidth', write_pv = 'SlitInput',     kind='config')
+    slitwidth       = Cpt(EpicsSignal,  'slitwidth', write_pv = 'SlitInput',     kind='hinted')
 
 
 class ExitSlitMetrixs(ExitSlitBase):
