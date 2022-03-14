@@ -41,7 +41,7 @@ class MonoTranslationAxis(PVPositioner):
     This axis is used for moving things inside the mono. It does not change the calc params. They must be changed seperate
     """
     setpoint = FCpt(EpicsSignal,'{self.prefix}PH_{self._ch_num}_SET')
-    readback = FCpt(EpicsSignalRO,'{self.prefix}PH_{self._ch_num}_GET')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}PH_{self._ch_num}_GET', kind = 'hinted')
 
     relative  = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_SETSTEP')
     jog       = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_SETJOGSPEED')
@@ -81,7 +81,7 @@ class MonoComparatorAxis(PVPositionerComparator):
 class MonoThetaAxis(PVPositioner):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
-    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}', kind = 'hinted')
     done     = FCpt(EpicsSignalRO,'{self.prefix}mirrorDone')
     
     def __init__(self, prefix, ch_name=None, **kwargs):
@@ -93,7 +93,7 @@ class MonoThetaAxis(PVPositioner):
 class MonoAlphaBetaAxis(PVPositioner):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
-    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}', kind = 'hinted')
     done     = FCpt(EpicsSignalRO,'{self.prefix}gratingDone')
     
     def __init__(self, prefix, ch_name=None, **kwargs):
@@ -281,7 +281,7 @@ class FlyingEnergy(BasicFlyer, Energy):
         self.t0 = 0
         self.readback.name = self.name
         
-    read_attrs = ['readback']
+    #read_attrs = ['readback']
           
     #status is an mbbo record, I need to know what the different states are. 
     sweep_status    = Cpt(EpicsSignalRO, 'GetSweepState')
