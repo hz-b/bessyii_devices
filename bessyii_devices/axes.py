@@ -2,6 +2,7 @@ from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd.signal import Signal, SignalRO
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
+from ophyd import Kind
 from .positioners import PVPositionerComparator
 
 
@@ -22,7 +23,7 @@ class M1Axis(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
+        self.readback.name = self.name
 
 
 # Used only for M1 uses Software done signal
@@ -75,7 +76,7 @@ class AxisTypeA(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
+        self.readback.name = self.name
 
 # Used on AU2 and Diamond Filter        
 class AxisTypeB(PVPositioner):
@@ -112,7 +113,7 @@ class AxisTypeC(PVPositionerComparator):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
+        self.readback.name = self.name
         
 class AxisTypeD(PVPositionerComparator):
 
