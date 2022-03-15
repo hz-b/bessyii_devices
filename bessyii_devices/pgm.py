@@ -292,25 +292,6 @@ class FlyingEnergy(BasicFlyer, Energy):
     end_pos         = Cpt(EpicsSignal, 'SetSweepEnd'   , kind='config')
     velocity        = Cpt(EpicsSignal, 'SetSweepVel', kind='config')
     
-    # Expert settings
-    offset = Cpt(EpicsSignal,'SetSweepOffset' , kind='config')
-    vmin_fak = Cpt(EpicsSignal,'SetSweepVminFak' , kind='config')
-    vmax_fak = Cpt(EpicsSignal,'SetSweepVmaxFak' , kind='config')
-    max_gain_output = Cpt(EpicsSignal,'SetSweepOutLim' , kind='config')
-    open_loop_pvt =  Cpt(EpicsSignal,'SetSweepPVTM' , kind='config')
-    hold_start = Cpt(EpicsSignal,'SetSweepSUSSTART1' , kind='config')
-    hold_stop = Cpt(EpicsSignal,'SetSweepSUSSTOP1' , kind='config')
-    hold_vel = Cpt(EpicsSignal,'SetSweepSUSVEL1' , kind='config')
-    hold = Cpt(EpicsSignal,'SetSweepSUSM' , kind='config')
-    filt_phi = Cpt(EpicsSignal,'SetSweepMFDly' , kind='config')
-    filt_phi_ena = Cpt(EpicsSignal,'SetSweepMFOnOff' , kind='config')
-    filt_psi = Cpt(EpicsSignal,'SetSweepGFDly' , kind='config')
-    filt_psi_ena = Cpt(EpicsSignal,'SetSweepGFOnOff' , kind='config')
-    cycle_time = Cpt(EpicsSignal,'SetSweepTics' , kind='config')
-    kp_mirror = Cpt(EpicsSignal,'SetKpMirror' , kind='config')
-    kp_grating = Cpt(EpicsSignal,'SetKpGrating' , kind='config')
-    gap_method = Cpt(EpicsSignal,'SetSweepGapMeth' , kind='config')
-        
     
         
   
@@ -378,7 +359,7 @@ class FlyingEnergy(BasicFlyer, Energy):
             #Return True when the acquisition is complete, False otherwise.   
             if not self._acquiring:  #But only report done if acquisition was already started 
                 return False
-            return (value == 128)
+            return (value == 255 or value == 128)
 
         self.complete_status = SubscriptionStatus(self.sweep_status,check_value)
 
@@ -395,6 +376,25 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL):
     alpha               = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
     beta                = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
     theta               = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
+
+    # experts settings of flyscan
+    offset = Cpt(EpicsSignal,'SetSweepOffset' , kind='config')
+    vmin_fak = Cpt(EpicsSignal,'SetSweepVminFak' , kind='config')
+    vmax_fak = Cpt(EpicsSignal,'SetSweepVmaxFak' , kind='config')
+    max_gain_output = Cpt(EpicsSignal,'SetSweepOutLim' , kind='config')
+    open_loop_pvt =  Cpt(EpicsSignal,'SetSweepPVTM' , kind='config')
+    hold_start = Cpt(EpicsSignal,'SetSweepSUSSTART1' , kind='config')
+    hold_stop = Cpt(EpicsSignal,'SetSweepSUSSTOP1' , kind='config')
+    hold_vel = Cpt(EpicsSignal,'SetSweepSUSVEL1' , kind='config')
+    hold = Cpt(EpicsSignal,'SetSweepSUSM' , kind='config')
+    filt_phi = Cpt(EpicsSignal,'SetSweepMFDly' , kind='config')
+    filt_phi_ena = Cpt(EpicsSignal,'SetSweepMFOnOff' , kind='config')
+    filt_psi = Cpt(EpicsSignal,'SetSweepGFDly' , kind='config')
+    filt_psi_ena = Cpt(EpicsSignal,'SetSweepGFOnOff' , kind='config')
+    cycle_time = Cpt(EpicsSignal,'SetSweepTics' , kind='config')
+    kp_mirror = Cpt(EpicsSignal,'SetKpMirror' , kind='config')
+    kp_grating = Cpt(EpicsSignal,'SetKpGrating' , kind='config')
+    gap_method = Cpt(EpicsSignal,'SetSweepGapMeth' , kind='config')
     
     def set_grating_400(self, wait=False):
                 
@@ -446,7 +446,7 @@ class PGM_Aquarius(UndulatorMonoBase, PGM):
 
 
 class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):    
-    
+
     harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
     #cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
     
@@ -464,7 +464,7 @@ class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):
 
 
 class SGMUE52(IdSlopeOffset, UndulatorMonoBase, PGM):    
-    
+    en = Cpt(FlyingEnergy,'')
     slitwidth        = Cpt(ExitSlitSlitUE52SGM,'')
     harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
     #cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
