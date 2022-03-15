@@ -42,13 +42,13 @@ class UndulatorShift(PVPositioner):
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name 
     
-    setpoint        = Cpt(EpicsSignal,    'SBaseParGapsel.B',kind = 'hinted')
+    setpoint        = Cpt(EpicsSignal,    'SBaseParGapsel.B',kind = 'config')
     readback        = Cpt(EpicsSignalRO,  'SBaseIPmGap.E',kind = 'hinted') # parrallel
-    done            = Cpt(EpicsSignalRO,  'SBaseStatISLbl' ,string='True' )
-    actuate         = Cpt(EpicsSignal,    'SBaseCmdCalc.PROC' , kind = 'config'                                ) # this will only work if the command is set to "START"
+    done            = Cpt(EpicsSignalRO,  'SBaseStatISLbl' ,string='True', kind = 'config' )
+    actuate         = Cpt(EpicsSignal,    'SBaseCmdCalc.PROC' , kind = 'config'  ) # this will only work if the command is set to "START"
     done_value      = 'STOP'
     
-    readback_anti   = Cpt(EpicsSignalRO,  'SBaseIPmGap.F',kind = 'hinted') # anti_parrallel
+    readback_anti   = Cpt(EpicsSignalRO,  'SBaseIPmGap.F',kind = 'config') # anti_parrallel
     cmd             = Cpt(EpicsSignal,    'SBaseCmdMcmd',string ='True', kind ='config' )
         
     vel = Cpt(EpicsSignal,    'SDiagPhyVelSet', kind ='config' )
