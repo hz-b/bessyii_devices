@@ -103,6 +103,7 @@ class AU1UE52SGM(PseudoPositioner):
     ''' This class implements apertures with four blades (top, bottom, left, right)
     and four pseudo motors (htop,hoffset,vgap,voffset)
     '''
+
     # The pseudo positioner axes:
     hgap    = Cpt(PseudoSingle)
     vgap    = Cpt(PseudoSingle)
