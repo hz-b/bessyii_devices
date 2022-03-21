@@ -1,4 +1,3 @@
-#OAESE Motors
 from ophyd import Device, EpicsMotor
 from ophyd import Component as Cpt
 from .keithley import Keithley6514
@@ -11,6 +10,8 @@ from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 from ophyd import PseudoPositioner, PseudoSingle
 
+
+#OAESE Motors
 class OAESE(PseudoPositioner):
     
     def __init__(self,prefix, atol=1, **kwargs):
@@ -73,4 +74,81 @@ class OAESE(PseudoPositioner):
         
         
 
+#METRIXS Spectrometer
+class METRIXSSpectrometer(PseudoPositioner):
+    
+    def __init__(self,prefix, atol=1, **kwargs):
+        self.atol=atol
+        super().__init__(prefix, **kwargs)
+    
+    grating_alpha1 = Cpt(EpicsMotor, 'pmacAxis1')
+    grating_alpha2 = Cpt(EpicsMotor, 'pmacAxis2')
+    enc_grating_11 = Cpt(EpicsMotor, 'pmacAxisEnc1')
+    enc_grating_12 = Cpt(EpicsMotor, 'pmacAxisEnc2')
+    enc_grating_21 = Cpt(EpicsMotor, 'pmacAxisEnc3')
+    enc_grating_22 = Cpt(EpicsMotor, 'pmacAxisEnc4')
+    
+    
+    #Pseudo Axis
+    pos = Cpt(PseudoSingle, name='pos')
+    
+    pos_dict ={}
 
+    #save the current position with a particular name
+    def save(self, name):
+        
+        self.pos_dict[name]= numpy.array((self.grating_alpha1.user_readback.get(),
+                                          self.grating_alpha2.user_readback.get(),
+                                          self.enc_grating_11.user_readback.get(),
+                                          self.enc_grating_12.user_readback.get(),
+                                          self.enc_grating_21.user_readback.get(),
+                                          self.enc_grating_22.user_readback.get()
+                                          ))
+                            
+        
+    @pseudo_position_argument
+    def forward(self, pseudo):
+        '''Run a forward (pseudo -> real) calculation'''
+        name = pseudo.pos
+        print(name)
+
+        if name in self.pos_dict:
+            
+            return self.RealPosition(grating_alpha1=self.pos_dict[name][0],
+                                     grating_alpha2=self.pos_dict[name][1],
+                                     enc_grating_11=self.pos_dict[name][2],
+                                     enc_grating_12=self.pos_dict[name][3],
+                                     enc_grating_21=self.pos_dict[name][4],
+                                     enc_grating_22=self.pos_dict[name][5]                                     
+                                    )
+        else: 
+            print("We don't know that position")
+            return self.RealPosition(grating_alpha1=self.grating_alpha1.user_setpoint.get(),
+                                     grating_alpha2=self.grating_alpha2.user_setpoint.get(),
+                                     enc_grating_11=self.enc_grating_11.user_setpoint.get(),
+                                     enc_grating_12=self.enc_grating_12.user_setpoint.get(),
+                                     enc_grating_21=self.enc_grating_21.user_setpoint.get(),
+                                     enc_grating_22=self.enc_grating_22.user_setpoint.get()
+                                    )
+             
+    @real_position_argument
+    def inverse(self, real):
+        '''Run an inverse (real -> pseudo) calculation'''
+        coord = numpy.array((real.grating_alpha1,
+                             real.grating_alpha2,
+                             real.enc_grating_11,
+                             real.enc_grating_12,
+                             real.enc_grating_21,
+                             real.enc_grating_22
+                            ))
+        
+        for name in self.pos_dict:
+            if norm(self.pos_dict[name]-coord)<self.atol:
+        
+                return self.PseudoPosition(pos=name)
+        
+        else:
+            
+            return self.PseudoPosition(pos="unknown")
+        
+        
