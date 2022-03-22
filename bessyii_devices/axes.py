@@ -64,14 +64,11 @@ class HexapodAxis(PVPositioner):
 # EMIL
 # Used on AU1, AU3 and Pinhole
 
-class AxisTypeA(PVPositionerComparator):
+class AxisTypeA(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}' , kind='config'    )
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}',kind='hinted')
     readback = FCpt(EpicsSignalRO,  '{self.prefix}rdPos{self._ch_name}', kind='hinted')
-    atol = 0.005  # tolerance before we set done to be 1 (in um) we should check what this should be!
-
-    def done_comparator(self, readback, setpoint):
-        return setpoint-self.atol < readback < setpoint+self.atol
+    done = FCpt(EpicsSignalRO,  '{self.prefix}State{self._ch_name}',kind='normal')
 
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
@@ -81,9 +78,9 @@ class AxisTypeA(PVPositionerComparator):
 # Used on AU2 and Diamond Filter        
 class AxisTypeB(PVPositioner):
 
-    setpoint = Cpt(EpicsSignal,    '_SET' , kind='config'             )
+    setpoint = Cpt(EpicsSignal,    '_SET',kind='hinted'              )
     readback = Cpt(EpicsSignalRO,  '_GET',kind='hinted')
-    done     = Cpt(EpicsSignalRO,  '_STATUS', kind='config')
+    done     = Cpt(EpicsSignalRO,  '_STATUS')
     
     done_value = 0 
     
