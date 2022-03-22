@@ -246,17 +246,20 @@ class MyGreateyesDetectorV33(SingleTriggerV33,GreateyesDetector):
         super().__init__(*args, **kwargs)
         self.cam.ensure_nonblocking()
         self.cam.temp_control.ena.set(1)
-    
-    hdf5 = Cpt(HDF5PluginWithFileStore,  suffix="HDF1:", write_path_template="/home/emil/Apps/autosave/images/")
+    tiff = Cpt(TIFFPluginWithFileStore,  suffix="TIFF1:", write_path_template="/home/emil/Apps/autosave/images/")
+    #hdf5 = Cpt(HDF5PluginWithFileStore,  suffix="HDF1:", write_path_template="/home/emil/Apps/autosave/images/")
     stats = Cpt(StatsPlugin_V33, 'Stats1:')
     image = Cpt(ImagePlugin_V33, 'image1:')
     
     def set_detector(self):
 
-        self.hdf5.kind = 'normal' 
-        self.hdf5.stage_sigs["file_template"] = "%s%s_%4.4d.h5"
+        #self.hdf5.kind = 'normal' 
+        #self.hdf5.stage_sigs["file_template"] = "%s%s_%4.4d.h5"
+        self.tiff.kind = 'normal'
+        self.tiff.stage_sigs["file_template"] = "%s%s_%4.4d.tif"
         self.stats.kind = 'hinted'
         self.stats.profile_average.x.kind = 'hinted'
+        self.stats.profile_average.y.kind = 'hinted'
         self.stats.read_attrs = ['profile_average']
         self.image.kind = 'hinted'
         self.cam.kind = 'hinted'   

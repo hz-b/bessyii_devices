@@ -58,7 +58,7 @@ class Keithley6514(Device):
  
     def stage(self):
 
-        self.scan.put('Passive')      # update the EPICS PV as quick as we can
+        self.scan.put('.1 second')      # update the EPICS PV as quick as we can
         self.front_panel.put('On')      # Turn the front panel on (might be bad for readback)
         self.avg_type.put('Moving')     # Moving average filter, for speed of readback
         self.arm_src.put('Immediate')   # Immediate arm to give the fastest update possible
