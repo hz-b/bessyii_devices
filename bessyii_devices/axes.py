@@ -68,7 +68,8 @@ class AxisTypeA(PVPositioner):
 
     setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}',kind='hinted')
     readback = FCpt(EpicsSignalRO,  '{self.prefix}rdPos{self._ch_name}', kind='hinted')
-    done = FCpt(EpicsSignalRO,  '{self.prefix}State{self._ch_name}',kind='normal')
+    done = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}',kind='normal')
+    done_value = 0
 
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
