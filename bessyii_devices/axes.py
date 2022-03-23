@@ -79,13 +79,24 @@ class AxisTypeA(PVPositioner):
 # Used on AU2 and Diamond Filter        
 class AxisTypeB(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,    '{self.prefix}_SET{self._ch_name}', kind='normal')                   
-    readback = FCpt(EpicsSignalRO,  '{self.prefix}_GET{self._ch_name}', kind='hinted')
+    setpoint = Cpt(EpicsSignal,    '_SET', kind='normal')                   
+    readback = Cpt(EpicsSignalRO,  '_GET', kind='hinted')
     done     = Cpt(EpicsSignalRO,  '_STATUS', kind='omitted')
     done_value = 0 
     
-    def __init__(self, prefix, ch_name=None, **kwargs):
-        self._ch_name = ch_name
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
+class AxisTypeBChoice(PVPositioner):
+
+    setpoint = Cpt(EpicsSignal,    '_GON', kind='normal')                   
+    readback = Cpt(EpicsSignalRO,  '_GETN', kind='hinted')
+    done     = Cpt(EpicsSignalRO,  '_STATUS', kind='omitted')
+    done_value = 0 
+    
+    def __init__(self, prefix, **kwargs):
+
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name 
 
