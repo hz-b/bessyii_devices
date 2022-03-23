@@ -370,14 +370,14 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL):
     
   
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='config')
-    m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"},kind='normal')
-    grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"},kind='normal')
-    grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"},kind='normal')
-    slit                = Cpt(ExitSlitEMIL, '',kind='normal')
+    m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"})
+    grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"})
+    grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"})
+    slit                = Cpt(ExitSlitEMIL, '')
 
-    alpha               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0, kind='normal')
-    beta                = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta', settle_time=10.0, kind='normal')
-    theta               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Theta', settle_time=10.0, kind='normal')
+    alpha               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0)
+    beta                = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta', settle_time=10.0)
+    theta               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Theta', settle_time=10.0)
 
 
     # experts settings of flyscan
