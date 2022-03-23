@@ -107,7 +107,7 @@ class DCMEMIL(Device):
     prefix_1 = 'u171dcm1:'
     prefix_2 = 'MONOY01U112L:'
 
-    en              = Cpt(Energy, '')
+    en              = Cpt(Energy,  prefix_1)
 
 
     # horizontal translation to select the Si 111,311,422 crystal 
