@@ -9,7 +9,7 @@ from .positioners import PVPositionerComparator
 # Used only for M1 uses Software done signal
 class M1Axis(PVPositionerComparator):
 
-    setpoint    = FCpt(EpicsSignal,    '{self.prefix}{self._ch_name}Abs', kind='config' )
+    setpoint    = FCpt(EpicsSignal,    '{self.prefix}{self._ch_name}Abs', kind='normal' )
     readback    = FCpt(EpicsSignalRO,  '{self.prefix}rd{self._ch_name}', kind='hinted')
 
 
@@ -51,9 +51,9 @@ class M1AxisAquarius(PVPositionerComparator):
 # Used for hexapods
 class HexapodAxis(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,    '{self.prefix}hexapod:setPose{self._ch_name}', kind='config'   )
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}hexapod:setPose{self._ch_name}', kind='normal'   )
     readback = FCpt(EpicsSignalRO,  '{self.prefix}hexapod:getReadPose{self._ch_name}', kind='hinted')
-    done     = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='config'         )
+    done     = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='omitted'         )
     
     done_value = 0
     def __init__(self, prefix, ch_name=None, **kwargs):
@@ -66,9 +66,9 @@ class HexapodAxis(PVPositioner):
 
 class AxisTypeA(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}',kind='hinted')
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}',kind='normal')
     readback = FCpt(EpicsSignalRO,  '{self.prefix}rdPos{self._ch_name}', kind='hinted')
-    done = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}',kind='normal')
+    done = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}',kind='omitted')
     done_value = 0
 
     def __init__(self, prefix, ch_name=None, **kwargs):
