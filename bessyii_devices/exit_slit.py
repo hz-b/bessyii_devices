@@ -6,7 +6,7 @@ from .positioners import PVPositionerComparator
 
 # Don't use this
 
-class ExitSlit(PVPositionerComparator):
+class ExitSlitComp(PVPositionerComparator):
     setpoint         = Cpt(EpicsSignal,   '_Input'           ) # in micrometer
     readback         = Cpt(EpicsSignalRO, '_SW',kind='hinted', labels={"motors", "exitslits"}) # in micrometer
 #    done             = Cpt(EpicsSignalRO,    '_REF_STAT' )
@@ -29,6 +29,7 @@ class ExitSlit(PVPositioner):
     setpoint         = FCpt(EpicsSignal,   '{self.prefix}ES_{self._ch_number}_Input'           ) # in micrometer
     readback         = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_SW',kind='hinted', labels={"motors", "exitslits"}) # in micrometer
     done             = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_STATUS' )
+    done_value       = 0
     
     bandwidth        = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_BW') # in meV
     resolving_power  = FCpt(EpicsSignalRO, '{self.prefix}ES_{self._ch_number}_ResPow') 
