@@ -80,7 +80,7 @@ class AxisTypeA(PVPositioner):
 class AxisTypeB(PVPositioner):
 
     setpoint = Cpt(EpicsSignal,    '_SET', kind='normal')                   
-    readback = Cpt(EpicsSignalRO,  '_GET',string=True, kind='hinted')
+    readback = Cpt(EpicsSignalRO,  '_GET', kind='hinted')
     done     = Cpt(EpicsSignalRO,  '_STATUS', kind='omitted')
     done_value = 0 
     
@@ -91,7 +91,7 @@ class AxisTypeB(PVPositioner):
 class AxisTypeBChoice(PVPositioner):
 
     setpoint = Cpt(EpicsSignal,    '_GON', kind='normal')                   
-    readback = Cpt(EpicsSignalRO,  '_GETN', kind='hinted')
+    readback = Cpt(EpicsSignalRO,  '_GETN',string=True, kind='hinted')
     done     = Cpt(EpicsSignalRO,  '_STATUS', kind='omitted')
     done_value = 0 
     
