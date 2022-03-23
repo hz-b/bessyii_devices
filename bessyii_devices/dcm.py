@@ -7,7 +7,7 @@ from ophyd import FormattedComponent as FCpt
 from .positioners import *
 from .mostab import Mostab
 from .pgm import Energy
-from .axes import AxisTypeB
+from .axes import AxisTypeB, AxisTypeBChoice
 import numpy as np 
 import math
 
