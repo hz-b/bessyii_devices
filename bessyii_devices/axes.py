@@ -80,7 +80,7 @@ class AxisTypeA(PVPositioner):
 class AxisTypeB(PVPositioner):
 
     setpoint = Cpt(EpicsSignal,    '_SET', kind='normal')                   
-    readback = Cpt(EpicsSignalRO,  '_GET', kind='hinted')
+    readback = Cpt(EpicsSignalRO,  '_GET',string=True, kind='hinted')
     done     = Cpt(EpicsSignalRO,  '_STATUS', kind='omitted')
     done_value = 0 
     
