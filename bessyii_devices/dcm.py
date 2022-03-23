@@ -103,9 +103,6 @@ class Piezo3Axis(PseudoPositioner):
     
 class DCMEMIL(Device):
 
-    def __init__(self, prefix, *args, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
 
     prefix_1 = 'u171dcm1:'
     prefix_2 = 'MONOY01U112L:'
