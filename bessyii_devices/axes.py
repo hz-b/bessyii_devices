@@ -11,7 +11,7 @@ class M1Axis(PVPositioner):
 
     setpoint    = FCpt(EpicsSignal,    '{self.prefix}{self._ch_name}Abs', kind='normal' )
     readback    = FCpt(EpicsSignalRO,  '{self.prefix}rd{self._ch_name}', kind='hinted')
-    done = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}', kind='ommitted')
+    done = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}', kind='omitted')
     done_value = 0
 
     def __init__(self, prefix, ch_name=None, **kwargs):
