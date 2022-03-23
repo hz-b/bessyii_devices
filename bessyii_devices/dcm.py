@@ -35,7 +35,7 @@ class DCMCrystalAxis(PVPositioner):
 
 
     # this is an initial API 
-    setpoint        = FCpt(EpicsSignal,   '{self.prefix}dcm:set{self._ch_name}' , kind='normal'  )
+    setpoint        = FCpt(EpicsSignal,   '{self.prefix}dcm:set{self._ch_name}' , kind='normal')
     readback        = FCpt(EpicsSignalRO, '{self.prefix}dcm:{self._ch_name}', labels={"dcm", "motors"},     kind='hinted') # the main output
     done            = Cpt(EpicsSignalRO,  'multiaxis:running' , kind='omitted'             )
     done_value      = 0
