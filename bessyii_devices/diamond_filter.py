@@ -7,8 +7,8 @@ class DiamondFilterSub(Device):
 
     
 
-    motor  = Cpt(AxisTypeB,     '', ch_name = '', labels={"motors"})
-    choice = Cpt(AxisTypeB,     '', ch_name = 'N', labels={"motors"})
+    motor  = Cpt(AxisTypeB,'', labels={"motors"})
+    choice = Cpt(AxisTypeBChoice,'', labels={"motors"})
 
 
     
