@@ -1,6 +1,6 @@
 from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
-from .axes import AxisTypeB, AxisTypeFoil
+from .axes import AxisTypeB,AxisTypeBChoice
 
 
 class DiamondFilterSub(Device):
