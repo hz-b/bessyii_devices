@@ -27,13 +27,12 @@ class AxisPositioner(PVPositionerDone):
 
 class DCMCrystalAxis(PVPositioner):
 
- 
-   def __init__(self, prefix, ch_name=None, **kwargs):
+    def __init__(self, prefix,ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
 
-    setpoint=FCpt(EpicsSignal,'{self.prefix}dcm:set{self._ch_name}',kind='normal')
+    setpoint = FCpt(EpicsSignal,'{self.prefix}dcm:set{self._ch_name}',kind='normal')
     readback=FCpt(EpicsSignalRO, '{self.prefix}dcm:{self._ch_name}', labels={"dcm", "motors"},kind='hinted')
     done=Cpt(EpicsSignalRO,  'multiaxis:running' , kind='omitted')
     done_value= 0
