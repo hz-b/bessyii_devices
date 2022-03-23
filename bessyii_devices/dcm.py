@@ -116,9 +116,9 @@ class DCMEMIL(Device):
     # horizontal translation to select the Si 111,311,422 crystal 
     # Si111: 108 +/- 10, Si311: 66  +/- 10, Si 422: 24  +/- 10
     
-    cr1             = Cpt(DCMCrystalAxis,    prefix_1, ch_num = 'CR1', kind='config')
-    cr2             = Cpt(DCMCrystalAxis,    prefix_1, ch_num = 'CR2', kind='config')
-    ct1             = Cpt(DCMCrystalAxis,    prefix_1, ch_num = 'CT', kind='config')
+    cr1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR1', kind='config')
+    cr2             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR2', kind='config')
+    ct1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CT', kind='config')
     
     crystal_translate = Cpt(AxisTypeB, prefix_1+'PH_0',labels={"dcm","motors"},kind='config')
     crystal_select  = Cpt(AxisTypeBChoice, prefix_1+'PH_0',labels={"dcm","motors"},kind='config')
