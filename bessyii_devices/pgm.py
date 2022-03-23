@@ -169,13 +169,17 @@ class ExitSlitBase(Device):
     # Many monos will allow also set "wish" energy resolution by driving exit slit. This shall be included in this class
 
 
-class ExitSlitEMIL(ExitSlitBase):
+class ExitSlitEMIL(PVPositioner):
     """
     EMIL specific exit slit implementation. EMIL beamlines uses different PV name for setting the slit
 
     Since we always read ue48_pgm.en and not the entire mono device, making it hinted is acceptable for now. Should be a PVPositioner!
     """
-    slitwidth       = Cpt(EpicsSignal,  'slitwidth', write_pv = 'SlitInput',     kind='config')
+    setpoint      = Cpt(EpicsSignal,  'SlitInput')
+    readback =  Cpt(EpicsSignalRO, 'slitwidth')
+    done =Cpt(EpicsSignalRO, 'ES_STATUS')
+    done_value = 0
+    branch = Cpt(EpicsSignal,  'SetBranch',  string='True',kind='config')
 
 
 class ExitSlitMetrixs(ExitSlitBase):
@@ -372,7 +376,7 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL):
     m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"},kind='config')
     grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"},kind='config')
     grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"},kind='config')
-    set_branch          = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
+    slit                = Cpt(ExitSlitEMIL, '',kind='config')
 
     alpha               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
     beta                = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta', settle_time=10.0, kind='config')
