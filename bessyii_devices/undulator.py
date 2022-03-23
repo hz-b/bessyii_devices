@@ -14,7 +14,7 @@ class UndulatorGap(PVPositioner):
     
     setpoint        = Cpt(EpicsSignal,    'BaseParGapsel.B', kind='normal')
     readback        = Cpt(EpicsSignalRO,  'BaseIPmGap.A',labels={"motors", "undulators"},kind = 'hinted')
-    done            = Cpt(EpicsSignalRO,  'BaseStatISLbl' ,string='True'    ,kind = 'ommitted' )
+    done            = Cpt(EpicsSignalRO,  'BaseStatISLbl' ,string='True'    ,kind = 'omitted' )
     actuate         = Cpt(EpicsSignal,    'BaseCmdCalc.PROC'  , kind = 'config'                     )
     done_value      = 'STOP'
     cmd             = Cpt(EpicsSignal,    'BaseCmdMcmd',string ='True', kind ='config' )
@@ -44,7 +44,7 @@ class UndulatorShift(PVPositioner):
     
     setpoint        = Cpt(EpicsSignal,    'SBaseParGapsel.B',kind = 'normal')
     readback        = Cpt(EpicsSignalRO,  'SBaseIPmGap.E',kind = 'hinted') # parrallel
-    done            = Cpt(EpicsSignalRO,  'SBaseStatISLbl' ,string='True', kind = 'ommitted' )
+    done            = Cpt(EpicsSignalRO,  'SBaseStatISLbl' ,string='True', kind = 'omitted' )
     actuate         = Cpt(EpicsSignal,    'SBaseCmdCalc.PROC' , kind = 'config'  ) # this will only work if the command is set to "START"
     done_value      = 'STOP'
     

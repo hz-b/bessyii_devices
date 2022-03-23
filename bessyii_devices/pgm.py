@@ -366,7 +366,7 @@ class FlyingEnergy(BasicFlyer, Energy):
 
         return self.complete_status
        
-class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL):
+class PGMEmil(UndulatorMonoBase,PGM):
     
   
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='config')
