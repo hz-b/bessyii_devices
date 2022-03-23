@@ -5,11 +5,10 @@ from .axes import AxisTypeB, AxisTypeFoil
 
 class DiamondFilterSub(Device):
 
-    read_attrs=['h.move.readback', 'v.move.readback']
     
-    move           = Cpt(AxisTypeFoil,     '', ch_name = '', labels={"motors"})
-    # we need to create a "lock" that makes it impossible use setpoint when choice_diamand is called 
-    choice_diamand = Cpt(AxisTypeFoil,     '', ch_name = 'N', labels={"motors"})
+
+    motor  = Cpt(AxisTypeB,     '', ch_name = '', labels={"motors"})
+    choice = Cpt(AxisTypeB,     '', ch_name = 'N', labels={"motors"})
 
 
     
