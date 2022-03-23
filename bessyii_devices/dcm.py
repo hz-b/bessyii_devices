@@ -132,7 +132,7 @@ class DCMEMIL(Device):
     bw              = Cpt(EpicsSignalRO,  prefix_1+'crystal_bw',kind='config')
     dspacing        = Cpt(EpicsSignalRO,  prefix_1+'d_hkl',kind='config')
     slope           = Cpt(EpicsSignal,  prefix_1+'aiIdSlope', write_pv=prefix_1+'aoIdSlope',kind='config' )
-    offset          = Cpt(EpicsSignal,  prefix_1+'siIdOffset', write_pv=prefix_1+'aoIdOffset',kind='config' )
+    offset          = Cpt(EpicsSignal,  prefix_1+'aiIdOffset', write_pv=prefix_1+'aoIdOffset',kind='config' )
    
      # Temperature
     temp1_111           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T1', labels={"dcm"},kind='normal')
