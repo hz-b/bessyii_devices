@@ -32,14 +32,12 @@ class DCMCrystalAxis(PVPositioner):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
+    
+    setpoint=FCpt(EpicsSignal,'{self.prefix}dcm:set{self._ch_name}',kind='normal')
+    readback=FCpt(EpicsSignalRO, '{self.prefix}dcm:{self._ch_name}', labels={"dcm", "motors"},kind='hinted')
+    done=Cpt(EpicsSignalRO,  'multiaxis:running' , kind='omitted')
+    done_value= 0
 
-
-    # this is an initial API 
-    setpoint        = FCpt(EpicsSignal,   '{self.prefix}dcm:set{self._ch_name}' , kind='normal')
-    readback        = FCpt(EpicsSignalRO, '{self.prefix}dcm:{self._ch_name}', labels={"dcm", "motors"},     kind='hinted') # the main output
-    done            = Cpt(EpicsSignalRO,  'multiaxis:running' , kind='omitted'             )
-    done_value      = 0
- 
 class DCMThetaAxis(PVPositioner):
 
     setpoint = Cpt(EpicsSignal,'SetTheta', kind='normal')
