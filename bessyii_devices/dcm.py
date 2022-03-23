@@ -10,6 +10,7 @@ from .pgm import Energy
 from .axes import AxisTypeB, AxisTypeBChoice
 import numpy as np 
 import math
+from ophyd import Kind
 
 
 class AxisPositioner(PVPositionerDone):
@@ -107,19 +108,19 @@ class DCMEMIL(Device):
     prefix_1 = 'u171dcm1:'
     prefix_2 = 'MONOY01U112L:'
 
-    en              = Cpt(Energy,  prefix_1)
+    en              = Cpt(Energy,  prefix_1,kind='hinted')
 
 
     # horizontal translation to select the Si 111,311,422 crystal 
     # Si111: 108 +/- 10, Si311: 66  +/- 10, Si 422: 24  +/- 10
     
-    cr1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR1', kind='config')
-    cr2             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR2', kind='config')
-    ct1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CT', kind='config')
+    cr1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR1', kind=Kind.config|Kind.normal)
+    cr2             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR2', kind=Kind.config|Kind.normal)
+    ct1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CT', kind=Kind.config|Kind.normal)
     
-    crystal_translate = Cpt(AxisTypeB, prefix_1+'PH_0',labels={"dcm","motors"},kind='config')
-    crystal_select  = Cpt(AxisTypeBChoice, prefix_1+'PH_0',labels={"dcm","motors"},kind='config')
-    crystal_calc         = Cpt(EpicsSignal,  prefix_1+'SetGratingNo',  string='True',    kind='config', labels={"dcm", "motors"})      
+    crystal_translate = Cpt(AxisTypeB, prefix_1+'PH_0',labels={"dcm","motors"},kind=Kind.config|Kind.normal)
+    crystal_select  = Cpt(AxisTypeBChoice, prefix_1+'PH_0',labels={"dcm","motors"},kind=Kind.config|Kind.normal)
+    crystal_calc         = Cpt(EpicsSignal,  prefix_1+'SetGratingNo',  string='True',    kind=Kind.config|Kind.normal, labels={"dcm", "motors"})      
 
     
 
@@ -143,9 +144,9 @@ class DCMEMIL(Device):
     temp2_422           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T3', labels={"dcm"},kind='normal')
 
     # Piezo
-    piezo           = Cpt(Piezo3Axis,'',kind='config')
+    piezo           = Cpt(Piezo3Axis,'',kind=Kind.config|Kind.normal)
     
     # Mostab 
     
-    pitch_mostab = Cpt(Mostab,'EMILEL:Mostab0:',kind='config')
-    roll_mostab = Cpt(Mostab,'EMILEL:Mostab1:',kind='config')
+    pitch_mostab = Cpt(Mostab,'EMILEL:Mostab0:',kind=Kind.config|Kind.normal)
+    roll_mostab = Cpt(Mostab,'EMILEL:Mostab1:',kind=Kind.config|Kind.normal)
