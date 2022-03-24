@@ -71,10 +71,23 @@ class AxisTypeA(PVPositioner):
     done = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}',kind='normal')
     done_value = 0
 
+    def cb_setpoint(self, *args, **kwargs):
+        """
+        Called when setpoint changes (EPICS CA monitor event).
+        When the setpoint is changed, force done=False.  For any move, 
+        done must go != done_value, then back to done_value (True).
+        Without this response, a small move (within tolerance) will not return.
+        Next update of readback will compute self.done.
+        """
+        self.done.put(not self.done_value)
+
+    
+
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
+        self.setpoint.subscribe(self.cb_setpoint)
 
 # Used on AU2 and Diamond Filter        
 class AxisTypeB(PVPositioner):
