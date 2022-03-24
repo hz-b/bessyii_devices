@@ -68,7 +68,7 @@ class AxisTypeA(PVPositioner):
 
     setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}',kind='normal')
     readback = FCpt(EpicsSignalRO,  '{self.prefix}rdPos{self._ch_name}', kind='hinted')
-    done = Component(Signal, value=True)
+    done = Cpt(Signal, value=True)
     done_value = True
     running_signal = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}',kind='omitted')
     
@@ -87,7 +87,7 @@ class AxisTypeA(PVPositioner):
         diff = self.readback.get() - self.setpoint.get()
         dmov = abs(diff) <= self._atol
 
-        if dmov and not self.running_signal.get()
+        if dmov and not self.running_signal.get():
         
             self.done.put(True)
     
@@ -103,6 +103,7 @@ class AxisTypeA(PVPositioner):
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
         self.setpoint.subscribe(self.cb_setpoint)
+        self.running_signal.subscribe(self.cb_running)
 
 # Used on AU2 and Diamond Filter        
 class AxisTypeB(PVPositioner):
