@@ -66,10 +66,13 @@ class HexapodAxis(PVPositioner):
 
 class AxisTypeA(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}',kind='hinted')
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}',kind='normal')
     readback = FCpt(EpicsSignalRO,  '{self.prefix}rdPos{self._ch_name}', kind='hinted')
-    done = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}',kind='normal')
-    done_value = 0
+    done = Component(Signal, value=True)
+    done_value = True
+    running_signal = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}',kind='omitted')
+    
+  
 
     def cb_setpoint(self, *args, **kwargs):
         """
@@ -79,12 +82,24 @@ class AxisTypeA(PVPositioner):
         Without this response, a small move (within tolerance) will not return.
         Next update of readback will compute self.done.
         """
-        self.done.put(not self.done_value)
+        self.done.put(False)
+
+        diff = self.readback.get() - self.setpoint.get()
+        dmov = abs(diff) <= self._atol
+
+        if dmov and not self.running_signal.get()
+        
+            self.done.put(True)
+    
+    def cb_running(self, *args, **kwargs):
+
+        self.done.put(not(self.running_signal.get()))
 
     
 
-    def __init__(self, prefix, ch_name=None, **kwargs):
+    def __init__(self, prefix, ch_name=None,atol=0.001, **kwargs):
         self._ch_name = ch_name
+        self._atol = atol
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
         self.setpoint.subscribe(self.cb_setpoint)
