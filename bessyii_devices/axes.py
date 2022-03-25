@@ -7,18 +7,12 @@ from .positioners import PVPositionerComparator
 
 
 # Used only for M1 uses Software done signal
-class M1Axis(PVPositionerComparator):
+class M1Axis(PVPositioner):
 
-    setpoint    = FCpt(EpicsSignal,    '{self.prefix}{self._ch_name}Abs', kind='config' )
+    setpoint    = FCpt(EpicsSignal,    '{self.prefix}{self._ch_name}Abs', kind='normal' )
     readback    = FCpt(EpicsSignalRO,  '{self.prefix}rd{self._ch_name}', kind='hinted')
-
-
-    atol = 1.0  # tolerance before we set done to be 1 (in um) we should check what this should be!
-
-
-    def done_comparator(self, readback, setpoint):
-        return setpoint-self.atol < readback < setpoint+self.atol
-
+    done = FCpt(EpicsSignalRO,  '{self.prefix}ExecSens', kind='omitted')
+    done_value = 0
 
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
@@ -51,9 +45,9 @@ class M1AxisAquarius(PVPositionerComparator):
 # Used for hexapods
 class HexapodAxis(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,    '{self.prefix}hexapod:setPose{self._ch_name}', kind='config'   )
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}hexapod:setPose{self._ch_name}', kind='normal'   )
     readback = FCpt(EpicsSignalRO,  '{self.prefix}hexapod:getReadPose{self._ch_name}', kind='hinted')
-    done     = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='config'         )
+    done     = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='omitted'         )
     
     done_value = 0
     def __init__(self, prefix, ch_name=None, **kwargs):
