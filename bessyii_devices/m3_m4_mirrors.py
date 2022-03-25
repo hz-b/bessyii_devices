@@ -39,16 +39,82 @@ class SMUChoice(PVPositioner):
     
     done_value = 0
 
-                
-class M3M4(Device):
-#move simulataneously does not work unless you activate the start_immediately PV        
-    rx = Cpt(HexapodAxis, '', ch_name='A', labels={"mirrors"})
-    ry = Cpt(HexapodAxis, '', ch_name='B', labels={"mirrors"})
-    rz = Cpt(HexapodAxis, '', ch_name='C', labels={"mirrors"})
-    tx = Cpt(HexapodAxis, '', ch_name='X', labels={"mirrors"})
-    ty = Cpt(HexapodAxis, '', ch_name='Y', labels={"mirrors"})
-    tz = Cpt(HexapodAxis, '', ch_name='Z', labels={"mirrors"})
-    start_immediately = Cpt(EpicsSignal, 'hexapod:mbboRunAfterValue')
+from ophyd import PseudoPositioner, PseudoSingle, PositionerBase, Signal, InternalSignal
+from .positioners import  InternalSignal
+
+
+class M3M4(PseudoPositioner):
+    
+    rx = Cpt(PseudoSingle)
+    ry = Cpt(PseudoSingle)
+    rz = Cpt(PseudoSingle)
+    tx = Cpt(PseudoSingle)
+    ty = Cpt(PseudoSingle)
+    tz = Cpt(PseudoSingle)
+
+    #Real Axes
+    rrx = Cpt(HexapodAxis, '', ch_name='A', labels={"mirrors"},kind='normal')
+    rry = Cpt(HexapodAxis, '', ch_name='B', labels={"mirrors"},kind='normal')
+    rrz = Cpt(HexapodAxis, '', ch_name='C', labels={"mirrors"},kind='normal')
+    rtx = Cpt(HexapodAxis, '', ch_name='X', labels={"mirrors"},kind='normal')
+    rty = Cpt(HexapodAxis, '', ch_name='Y', labels={"mirrors"},kind='normal')
+    rtz = Cpt(HexapodAxis, '', ch_name='Z', labels={"mirrors"},kind='normal')
+    
+    start_immediately = Cpt(EpicsSignal, 'hexapod:mbboRunAfterValue', kind = 'omitted')
+    do_it = Cpt(EpicsSignal, 'hexapod:setPoseA.PROC', kind = 'omitted')
+    multiaxis_running = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='omitted'         )
+
+    @pseudo_position_argument
+    def forward(self, pseudo_pos):
+        '''Run a forward (pseudo -> real) calculation'''
+        return self.RealPosition(pseudo_pos)
+
+    @real_position_argument
+    def inverse(self, real_pos):
+        '''Run an inverse (real -> pseudo) calculation'''
+        return self.PseudoPosition(real_pos)
+
+    def _concurrent_move(self, real_pos, **kwargs):
+        '''Move all real positioners to a certain position, in parallel'''
+    
+        self.start_immediately.put(0)
+        for real, value in zip(self._real, real_pos):
+            self.log.debug('[concurrent] Moving %s to %s', real.name, value)
+            real.setpoint.put(value)
+        
+        self.start_immediately.put(1)
+        self.do_it.put(1)
+
+        #Now having put the values to the axes we need to set a done signal to 0, then initiate the move and add a callback which will
+        # move the done write 
+
+    def _real_finished(self, *args,**kwargs):
+    '''Callback: A single real positioner has finished moving.
+    Used for asynchronous motion, if all have finished moving then fire a
+    callback (via `Positioner._done_moving`)
+    '''
+        with self._finished_lock:
+            if self.multiaxis_running.get() == 0:
+                self._done_moving()
+    
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.multiaxis_running.subscribe(self._real_finished)
+
+
+
+  
+        
+
+
+    
+
+
+
+    
+        
+
+
     
 class SMU(M3M4):
 
