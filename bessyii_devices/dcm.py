@@ -6,15 +6,17 @@ from ophyd.signal import Signal, SignalRO
 from ophyd import FormattedComponent as FCpt
 from .positioners import *
 from .mostab import Mostab
-
+from .pgm import Energy
+from .axes import AxisTypeB, AxisTypeBChoice
 import numpy as np 
 import math
+from ophyd import Kind
 
 
 class AxisPositioner(PVPositionerDone):
     
   
-    setpoint = FCpt(EpicsSignal,    '{self._pre_volt}Piezo{self._pz_num}U1') 
+    setpoint = FCpt(EpicsSignal,    '{self._pre_volt}Piezo{self._pz_num}U1',kind='normal') 
     readback = FCpt(EpicsSignalRO,  '{self._pre_enc}dcm:cr2{self._ch_name}Encoder', kind='hinted')
    
     def __init__(self,prefix, pre_volt=None, pre_enc=None, ch_name=None, pz_num=None, **kwargs):
@@ -24,21 +26,29 @@ class AxisPositioner(PVPositionerDone):
         self._pre_enc = pre_enc
         super().__init__(prefix, **kwargs)
 
+class DCMCrystalAxis(PVPositioner):
 
-class DCMTranslationAxis(PVPositionerComparator):
-
-    setpoint = FCpt(EpicsSignal,'{self.prefix}PH_{self._ch_num}_SET')
-    readback = FCpt(EpicsSignalRO,'{self.prefix}PH_{self._ch_num}_GET')
-
-    atol = 0.1  # tolerance before we set done to be 1 (in um) we should check what this should be!
-
-    def done_comparator(self, readback, setpoint):
-        return setpoint-self.atol < readback < setpoint+self.atol
-        
-        
-    def __init__(self, prefix, ch_num=None, **kwargs):
-        self._ch_num = ch_num
+    def __init__(self, prefix,ch_name=None, **kwargs):
+        self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+
+    setpoint = FCpt(EpicsSignal,'{self.prefix}dcm:set{self._ch_name}',kind='normal')
+    readback=FCpt(EpicsSignalRO, '{self.prefix}dcm:{self._ch_name}', labels={"dcm", "motors"},kind='hinted')
+    done=Cpt(EpicsSignalRO,  'multiaxis:running' , kind='omitted')
+    done_value= 0
+
+class DCMThetaAxis(PVPositioner):
+
+    setpoint = Cpt(EpicsSignal,'SetTheta', kind='normal')
+    readback = Cpt(EpicsSignalRO,'Theta', kind = 'hinted')
+    done     = Cpt(EpicsSignalRO,'Status', kind='omitted')
+    done_value = 0
+
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+
     
 #https://nsls-ii.github.io/ophyd/positioners.html#pseudopositioner
 class Piezo3Axis(PseudoPositioner):
@@ -91,62 +101,52 @@ class Piezo3Axis(PseudoPositioner):
 
        
         
-class DCMEnergy(PVPositioner):
-    """
-    Class to set and read energy of the DCM. Will not be necessary with new DCM implementation
-    """
-       
-    #prefix at emil: MONOY01U112L
-    setpoint        = Cpt(EpicsSignal,      'monoSetEnergy'                  )
-    readback        = Cpt(EpicsSignalRO,    'monoGetEnergy',    kind='hinted', labels={"dcm", "motors"}) 
-    done            = Cpt(EpicsSignalRO,    'GK_STATUS'                  )
     
-class DCM(PVPositioner):
+class DCMEMIL(Device):
 
-    def __init__(self, prefix, *args, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
 
     prefix_1 = 'u171dcm1:'
     prefix_2 = 'MONOY01U112L:'
 
-    #prefix at emil: MONOY01U112L
-    setpoint        = Cpt(EpicsSignal,     prefix_1+'monoSetEnergy'                  )
-    readback        = Cpt(EpicsSignalRO,    prefix_1+'monoGetEnergy',    kind='hinted', labels={"dcm", "motors"}) 
-    done            = Cpt(EpicsSignalRO,    prefix_1+'GK_STATUS'                  )
+    en              = Cpt(Energy,  prefix_1,kind='hinted')
 
 
     # horizontal translation to select the Si 111,311,422 crystal 
     # Si111: 108 +/- 10, Si311: 66  +/- 10, Si 422: 24  +/- 10
     
-    cr1             = Cpt(EpicsSignal,    prefix_1+'dcm:CR1',   write_pv =  prefix_1+'dcm:setCR1',    kind='config', labels={"dcm", "motors"})
-    cr2             = Cpt(EpicsSignal,    prefix_1+'dcm:CR2',   write_pv =  prefix_1+'dcm:setCR2',    kind='config', labels={"dcm", "motors"})
-    ct1             = Cpt(DCMTranslationAxis, prefix_1, ch_num='0',labels={"motors"},kind='config')
+    cr1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR1', kind=Kind.config|Kind.normal)
+    cr2             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR2', kind=Kind.config|Kind.normal)
+    ct1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CT', kind=Kind.config|Kind.normal)
+    
+    crystal_translate = Cpt(AxisTypeB, prefix_1+'PH_0',labels={"dcm","motors"},kind=Kind.config|Kind.normal)
+    crystal_select  = Cpt(AxisTypeBChoice, prefix_1+'PH_0',labels={"dcm","motors"},kind=Kind.config|Kind.normal)
+    crystal_calc         = Cpt(EpicsSignal,  prefix_1+'SetGratingNo',  string='True',    kind=Kind.config|Kind.normal, labels={"dcm", "motors"})      
+
+    
 
     table           = Cpt(EpicsSignal,    prefix_1+'idMbboIndex', string='True',kind='config') 
     table_filename  = Cpt(EpicsSignalRO,  prefix_1+'idFilename', string='True',kind='config')
-    channelcut      = Cpt(EpicsSignal,    prefix_1+'disableCT')
+    channelcut_disable      = Cpt(EpicsSignal,    prefix_1+'disableCT',kind='config')
     harmonic        = Cpt(EpicsSignal,    prefix_1+'GetIdHarmonic', write_pv=prefix_1+'Harmonic', string='True', kind='config')
     ID_on           = Cpt(EpicsSignal,    prefix_1+'SetIdOn', string='True',kind='config')
-    theta           = Cpt(EpicsSignal,    prefix_1+'Theta', write_pv = prefix_1+'SetTheta', kind='config', labels={"dcm", "motors"})
-    crystal         = Cpt(EpicsSignal,  prefix_1+'SetGratingNo',  string='True',    kind='config', labels={"dcm", "motors"})                 # In reality this is a rw pv
-    bw              = Cpt(EpicsSignalRO,  prefix_1+'crystal_bw' )
-    dspacing        = Cpt(EpicsSignalRO,  prefix_1+'d_hkl' )
-    slope           = Cpt(EpicsSignal,  prefix_1+'aiIdSlope', write_pv=prefix_1+'aoIdSlope' )
-    offset          = Cpt(EpicsSignal,  prefix_1+'siIdOffset', write_pv=prefix_1+'aoIdOffset'  )
+    theta           = Cpt(DCMThetaAxis,    prefix_1, kind='config', labels={"dcm", "motors"})
+    bw              = Cpt(EpicsSignalRO,  prefix_1+'crystal_bw',kind='config')
+    dspacing        = Cpt(EpicsSignalRO,  prefix_1+'d_hkl',kind='config')
+    slope           = Cpt(EpicsSignal,  prefix_1+'aiIdSlope', write_pv=prefix_1+'aoIdSlope',kind='config' )
+    offset          = Cpt(EpicsSignal,  prefix_1+'aiIdOffset', write_pv=prefix_1+'aoIdOffset',kind='config' )
    
      # Temperature
-    temp1_111           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T1', labels={"dcm"})
-    temp2_111           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T1', labels={"dcm"})
-    temp1_311           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T2', labels={"dcm"})
-    temp2_311           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T2', labels={"dcm"})
-    temp1_422           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T3', labels={"dcm"})
-    temp2_422           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T3', labels={"dcm"})
+    temp1_111           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T1', labels={"dcm"},kind='normal')
+    temp2_111           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T1', labels={"dcm"},kind='normal')
+    temp1_311           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T2', labels={"dcm"},kind='normal')
+    temp2_311           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T2', labels={"dcm"},kind='normal')
+    temp1_422           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T3', labels={"dcm"},kind='normal')
+    temp2_422           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T3', labels={"dcm"},kind='normal')
 
     # Piezo
-    piezo           = Cpt(Piezo3Axis,'')
+    piezo           = Cpt(Piezo3Axis,'',kind=Kind.config|Kind.normal)
     
     # Mostab 
     
-    pitch_mostab = Cpt(Mostab,'EMILEL:Mostab0:')
-    roll_mostab = Cpt(Mostab,'EMILEL:Mostab1:')
+    pitch_mostab = Cpt(Mostab,'EMILEL:Mostab0:',kind=Kind.config|Kind.normal)
+    roll_mostab = Cpt(Mostab,'EMILEL:Mostab1:',kind=Kind.config|Kind.normal)

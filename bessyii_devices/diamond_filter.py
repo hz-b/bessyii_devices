@@ -1,15 +1,14 @@
 from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
-from .axes import AxisTypeB, AxisTypeFoil
+from .axes import AxisTypeB,AxisTypeBChoice
 
 
 class DiamondFilterSub(Device):
 
-    read_attrs=['h.move.readback', 'v.move.readback']
     
-    move           = Cpt(AxisTypeFoil,     '', ch_name = '', labels={"motors"})
-    # we need to create a "lock" that makes it impossible use setpoint when choice_diamand is called 
-    choice_diamand = Cpt(AxisTypeFoil,     '', ch_name = 'N', labels={"motors"})
+
+    motor  = Cpt(AxisTypeB,'', labels={"motors"})
+    choice = Cpt(AxisTypeBChoice,'', labels={"motors"})
 
 
     
