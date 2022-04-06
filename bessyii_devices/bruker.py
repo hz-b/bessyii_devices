@@ -12,7 +12,7 @@ class ROI(Device):
 
     # 'name' is not an allowed attribute
     label = Cpt(EpicsSignal, 'NM', lazy=True, kind='config')
-    count = Cpt(EpicsSignalRO, '', lazy=True, kind='hinted')
+    count = Cpt(EpicsSignalRO, '', lazy=True, kind='normal')
     net_count = Cpt(EpicsSignalRO, 'N', lazy=True, kind='config')
     preset_count = Cpt(EpicsSignal, 'P', lazy=True, kind='config')
     is_preset = Cpt(EpicsSignal, 'IP', lazy=True, kind='config')
@@ -28,22 +28,20 @@ class ROI(Device):
                          name=name, parent=parent, **kwargs)
 
 
-
+class Rontec(Device):
+    
+    throughput = Cpt(EpicsSignalRO, 'Throughput', kind='normal')
+    temperature = Cpt(EpicsSignalRO, 'Temperature', kind='normal')
+    
 class MyEpicsMCA(EpicsMCA):
     
     erase_start = Cpt(EpicsSignal, 'EraseStart', kind='omitted')
     acquiring = Cpt(EpicsSignalRO, 'WhenAcqStops', kind='omitted')
     done_value = 0
     
-        #Acquisition Throughput 
-    throughput = Cpt(EpicsSignalRO, 'Throughput', kind='omitted')
-    
-    
-    #None of these are consistent enough
-    reading = Cpt(EpicsSignalRO, '.READ', kind='omitted')
-    readingg = Cpt(EpicsSignalRO, '.RDNG', kind='omitted')
-    readings = Cpt(EpicsSignalRO, '.RDNS', kind='omitted')
-    
+    #device
+    #rontec = Cpt(Rontec, , kind = 'normal')
+
     roi0 =Cpt(ROI, '.R0')
     roi1 =Cpt(ROI, '.R1')
     roi2 =Cpt(ROI, '.R2')
@@ -95,8 +93,11 @@ class MyEpicsMCA(EpicsMCA):
         
         return stat
 
-
-
+class Bruker(Device):
+    
+    mca = Cpt(MyEpicsMCA, 'mca1', name='mca')
+    detector = Cpt(Rontec, 'Rontec1', name = 'detector')
+    
         
        
    
