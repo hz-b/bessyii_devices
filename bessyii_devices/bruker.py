@@ -32,7 +32,8 @@ class ROI(Device):
 class MyEpicsMCA(EpicsMCA):
     
     erase_start = Cpt(EpicsSignal, 'EraseStart', kind='omitted')
-    acquiring = Cpt(EpicsSignalRO, '.ACQG', kind='omitted')
+    acquiring = Cpt(EpicsSignalRO, 'WhenAcqStops', kind='omitted')
+    done_value = 0
     
         #Acquisition Throughput 
     throughput = Cpt(EpicsSignalRO, 'Throughput', kind='omitted')
@@ -80,10 +81,10 @@ class MyEpicsMCA(EpicsMCA):
                 
                 return False
                        
-            return (value == 0 and old_value == 1 and self.preset_real_time.get() == self.elapsed_real_time.get())
+            return (value == self.done_value)
         
         # create the status with SubscriptionStatus that add's a callback to check_value.
-        sta_cnt = SubscriptionStatus(callback_signal, check_value, run=False, settle_time = 3)
+        sta_cnt = SubscriptionStatus(callback_signal, check_value, run=False)
          
         # Start the acquisition
         sta_acq = self.erase_start.set(1)
