@@ -91,13 +91,13 @@ class PositionerBessyValve(PVPositioner):
         
             
         #If we have transitioned from moving to opened then set opened and done
-        elif value in self.opened_values and self._last_status in self.moving_vals:
+        elif value in self.opened_values:
             self.readback.put(1) # open
             self._finished_moving = 1
       
             
         #If we have transitioned from moving to closed then set closed and done
-        elif value in self.closed_values and self._last_status in self.moving_vals:
+        elif value in self.closed_values:
             self.readback.put(0) # closed
             self._finished_moving = 1
             
