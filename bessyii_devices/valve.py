@@ -48,13 +48,13 @@ class PositionerBessyValve(PVPositioner):
     """
     
     setpoint = Cpt(Signal)
-    readback = Cpt(InternalSignal, value=0, labels={"valves"})
+    readback = Cpt(Signal, value=0, labels={"valves"})
     
     _default_read_attrs = ['readback']
     
     toggle    = Cpt(EpicsSignal, 'SetTa') 
-    status    = Cpt(EpicsSignalRO, 'State1') 
-    done = Cpt(InternalSignal, value=0)
+    status    = Cpt(EpicsSignal, 'State1',auto_monitor=True) 
+    done = Cpt(Signal, value=0)
     done_value = 1
     
     moving_vals = [0,4,6,12,13]  # the values which the valve reports if it is moving
@@ -70,54 +70,62 @@ class PositionerBessyValve(PVPositioner):
         if value != self.readback.get():
 
             #Set done to 0, and start the move
-            self.done.put(0, force=True)
-            self.toggle.put(1)
+            self._finished_moving = 0
+            self.done.put(0)
+            self.toggle.set(1)
         else:
             #Else, toggle done so that the status object completes
-            self.done.put(0, force=True)
-            self.done.put(1, force=True)
+            self.done.put(0)
+            self.done.put(1)
 
     
-    def _update_readback_and_done(self, *args, value, **kwargs):
-        """ Callback to update the readback and done based on current and previous status"""
+    def _update_readback(self, *args, value, **kwargs):
+        """ Callback to update the readback based on status"""
    
-        #Required for first call so that _last_status exists
         if self._last_status == None:
             self._last_status = value
         
         if value in self.error_values:
-            self.readback.put(-1, force=True) # error
-            self.done.put(1, force=True)
+            self.readback.put(-1) # error
+            
+        
             
         #If we have transitioned from moving to opened then set opened and done
-        elif value in self.opened_values and self._last_status in self.moving_vals :
-            self.readback.put(1, force=True) # open
-            self.done.put(1, force=True)
+        elif value in self.opened_values:
+            self.readback.put(1) # open
+            self._finished_moving = 1
+      
             
         #If we have transitioned from moving to closed then set closed and done
-        elif value in self.closed_values and self._last_status in self.moving_vals:
-            self.readback.put(0, force=True) # closed
-            self.done.put(1, force=True)
+        elif value in self.closed_values:
+            self.readback.put(0) # closed
+            self._finished_moving = 1
             
-        
-        #Else, if the status value hasn't changed out of a moving state then done will remain 0
-        
-        #Record the value to find the transition
+            
         self._last_status = value
+            
+    def _update_done(self, *args, value, **kwargs):
+        """ Callback to update the done based on status"""
+        
+        if value == 0 and self._finished_moving == 1:
+            self.done.put(1)
                 
     def __init__(self, prefix, *, name, **kwargs):
         self._last_status = None
+        self._finished_moving = 1
         
         super().__init__(prefix, name=name, **kwargs)
         self.readback.name = self.name
         # Determine the initial state of the readback
         if self.status.get() in self.opened_values:
-              self.readback.put(1, force=True) # open
+              self.readback.put(1) # open
         
         # For now ignore the error state. If we are moving the callbacks will find the state we are in
         else:
-              self.readback.put(0, force=True) # close
+              self.readback.put(0) # close
 
         # Subscribe callbacks to changes of the status PV, or requests to change setpoint
-        self.status.subscribe(self._update_readback_and_done, event_type=Signal.SUB_VALUE, run=False)
+        self.status.subscribe(self._update_readback, event_type=Signal.SUB_VALUE, run=False)
+        self.toggle.subscribe(self._update_done, event_type=Signal.SUB_VALUE, run=False)
+        
         self.setpoint.subscribe(self._update_setpoint, event_type=Signal.SUB_VALUE, run=False)

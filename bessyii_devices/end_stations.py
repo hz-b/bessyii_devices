@@ -1,7 +1,7 @@
-from ophyd import Device, EpicsMotor
+from ophyd import Device, EpicsMotor, EpicsSignalRO, EpicsSignal
 from ophyd import Component as Cpt
 from .keithley import Keithley6514
-from .bruker import MyEpicsMCA
+from .bruker import Bruker
 from ophyd.status import AndStatus
 
 from numpy.linalg import norm
@@ -23,7 +23,12 @@ class OAESE(PseudoPositioner):
     z = Cpt(EpicsMotor, 'motor0:mz')
     kth00 = Cpt(Keithley6514, 'Keithley00:')
     kth01 = Cpt(Keithley6514, 'Keithley01:')
-    bruker = Cpt(MyEpicsMCA,'SDD00:mca1')
+    temp1 = Cpt(EpicsSignal,'TEMPERATURE01:getTemp', name = 'temp1',auto_monitor =True, kind ='hinted')
+    temp2 = Cpt(EpicsSignal,'TEMPERATURE02:getTemp', name = 'temp2',auto_monitor =True,  kind ='hinted')
+    temp3 = Cpt(EpicsSignal,'TEMPERATURE03:getTemp', name = 'temp3',auto_monitor =True,  kind ='hinted')
+    temp4 = Cpt(EpicsSignal,'TEMPERATURE04:getTemp', name = 'temp4',auto_monitor =True,  kind ='hinted')
+    temp5 = Cpt(EpicsSignal,'TEMPERATURE05:getTemp', name = 'temp5',auto_monitor =True,  kind ='hinted')
+    bruker = Cpt(Bruker,'SDD00:')
     
     #Pseudo Axis
     pos = Cpt(PseudoSingle, name='pos')
