@@ -28,32 +28,31 @@ class ROI(Device):
                          name=name, parent=parent, **kwargs)
 
 
-
+class Rontec(Device):
+    
+    throughput = Cpt(EpicsSignalRO, 'Throughput', kind='normal')
+    temperature = Cpt(EpicsSignalRO, 'Temperature', kind='normal')
+    
 class MyEpicsMCA(EpicsMCA):
     
     erase_start = Cpt(EpicsSignal, 'EraseStart', kind='omitted')
-    acquiring = Cpt(EpicsSignalRO, '.ACQG', kind='omitted')
+    acquiring = Cpt(EpicsSignalRO, 'WhenAcqStops', kind='omitted')
+    done_value = 0
     
-        #Acquisition Throughput 
-    throughput = Cpt(EpicsSignalRO, 'Throughput', kind='omitted')
-    
-    
-    #None of these are consistent enough
-    reading = Cpt(EpicsSignalRO, '.READ', kind='omitted')
-    readingg = Cpt(EpicsSignalRO, '.RDNG', kind='omitted')
-    readings = Cpt(EpicsSignalRO, '.RDNS', kind='omitted')
-    
-    roi0 =Cpt(ROI, '.R0')
-    roi1 =Cpt(ROI, '.R1')
-    roi2 =Cpt(ROI, '.R2')
-    roi3 =Cpt(ROI, '.R3')
-    roi4 =Cpt(ROI, '.R4')
-    roi5 =Cpt(ROI, '.R5')
-    roi6 =Cpt(ROI, '.R6')
-    roi7 =Cpt(ROI, '.R7')
-    roi8 =Cpt(ROI, '.R8')
-    roi9 =Cpt(ROI, '.R9')
-    roi10 =Cpt(ROI, '.R10')
+    #device
+    #rontec = Cpt(Rontec, , kind = 'normal')
+
+    roi0 =Cpt(ROI, '.R0',kind = 'normal')
+    #roi1 =Cpt(ROI, '.R1')
+    roi2 =Cpt(ROI, '.R2', kind='hinted')
+    roi3 =Cpt(ROI, '.R3', kind='hinted')
+    #roi4 =Cpt(ROI, '.R4')
+    #roi5 =Cpt(ROI, '.R5')
+    #roi6 =Cpt(ROI, '.R6')
+    #roi7 =Cpt(ROI, '.R7')
+    #roi8 =Cpt(ROI, '.R8')
+    #roi9 =Cpt(ROI, '.R9')
+    #roi10 =Cpt(ROI, '.R10')
     
     #calibration
     offset = Cpt(EpicsSignalRO, '.CALO',kind='config')
@@ -80,10 +79,10 @@ class MyEpicsMCA(EpicsMCA):
                 
                 return False
                        
-            return (value == 0 and old_value == 1 and self.preset_real_time.get() == self.elapsed_real_time.get())
+            return (value == self.done_value)
         
         # create the status with SubscriptionStatus that add's a callback to check_value.
-        sta_cnt = SubscriptionStatus(callback_signal, check_value, run=False, settle_time = 3)
+        sta_cnt = SubscriptionStatus(callback_signal, check_value, run=False)
          
         # Start the acquisition
         sta_acq = self.erase_start.set(1)
@@ -94,8 +93,11 @@ class MyEpicsMCA(EpicsMCA):
         
         return stat
 
-
-
+class Bruker(Device):
+    
+    mca = Cpt(MyEpicsMCA, 'mca1', name='mca', kind='hinted')
+    detector = Cpt(Rontec, 'Rontec1', name = 'detector',kind='config')
+    
         
        
    
