@@ -89,14 +89,11 @@ class M3M4(PseudoPositioner):
         # move the done write 
 
     def _real_finished(self, *args,**kwargs):
-    '''Callback: A single real positioner has finished moving.
-    Used for asynchronous motion, if all have finished moving then fire a
-    callback (via `Positioner._done_moving`)
-    '''
+        '''Callback: A single real positioner has finished moving. 	Used for asynchronous motion, if all have finished moving 	then fire a callback (via Positioner._done_moving)'''
         with self._finished_lock:
-            if self.multiaxis_running.get() == 0:
-                self._done_moving()
-    
+                if self.multiaxis_running.get() == 0:
+                        self._done_moving()
+
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
         self.multiaxis_running.subscribe(self._real_finished)
