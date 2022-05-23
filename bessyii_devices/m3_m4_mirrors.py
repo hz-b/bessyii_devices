@@ -85,12 +85,25 @@ class Hexapod(PseudoPositioner):
     @pseudo_position_argument
     def forward(self, pseudo_pos):
         '''Run a forward (pseudo -> real) calculation'''
-        return self.RealPosition(pseudo_pos)
+        return self.RealPosition(rrx=pseudo_pos.rx,
+                                 rry=pseudo_pos.ry,
+                                 rrz=pseudo_pos.rz,
+                                 rtx=pseudo_pos.tx,
+                                 rty=pseudo_pos.ty,
+                                 rtz=pseudo_pos.tz
+                                 )
+
 
     @real_position_argument
     def inverse(self, real_pos):
         '''Run an inverse (real -> pseudo) calculation'''
-        return self.PseudoPosition(real_pos)
+        return self.PseudoPosition(rx=real_pos.rrx,
+                                 ry=real_pos.rry,
+                                 rz=real_pos.rrz,
+                                 tx=real_pos.rtx,
+                                 ty=real_pos.rty,
+                                 tz=real_pos.rtz
+                                 )
 
     def _concurrent_move(self, real_pos, **kwargs):
         '''Move all real positioners to a certain position, in parallel'''
@@ -118,7 +131,7 @@ class Hexapod(PseudoPositioner):
     
 class SMU(Hexapod):
 
-    choice = Cpt(SMUChoice,'')
+    coordinate_sys = Cpt(SMUChoice,'')
     
     
     
