@@ -193,11 +193,13 @@ class SMU2(Hexapod):
     
 class SMU3(Hexapod):
 
+
     """
     A hexapod that can change between three different co-ordinate systems
     """
     _real = ['rrx','rry','rrz','rtx','rty','rtz']
     choice = Cpt(SMU3Choice,'')  
+
     
     
     
