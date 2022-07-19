@@ -20,28 +20,6 @@ class M1Axis(PVPositioner):
         self.readback.name = self.name
 
 
-# Used only for M1 uses Software done signal
-class M1AxisAquarius(PVPositionerComparator):
-
-    setpoint = FCpt(EpicsSignal, '{self.prefix}.VAL', kind='config'  ) 
-    stop_setpoint = FCpt(EpicsSignal, '{self.prefix}.STOP', kind='config'  )      
-    setpoint_relative = FCpt(EpicsSignal, '{self.prefix}.TWV', kind='config' )                  
-    readback = FCpt(EpicsSignalRO, '{self.prefix}.RBV', kind='hinted')
-
-            
-    atol = 1.0  # tolerance before we set done to be 1 (in um) we should check what this should be!
-
-
-    def done_comparator(self, readback, setpoint):
-        return setpoint-self.atol < readback < setpoint+self.atol
-        
-        
-    def __init__(self, prefix, ch_name=None, **kwargs):
-        self._ch_name = ch_name
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name
-
-
 # Used for hexapods
 class HexapodAxis(PVPositioner):
 
