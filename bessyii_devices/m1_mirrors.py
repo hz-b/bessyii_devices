@@ -1,9 +1,9 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import PVPositioner, EpicsSignal,EpicsMotor, EpicsSignalRO, Device
 from ophyd.signal import Signal, SignalRO
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 #from .positioners import *
-from .axes import M1Axis, M1AxisAquarius
+from .axes import M1Axis
 
 
 
@@ -25,10 +25,12 @@ class M1HardEmil(M1):
 
 class M1Aquarius(Device):
 
-    tx   = Cpt(M1AxisAquarius, '', ch_name='Tx', labels={"mirrors"})
-    ty   = Cpt(M1AxisAquarius, '', ch_name='Ty', labels={"mirrors"})
-    rx   = Cpt(M1AxisAquarius, '', ch_name='Rx', labels={"mirrors"})
-    ry   = Cpt(M1AxisAquarius, '', ch_name='Ry', labels={"mirrors"})
-    rz   = Cpt(M1AxisAquarius, '', ch_name='Rz', labels={"mirrors"})
+    tx = EpicsMotor('Tx', name='tx', labels={"mirrors"})
+    ty = EpicsMotor('Ty', name='ty', labels={"mirrors"})
+    tz = EpicsMotor('Tz', name='tz', labels={"mirrors"})
+    rx = EpicsMotor('Rx', name='rx', labels={"mirrors"})
+    ry = EpicsMotor('Ry', name='ry', labels={"mirrors"})
+    rz = EpicsMotor('Rz', name='rz', labels={"mirrors"})
+
 
 
