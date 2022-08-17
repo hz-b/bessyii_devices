@@ -1,4 +1,4 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device, EpicsMotor
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from .axes import HexapodAxis, M1AxisAquarius, AxisTypeA
@@ -152,9 +152,9 @@ class SMUAquariusPGM2(Device):
 # used for METRIXS and UE52-SGM
 class SMUMetrixs(Device):
 
-    tx   = Cpt(AxisTypeA, '', ch_name='M2', labels={"mirrors"})
-    rx   = Cpt(AxisTypeA, '', ch_name='M3', labels={"mirrors"})
-    ry   = Cpt(AxisTypeA, '', ch_name='M4', labels={"mirrors"})
-    rz   = Cpt(AxisTypeA, '', ch_name='M5', labels={"mirrors"})
+    tx   = Cpt(EpicsMotor, 'M2', labels={"mirrors"})
+    rx   = Cpt(EpicsMotor, 'M3', labels={"mirrors"})
+    ry   = Cpt(EpicsMotor, 'M4', labels={"mirrors"})
+    rz   = Cpt(EpicsMotor, 'M5', labels={"mirrors"})
 
 
