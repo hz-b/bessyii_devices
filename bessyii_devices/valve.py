@@ -71,7 +71,6 @@ class PositionerBessyValve(PVPositioner):
     def _update_readback(self, *args, value, **kwargs):
         """ Callback to update the readback based on status"""
         
-        print(f"update readback value= {value}, done = {self.done.get()}")
         if self._last_status == None:
             self._last_status = value
 
