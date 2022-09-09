@@ -12,7 +12,17 @@ class Ring(Device):
     current  = Cpt(EpicsSignalRO,      'current',   kind="hinted", labels={"detectors"})
     lifetime = Cpt(EpicsSignalRO,      'lt10',      kind="hinted"                      )
     
+class BPM(Device):
+    
+    """
+    Object to query machine BPM Status
 
+    """
+
+    x = Cpt(EpicsSignalRO,      'rdX',   kind="hinted", labels={"detectors"})
+    y = Cpt(EpicsSignalRO,      'rdY',   kind="hinted", labels={"detectors"})
+ 
+    
 class Topup(Device):
     
     """

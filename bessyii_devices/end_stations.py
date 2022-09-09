@@ -1,7 +1,7 @@
 from ophyd import Device, EpicsMotor, EpicsSignalRO, EpicsSignal
 from ophyd import Component as Cpt
 from .keithley import Keithley6514
-from .bruker import MyEpicsMCA
+from .bruker import Bruker
 from ophyd.status import AndStatus
 
 from numpy.linalg import norm
@@ -28,7 +28,7 @@ class OAESE(PseudoPositioner):
     temp3 = Cpt(EpicsSignal,'TEMPERATURE03:getTemp', name = 'temp3',auto_monitor =True,  kind ='hinted')
     temp4 = Cpt(EpicsSignal,'TEMPERATURE04:getTemp', name = 'temp4',auto_monitor =True,  kind ='hinted')
     temp5 = Cpt(EpicsSignal,'TEMPERATURE05:getTemp', name = 'temp5',auto_monitor =True,  kind ='hinted')
-    bruker = Cpt(MyEpicsMCA,'SDD00:mca1')
+#    bruker = Cpt(Bruker,'SDD00:')
     
     #Pseudo Axis
     pos = Cpt(PseudoSingle, name='pos')
@@ -155,5 +155,60 @@ class METRIXSSpectrometer(PseudoPositioner):
         else:
             
             return self.PseudoPosition(pos="unknown")
+
+# METRIXS Detector Unit 
+class METRIXSDetector(PseudoPositioner):
+    
+    def __init__(self,prefix, atol=1, **kwargs):
+        self.atol=atol
+        super().__init__(prefix, **kwargs)
+    
+    z          = Cpt(EpicsMotor, 'DetZ', labels={"detector"})
+    distance   = Cpt(EpicsMotor, 'DetDist', labels={"detector"})
         
+    #Pseudo Axis
+    pos = Cpt(PseudoSingle, name='pos')
+    
+    pos_dict ={}
+
+    #save the current position with a particular name
+    def save(self, name):
+        
+        self.pos_dict[name]= numpy.array((self.z.user_readback.get(),
+                                          self.distance.user_readback.get()
+                                          ))
+                            
+        
+    @pseudo_position_argument
+    def forward(self, pseudo):
+        '''Run a forward (pseudo -> real) calculation'''
+        name = pseudo.pos
+        print(name)
+
+        if name in self.pos_dict:
+            
+            return self.RealPosition(z=self.pos_dict[name][0],
+                                     distance=self.pos_dict[name][1]                                 
+                                    )
+        else: 
+            print("We don't know that position")
+            return self.RealPosition(z=self.z.user_setpoint.get(),
+                                     distance=self.distance.user_setpoint.get()
+                                    )
+             
+    @real_position_argument
+    def inverse(self, real):
+        '''Run an inverse (real -> pseudo) calculation'''
+        coord = numpy.array((real.z,
+                             real.distance
+                            ))
+        
+        for name in self.pos_dict:
+            if norm(self.pos_dict[name]-coord)<self.atol:
+        
+                return self.PseudoPosition(pos=name)
+        
+        else:
+            
+            return self.PseudoPosition(pos="unknown")
         

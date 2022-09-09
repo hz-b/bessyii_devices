@@ -1,4 +1,4 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device, EpicsMotor
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from .axes import AxisTypeA, AxisTypeB, AxisTypeD
@@ -70,7 +70,6 @@ class STXM_HS(Device):
 #Status 			AUYU15L:Top.STOP
 #Stop			AUYU15L:Top.stMotor
 
-
 # AQUARIUS
 class AU1Aquarius(Device):
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
@@ -81,15 +80,24 @@ class AU1Aquarius(Device):
 
 
 
-
 # METRIXS
+# not in use since end of shutdown august 2020 
 class AU1Metrixs(Device):
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
     top         = Cpt(AxisTypeD, 'AUTOPES6L')
     bottom      = Cpt(AxisTypeD, 'AUBOTES6L')
     left        = Cpt(AxisTypeD, 'AUWALLES6L') 
     right       = Cpt(AxisTypeD, 'AURINGES6L') 
-    
+
+# METRIXS Spectrometer AU
+class AUspecMETRIXS(Device):
+    #_default_read_attrs = ['top.user_readback', 'bottom.user_readback', 'left.user_readback', 'right.user_readback']
+    top    = Cpt(EpicsMotor, 'Blade-Up', labels={"aperture"})
+    bottom = Cpt(EpicsMotor, 'Blade-Down', labels={"aperture"})
+    left   = Cpt(EpicsMotor, 'Blade-Wall', labels={"aperture"})
+    right  = Cpt(EpicsMotor, 'Blade-Ring', labels={"aperture"})
+
+
     
 # UE52-SGM
 class AU1UE52SGM(Device):

@@ -1,4 +1,4 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device, EpicsMotor
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from bessyii_devices.axes import HexapodAxis, M1AxisAquarius, AxisTypeA
@@ -119,14 +119,14 @@ class Hexapod(PseudoPositioner):
     tz = Cpt(PseudoSingle)
 
     #Real Axes
-    rrx = Cpt(HexapodAxis, '', ch_name='A', labels={"mirrors"},kind='normal')
-    rry = Cpt(HexapodAxis, '', ch_name='B', labels={"mirrors"},kind='normal')
-    rrz = Cpt(HexapodAxis, '', ch_name='C', labels={"mirrors"},kind='normal')
-    rtx = Cpt(HexapodAxis, '', ch_name='X', labels={"mirrors"},kind='normal')
-    rty = Cpt(HexapodAxis, '', ch_name='Y', labels={"mirrors"},kind='normal')
-    rtz = Cpt(HexapodAxis, '', ch_name='Z', labels={"mirrors"},kind='normal')
+    tx = Cpt(HexapodAxis, '', ch_name='X', labels={"mirrors"},kind='normal')
+    ty = Cpt(HexapodAxis, '', ch_name='Y', labels={"mirrors"},kind='normal')
+    tz = Cpt(HexapodAxis, '', ch_name='Z', labels={"mirrors"},kind='normal')
+    rx = Cpt(HexapodAxis, '', ch_name='A', labels={"mirrors"},kind='normal')
+    ry = Cpt(HexapodAxis, '', ch_name='B', labels={"mirrors"},kind='normal')
+    rz = Cpt(HexapodAxis, '', ch_name='C', labels={"mirrors"},kind='normal')
     
-    start_immediately = Cpt(EpicsSignal, 'hexapod:mbboRunAfterValue', kind = 'omitted')
+    wait_for_values = Cpt(EpicsSignal, 'hexapod:mbboRunAfterValue', kind = 'omitted')
     do_it = Cpt(EpicsSignal, 'hexapod:setPoseA.PROC', kind = 'omitted')
     multiaxis_running = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='omitted'         )
     pmac = Cpt(EpicsSignal, 'pmac.AOUT',string='True', kind = 'omitted') #send &1a to clear errors before any move
@@ -163,7 +163,7 @@ class Hexapod(PseudoPositioner):
             self.log.debug('[concurrent] Moving %s to %s', real.name, value)
             real.setpoint.put(value)
         
-        self.start_immediately.put(1)
+        self.wait_for_values.put(0)
         self.do_it.put(1)
 
         #Now having put the values to the axes we need to set a done signal to 0, then initiate the move and add a callback which will
@@ -222,8 +222,9 @@ class SMUAquariusPGM2(Device):
 # used for METRIXS and UE52-SGM
 class SMUMetrixs(Device):
 
-    tx   = Cpt(AxisTypeA, '', ch_name='M2', labels={"mirrors"})
-    rx   = Cpt(AxisTypeA, '', ch_name='M3', labels={"mirrors"})
-    ry   = Cpt(AxisTypeA, '', ch_name='M4', labels={"mirrors"})
-    rz   = Cpt(AxisTypeA, '', ch_name='M5', labels={"mirrors"})
+    tx   = Cpt(EpicsMotor, 'M2', labels={"mirrors"})
+    rx   = Cpt(EpicsMotor, 'M3', labels={"mirrors"})
+    ry   = Cpt(EpicsMotor, 'M4', labels={"mirrors"})
+    rz   = Cpt(EpicsMotor, 'M5', labels={"mirrors"})
+
 

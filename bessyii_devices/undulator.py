@@ -23,8 +23,8 @@ class UndulatorGap(PVPositioner):
     delta = Cpt(EpicsSignal,    'BaseParGapTrs', kind ='config' )
         
     # Readback
-    harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'config' )   # approximated energy of the 1stharmonic with standard electron beam condition
-    harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'config' )   
+    harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'normal' )   # approximated energy of the 1stharmonic with standard electron beam condition
+    harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'normal' )   
 
 
     
@@ -73,17 +73,17 @@ class UndulatorBase(Device): # PlanarDevice
 
     
     # Readback
-    harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'config' )   # approximated energy of the 1stharmonic with standard electron beam condition
-    harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'config' )   
+    harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'normal' )   # approximated energy of the 1stharmonic with standard electron beam condition
+    harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'normal' )   
     
-    read_attrs = ['gap','harmonic_01_eV']
+    read_attrs = ['gap','harmonic_01_eV', 'harmonic_01_nM']
     
 
 class HelicalUndulator(UndulatorBase):
     
     shift = Cpt(UndulatorShift, '') # include it as a device
     
-    read_attrs = ['gap','shift','harmonic_01_eV']
+    read_attrs = ['gap','shift','harmonic_01_eV', 'harmonic_01_nM']
 
 
 class UndulatorMetrixs(UndulatorBase):
