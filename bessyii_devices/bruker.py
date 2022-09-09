@@ -32,6 +32,7 @@ class Rontec(Device):
     
     throughput = Cpt(EpicsSignalRO, 'Throughput', kind='normal')
     temperature = Cpt(EpicsSignalRO, 'Temperature', kind='normal')
+    status_rate = Cpt(EpicsSignalRO, 'ReadTemperature.SCAN', kind='config')
     
 class MyEpicsMCA(EpicsMCA):
     
@@ -75,6 +76,9 @@ class MyEpicsMCA(EpicsMCA):
     egu = Cpt(EpicsSignalRO, '.EGU',kind='config')
     two_theta = Cpt(EpicsSignalRO, '.TTH',kind='config')
     
+    ##Config
+    
+    
 
     def trigger(self):
         
@@ -116,6 +120,14 @@ class Bruker(Device):
     mca = Cpt(MyEpicsMCA, 'mca1', name='mca', kind='hinted')
     detector = Cpt(Rontec, 'Rontec1', name = 'detector',kind='config')
 >>>>>>> bessyii_devices/bruker.py
+    
+    def stage(self):
+        
+        self.detector.status_rate.put("Passive")
+        
+    def unstage(self):
+        
+        self.detector.status_rate.put(".1 second")
     
         
        
