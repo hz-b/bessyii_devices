@@ -27,23 +27,12 @@ class PositionerBessyValve(PVPositioner):
     done is 1, moving is 0
     
     enums from status pv:
-  
-      [ 0] closing(----)
-      [ 1] closed(---C)
-      [ 2] opened(--O-)
-      [ 3] error(--OC)
-      [ 4] closing(-F--)
-      [ 5] closed(-F-C)
-      [ 6] closing(-FO-)
-      [ 7] error(-FOC)
-      [ 8] error(S---)
-      [ 9] error(S--C)
-      [10] opened(S-O-)
-      [11] error(S-OC)
-      [12] opening(SF--)
-      [13] opening(SF-C)
-      [14] opened(SFO-)
-      [15] error(SFOC)
+        
+      State
+      [0] none
+      [1] closed
+      [2] opened
+      [3] both
 
     """
     
@@ -53,14 +42,14 @@ class PositionerBessyValve(PVPositioner):
     _default_read_attrs = ['readback']
     
     toggle    = Cpt(EpicsSignal, 'SetTa') 
-    status    = Cpt(EpicsSignal, 'State1',auto_monitor=True) 
+    status    = Cpt(EpicsSignal, 'State',auto_monitor=True) 
     done = Cpt(Signal, value=0)
     done_value = 1
     
-    moving_vals = [0,4,6,12,13]  # the values which the valve reports if it is moving
-    opened_values = [2,10,14]
-    closed_values = [1,5]
-    error_values = [15,11,9,8,7,3]
+    moving_vals = [0]  # the values which the valve reports if it is moving
+    opened_values = [2]
+    closed_values = [1]
+    error_vals = [3]
  
     
     def _update_setpoint(self, *args, value, **kwargs):
@@ -70,8 +59,8 @@ class PositionerBessyValve(PVPositioner):
         if value != self.readback.get():
 
             #Set done to 0, and start the move
-            self._finished_moving = 0
             self.done.put(0)
+            self._finished_moving = 0
             self.toggle.set(1)
         else:
             #Else, toggle done so that the status object completes
@@ -81,35 +70,27 @@ class PositionerBessyValve(PVPositioner):
     
     def _update_readback(self, *args, value, **kwargs):
         """ Callback to update the readback based on status"""
-   
+        
         if self._last_status == None:
             self._last_status = value
-        
-        if value in self.error_values:
-            self.readback.put(-1) # error
-            
-        
-            
+
         #If we have transitioned from moving to opened then set opened and done
-        elif value in self.opened_values:
+        elif value in self.opened_values and self._finished_moving == 0:
             self.readback.put(1) # open
             self._finished_moving = 1
+            self.done.put(1)
       
             
         #If we have transitioned from moving to closed then set closed and done
-        elif value in self.closed_values:
+        elif value in self.closed_values and self._finished_moving == 0:
             self.readback.put(0) # closed
             self._finished_moving = 1
+            self.done.put(1)
             
             
         self._last_status = value
             
-    def _update_done(self, *args, value, **kwargs):
-        """ Callback to update the done based on status"""
-        
-        if value == 0 and self._finished_moving == 1:
-            self.done.put(1)
-                
+      
     def __init__(self, prefix, *, name, **kwargs):
         self._last_status = None
         self._finished_moving = 1
@@ -125,7 +106,5 @@ class PositionerBessyValve(PVPositioner):
               self.readback.put(0) # close
 
         # Subscribe callbacks to changes of the status PV, or requests to change setpoint
-        self.status.subscribe(self._update_readback, event_type=Signal.SUB_VALUE, run=False)
-        self.toggle.subscribe(self._update_done, event_type=Signal.SUB_VALUE, run=False)
-        
+        self.status.subscribe(self._update_readback, event_type=Signal.SUB_VALUE, run=False)        
         self.setpoint.subscribe(self._update_setpoint, event_type=Signal.SUB_VALUE, run=False)
