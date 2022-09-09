@@ -174,8 +174,12 @@ class Hexapod(PseudoPositioner):
         with self._finished_lock:
                 if self.multiaxis_running.get() == 0:
                         self._done_moving()
+<<<<<<< HEAD
                         
     
+=======
+
+>>>>>>> origin/m3m4_pseudo_pos_00
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
         self.multiaxis_running.subscribe(self._real_finished)
