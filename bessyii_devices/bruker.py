@@ -43,19 +43,6 @@ class MyEpicsMCA(EpicsMCA):
     #device
     #rontec = Cpt(Rontec, , kind = 'normal')
 
-<<<<<<< bessyii_devices/bruker.py
-    roi0 =Cpt(ROI, '.R0')
-    roi1 =Cpt(ROI, '.R1')
-    roi2 =Cpt(ROI, '.R2')
-    roi3 =Cpt(ROI, '.R3')
-    roi4 =Cpt(ROI, '.R4')
-    roi5 =Cpt(ROI, '.R5')
-    roi6 =Cpt(ROI, '.R6')
-    roi7 =Cpt(ROI, '.R7')
-    roi8 =Cpt(ROI, '.R8')
-    roi9 =Cpt(ROI, '.R9')
-    roi10 =Cpt(ROI, '.R10')
-=======
     roi0 =Cpt(ROI, '.R0',kind = 'normal')
     #roi1 =Cpt(ROI, '.R1')
     roi2 =Cpt(ROI, '.R2', kind='hinted')
@@ -67,7 +54,6 @@ class MyEpicsMCA(EpicsMCA):
     #roi8 =Cpt(ROI, '.R8')
     #roi9 =Cpt(ROI, '.R9')
     #roi10 =Cpt(ROI, '.R10')
->>>>>>> bessyii_devices/bruker.py
     
     #calibration
     offset = Cpt(EpicsSignalRO, '.CALO',kind='config')
@@ -113,13 +99,9 @@ class MyEpicsMCA(EpicsMCA):
 
 class Bruker(Device):
     
-<<<<<<< bessyii_devices/bruker.py
-    mca = Cpt(MyEpicsMCA, 'mca1', name='mca')
-    detector = Cpt(Rontec, 'Rontec1', name = 'detector')
-=======
+
     mca = Cpt(MyEpicsMCA, 'mca1', name='mca', kind='hinted')
     detector = Cpt(Rontec, 'Rontec1', name = 'detector',kind='config')
->>>>>>> bessyii_devices/bruker.py
     
     def stage(self):
         
