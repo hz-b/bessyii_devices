@@ -180,7 +180,7 @@ class Hexapod(PseudoPositioner):
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
         self.multiaxis_running.subscribe(self._real_finished)
-        self.read_attrs = ['rtx','rty','rtz','rrx','rry','rrz']
+        #self.read_attrs = ['rtx','rty','rtz','rrx','rry','rrz']
 
         
     
@@ -192,9 +192,7 @@ class SMU2(Hexapod):
     """
     _real = ['rrx','rry','rrz','rtx','rty','rtz']
     choice = Cpt(SMU2Choice,'',kind="normal")
-    def __init__(self, prefix, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.read_attrs = ['rtx','rty','rtz','rrx','rry','rrz','choice']
+ 
     
 class SMU3(Hexapod):
 
