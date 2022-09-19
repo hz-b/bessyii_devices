@@ -24,7 +24,12 @@ from ophyd.pseudopos import (pseudo_position_argument,
 # AU1: WAUY01U012L
 # AU3 SISSY: AUY02U112L   
 # AU3 CAT: AUY02U212L
+class AU4(Device):
 
+    top = Cpt(EpicsMotor, "M3", labels={"apertures"})
+    bottom = Cpt(EpicsMotor, "M1", labels={"apertures"})
+    left = Cpt(EpicsMotor, "M2", labels={"apertures"})
+    right = Cpt(EpicsMotor, "M0", labels={"apertures"})
 
 class AU13(Device):
     #_default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
