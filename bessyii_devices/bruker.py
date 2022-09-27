@@ -32,7 +32,7 @@ class Rontec(Device):
     
     throughput = Cpt(EpicsSignalRO, 'Throughput', kind='normal')
     temperature = Cpt(EpicsSignalRO, 'Temperature', kind='normal')
-    status_rate = Cpt(EpicsSignalRO, 'ReadTemperature.SCAN', kind='config')
+    status_rate = Cpt(EpicsSignal, 'ReadTemperature.SCAN', kind='config')
     
 class MyEpicsMCA(EpicsMCA):
     
