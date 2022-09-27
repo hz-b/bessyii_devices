@@ -36,9 +36,70 @@ class SimPositionerDone(SynAxis, PVPositionerDone):
         super().__init__(name=name, parent=parent, labels=labels, kind=kind,readback_func=readback_func,delay=delay,precision=precision,
                          **kwargs)
         self.set(value)
+
+from ophyd.status import DeviceStatus, MoveStatus
+from ophyd import ttime
+from ophyd.utils import (
+    InvalidState,
+    StatusTimeoutError,
+    UnknownStatusFailure,
+    WaitTimeoutError,
+)
+import threading
+
+class DodgyMotor(SimPositionerDone):
     
+    def __init__(self,
+                 name,
+                 readback_func=None,
+                 value=0,
+                 delay=0,
+                 precision=3,
+                 parent=None,
+                 labels=None,
+                 kind=None,**kwargs):
+        super().__init__(name=name, parent=parent, labels=labels, kind=kind,readback_func=readback_func,delay=delay,precision=precision,
+                         **kwargs)
+        self.set(value)
+        self.timeout = self.delay - 1
     
-    
+    def set(self, value):
+        old_setpoint = self.sim_state['setpoint']
+        self.sim_state['setpoint'] = value
+        self.sim_state['setpoint_ts'] = ttime.time()
+        self.setpoint._run_subs(sub_type=self.setpoint.SUB_VALUE,
+                                old_value=old_setpoint,
+                                value=self.sim_state['setpoint'],
+                                timestamp=self.sim_state['setpoint_ts'])
+
+        def update_state():
+            old_readback = self.sim_state['readback']
+            self.sim_state['readback'] = self._readback_func(value)
+            self.sim_state['readback_ts'] = ttime.time()
+            self.readback._run_subs(sub_type=self.readback.SUB_VALUE,
+                                    old_value=old_readback,
+                                    value=self.sim_state['readback'],
+                                    timestamp=self.sim_state['readback_ts'])
+            self._run_subs(sub_type=self.SUB_READBACK,
+                           old_value=old_readback,
+                           value=self.sim_state['readback'],
+                           timestamp=self.sim_state['readback_ts'])
+
+        st = DeviceStatus(device=self)
+        if self.delay:
+            def sleep_and_finish():
+                ttime.sleep(self.delay)
+                update_state()
+                
+            threading.Thread(target=sleep_and_finish, daemon=True).start()
+            
+        else:
+            update_state()
+            
+        
+        st.set_exception(TimeoutError)
+        return st
+
 
 m1 = SimPositionerDone(name='m1' )
 m2 = SimPositionerDone(name='m2')
