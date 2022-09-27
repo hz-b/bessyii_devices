@@ -1,4 +1,4 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import PVPositioner,EpicsMotor, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from bessyii_devices.axes import HexapodAxis, M1AxisAquarius, AxisTypeA
@@ -82,12 +82,13 @@ class SMU2Choice(PVPositioner):
         if self.actuate is not None:
             self.log.debug('%s.actuate = %s', self.name, self.actuate_value)
             self.actuate.put(self.actuate_value, wait=False)
+
 class SMU3Choice(SMU2Choice):
     
     """
     An extra position 
     """
-    pos0 = Cpt(SMUChoiceCoordSysPositions,'',mirror=0,kind = 'config')
+    pos3 = Cpt(SMUChoiceCoordSysPositions,'',mirror=3,kind = 'config')
 
     
 class Hexapod(PseudoPositioner):
@@ -183,6 +184,7 @@ class Hexapod(PseudoPositioner):
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
         self.multiaxis_running.subscribe(self._real_finished)
+        #self.read_attrs = ['rtx','rty','rtz','rrx','rry','rrz']
 
         
     
@@ -193,7 +195,8 @@ class SMU2(Hexapod):
     A hexapod that can change between two different co-ordinate systems
     """
     _real = ['rrx','rry','rrz','rtx','rty','rtz']
-    choice = Cpt(SMU2Choice,'')
+    choice = Cpt(SMU2Choice,'',kind="normal")
+ 
     
 class SMU3(Hexapod):
 
