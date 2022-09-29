@@ -8,26 +8,39 @@ from collections import OrderedDict
 from ophyd.device import (Device, Component as Cpt, DynamicDeviceComponent as DDC,
                      Kind)
 
+from ophyd import FormattedComponent as FCpt
+
+
 class ROI(Device):
 
     # 'name' is not an allowed attribute
-    label = Cpt(EpicsSignal, 'NM', lazy=True, kind='config')
-    count = Cpt(EpicsSignalRO, '', lazy=True, kind='normal')
-    net_count = Cpt(EpicsSignalRO, 'N', lazy=True, kind='config')
-    preset_count = Cpt(EpicsSignal, 'P', lazy=True, kind='config')
-    is_preset = Cpt(EpicsSignal, 'IP', lazy=True, kind='config')
-    bkgnd_chans = Cpt(EpicsSignal, 'BG', lazy=True, kind='config')
-    hi_chan = Cpt(EpicsSignal, 'HI', lazy=True, kind='config')
-    lo_chan = Cpt(EpicsSignal, 'LO', lazy=True, kind='config')
+    label = FCpt(EpicsSignal, '{self.prefix}.R{self._ch}NM', lazy=True, kind='config')
+    count = FCpt(EpicsSignal, '{self.prefix}.R{self._ch}', lazy=True, kind='normal')
+    net_count = FCpt(EpicsSignalRO, '{self.prefix}.R{self._ch}N', lazy=True, kind='config')
+    preset_count = FCpt(EpicsSignal, '{self.prefix}.R{self._ch}P', lazy=True, kind='config')
+    is_preset = FCpt(EpicsSignal, '{self.prefix}.R{self._ch}IP', lazy=True, kind='config')
+    bkgnd_chans = FCpt(EpicsSignal, '{self.prefix}.R{self._ch}BG', lazy=True, kind='config')
+    hi_chan = FCpt(EpicsSignal, '{self.prefix}.R{self._ch}HI', lazy=True, kind='config')
+    lo_chan = FCpt(EpicsSignal, '{self.prefix}.R{self._ch}LO', lazy=True, kind='config')
+    hi_en = FCpt(EpicsSignal, '{self.prefix}:R{self._ch}HIENERGY', lazy=True, kind='config')
+    lo_en = FCpt(EpicsSignal, '{self.prefix}:R{self._ch}LOENERGY', lazy =True, kind='config')
 
-    def __init__(self, prefix, *, read_attrs=None, configuration_attrs=None,
+    def __init__(self, prefix,ch, *, read_attrs=None, configuration_attrs=None,
                  name=None, parent=None, **kwargs):
-
         super().__init__(prefix, read_attrs=read_attrs,
                          configuration_attrs=configuration_attrs,
                          name=name, parent=parent, **kwargs)
+        self._ch = ch
+        self.hide()
+    
+    def display(self):
 
+        self.count.kind="hinted"
+    
+    def hide(self):
 
+        self.count.kind="normal"
+    
 class Rontec(Device):
     
     throughput = Cpt(EpicsSignalRO, 'Throughput', kind='normal')
@@ -43,10 +56,12 @@ class MyEpicsMCA(EpicsMCA):
     #device
     #rontec = Cpt(Rontec, , kind = 'normal')
 
-    roi0 =Cpt(ROI, '.R0',kind = 'normal')
-    #roi1 =Cpt(ROI, '.R1')
-    roi2 =Cpt(ROI, '.R2', kind='hinted')
-    roi3 =Cpt(ROI, '.R3', kind='hinted')
+    roi0 =Cpt(ROI, '', ch= 0,kind = 'normal')
+    roi1 =Cpt(ROI, '', ch= 1,kind = 'normal')
+    
+
+    roi2 =Cpt(ROI, '',ch=1, kind='normal')
+    roi3 =Cpt(ROI, '',ch=2, kind='normal')
     #roi4 =Cpt(ROI, '.R4')
     #roi5 =Cpt(ROI, '.R5')
     #roi6 =Cpt(ROI, '.R6')
@@ -100,7 +115,7 @@ class MyEpicsMCA(EpicsMCA):
 class Bruker(Device):
     
 
-    mca = Cpt(MyEpicsMCA, 'mca1', name='mca', kind='hinted')
+    mca = Cpt(MyEpicsMCA, 'mca1', name='mca', kind='normal')
     detector = Cpt(Rontec, 'Rontec1', name = 'detector',kind='config')
     
     def stage(self):
