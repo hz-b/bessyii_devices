@@ -1,4 +1,4 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device, EpicsMotor
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from .axes import HexapodAxis, M1AxisAquarius, AxisTypeA
@@ -80,3 +80,9 @@ class SMUMetrixs(Device):
     ry   = Cpt(AxisTypeA, '', ch_name='M4', labels={"mirrors"})
     rz   = Cpt(AxisTypeA, '', ch_name='M5', labels={"mirrors"})
 
+class SMUUE52SGM(Device):
+
+    tx   = EpicsMotor("SMUYU109L:M2", name='tx')
+    rx   = EpicsMotor("SMUYU109L:M3", name='rx')
+    ry   = EpicsMotor("SMUYU109L:M4", name='ry')
+    rz   = EpicsMotor("SMUYU109L:M5", name='rz')
