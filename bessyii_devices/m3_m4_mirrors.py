@@ -73,6 +73,8 @@ class SMUAquariusPGM2(Device):
 
 
 # used for METRIXS and UE52-SGM
+
+#Metrixs implementation should be changed similar to ue52-sgm
 class SMUMetrixs(Device):
 
     tx   = Cpt(AxisTypeA, '', ch_name='M2', labels={"mirrors"})
