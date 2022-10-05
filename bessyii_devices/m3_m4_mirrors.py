@@ -222,6 +222,8 @@ class SMUAquariusPGM2(Device):
 
 
 # used for METRIXS and UE52-SGM
+
+#Metrixs implementation should be changed similar to ue52-sgm
 class SMUMetrixs(Device):
 
     tx   = Cpt(EpicsMotor, 'M2', labels={"mirrors"})
@@ -230,3 +232,8 @@ class SMUMetrixs(Device):
     rz   = Cpt(EpicsMotor, 'M5', labels={"mirrors"})
 
 
+class SMUUE52SGM(Device):
+    tx   = Cpt(EpicsMotor, "M2", name='tx')
+    rx   = Cpt(EpicsMotor, "M3", name='rx')
+    ry   = Cpt(EpicsMotor, "M4", name='ry')
+    rz   = Cpt(EpicsMotor, "M5", name='rz')
