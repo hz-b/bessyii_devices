@@ -7,18 +7,12 @@ from .positioners import PVPositionerComparator
 
 
 # Used only for M1 uses Software done signal
-class M1Axis(PVPositionerComparator):
+class M1Axis(PVPositioner):
 
-    setpoint    = FCpt(EpicsSignal,    '{self.prefix}{self._ch_name}Abs', kind='config' )
+    setpoint    = FCpt(EpicsSignal,    '{self.prefix}{self._ch_name}Abs', kind='normal' )
     readback    = FCpt(EpicsSignalRO,  '{self.prefix}rd{self._ch_name}', kind='hinted')
-
-
-    atol = 1.0  # tolerance before we set done to be 1 (in um) we should check what this should be!
-
-
-    def done_comparator(self, readback, setpoint):
-        return setpoint-self.atol < readback < setpoint+self.atol
-
+    done = FCpt(EpicsSignalRO,  '{self.prefix}ExecSens', kind='omitted')
+    done_value = 0
 
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
@@ -51,9 +45,9 @@ class M1AxisAquarius(PVPositionerComparator):
 # Used for hexapods
 class HexapodAxis(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,    '{self.prefix}hexapod:setPose{self._ch_name}', kind='config'   )
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}hexapod:setPose{self._ch_name}', kind='normal'   )
     readback = FCpt(EpicsSignalRO,  '{self.prefix}hexapod:getReadPose{self._ch_name}', kind='hinted')
-    done     = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='config'         )
+    done     = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='omitted'         )
     
     done_value = 0
     def __init__(self, prefix, ch_name=None, **kwargs):
@@ -64,31 +58,68 @@ class HexapodAxis(PVPositioner):
 # EMIL
 # Used on AU1, AU3 and Pinhole
 
-class AxisTypeA(PVPositionerComparator):
+class AxisTypeA(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}' , kind='config'    )
+    setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}',kind='normal')
     readback = FCpt(EpicsSignalRO,  '{self.prefix}rdPos{self._ch_name}', kind='hinted')
-    atol = 0.005  # tolerance before we set done to be 1 (in um) we should check what this should be!
+    done = Cpt(Signal, value=True)
+    done_value = True
+    running_signal = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}',kind='omitted')
+    
+  
 
-    def done_comparator(self, readback, setpoint):
-        return setpoint-self.atol < readback < setpoint+self.atol
+    def cb_setpoint(self, *args, **kwargs):
+        """
+        Called when setpoint changes (EPICS CA monitor event).
+        When the setpoint is changed, force done=False.  For any move, 
+        done must go != done_value, then back to done_value (True).
+        Without this response, a small move (within tolerance) will not return.
+        Next update of readback will compute self.done.
+        """
+        self.done.put(False)
 
-    def __init__(self, prefix, ch_name=None, **kwargs):
+        diff = self.readback.get() - self.setpoint.get()
+        dmov = abs(diff) <= self._atol
+
+        if dmov and not self.running_signal.get():
+        
+            self.done.put(True)
+    
+    def cb_running(self, *args, **kwargs):
+
+        self.done.put(not(self.running_signal.get()))
+
+    
+
+    def __init__(self, prefix, ch_name=None,atol=0.001, **kwargs):
         self._ch_name = ch_name
+        self._atol = atol
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
+        self.setpoint.subscribe(self.cb_setpoint)
+        self.running_signal.subscribe(self.cb_running)
 
 # Used on AU2 and Diamond Filter        
 class AxisTypeB(PVPositioner):
 
-    setpoint = Cpt(EpicsSignal,    '_SET' , kind='config'             )
-    readback = Cpt(EpicsSignalRO,  '_GET',kind='hinted')
-    done     = Cpt(EpicsSignalRO,  '_STATUS', kind='config')
-    
+    setpoint = Cpt(EpicsSignal,    '_SET', kind='normal')                   
+    readback = Cpt(EpicsSignalRO,  '_GET', kind='hinted')
+    done     = Cpt(EpicsSignalRO,  '_STATUS', kind='omitted')
     done_value = 0 
     
-    def __init__(self, prefix, ch_name=None, **kwargs):
-        self._ch_name = ch_name
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
+class AxisTypeBChoice(PVPositioner):
+
+    setpoint = Cpt(EpicsSignal,    '_GON', kind='normal')                   
+    readback = Cpt(EpicsSignalRO,  '_GETN',string=True, kind='hinted')
+    done     = Cpt(EpicsSignalRO,  '_STATUS', kind='omitted')
+    done_value = 0 
+    
+    def __init__(self, prefix, **kwargs):
+
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name 
 

@@ -27,6 +27,7 @@ from ophyd.positioner import SoftPositioner
 from ophyd.utils import ReadOnlyError, LimitError
 from ophyd import PVPositioner
 from ophyd import Component as Cpt
+from .positioners import PVPositionerComparator
 import time
 
 class BasicFlyer(Device):   
@@ -96,7 +97,7 @@ class BasicFlyer(Device):
 
     def complete(self):
         """
-        Wait for flying to be complete, get the status object that will tell us when we are done
+        Wait for flying to be complete, get the status object that will tell us when we are 
         """
         print("we've be asked to complete")
 
@@ -150,6 +151,15 @@ class MyDetector(Device):
     
     count =  Cpt(EpicsSignalRO,'sensor4:getCount', kind='hinted') 
 
+#models ue48_pgm.en
+
+class MySubPositioner(PVPositioner):
+
+    setpoint = Cpt(EpicsSignal,'axis4:setStartPos', kind='normal') 
+    readback = Cpt(EpicsSignalRO,'axis4:getPos', kind='hinted') 
+    actuate = Cpt(EpicsSignal, 'axis4:init.PROC', kind='config')
+    done = Cpt(EpicsSignal, 'axis4:ready', kind='config')
+
 class MyMotor(BasicFlyer):
     
     start_pos = Cpt(EpicsSignal,'axis4:setStartPos', kind='config') 
@@ -162,5 +172,17 @@ class MyMotor(BasicFlyer):
     done = Cpt(EpicsSignal, 'axis4:done', kind='config')
     ready = Cpt(EpicsSignal, 'axis4:ready', kind='config')
     
+    sub_pos = Cpt(MySubPositioner,"",kind="config")
+    
+    
+    def set(self,value):
+    
+        return self.sub_pos.set(value)
+    
+        
+    
     read_attrs = ['pos']
+    
+    
+        
 

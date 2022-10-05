@@ -12,9 +12,9 @@ class UndulatorGap(PVPositioner):
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name 
     
-    setpoint        = Cpt(EpicsSignal,    'BaseParGapsel.B',kind = 'config')
+    setpoint        = Cpt(EpicsSignal,    'BaseParGapsel.B', kind='normal')
     readback        = Cpt(EpicsSignalRO,  'BaseIPmGap.A',labels={"motors", "undulators"},kind = 'hinted')
-    done            = Cpt(EpicsSignalRO,  'BaseStatISLbl' ,string='True'    ,kind = 'config' )
+    done            = Cpt(EpicsSignalRO,  'BaseStatISLbl' ,string='True'    ,kind = 'omitted' )
     actuate         = Cpt(EpicsSignal,    'BaseCmdCalc.PROC'  , kind = 'config'                     )
     done_value      = 'STOP'
     cmd             = Cpt(EpicsSignal,    'BaseCmdMcmd',string ='True', kind ='config' )
@@ -23,10 +23,10 @@ class UndulatorGap(PVPositioner):
     delta = Cpt(EpicsSignal,    'BaseParGapTrs', kind ='config' )
         
     # Readback
-    harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'config' )   # approximated energy of the 1stharmonic with standard electron beam condition
-    harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'config' )   
+    harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'normal' )   # approximated energy of the 1stharmonic with standard electron beam condition
+    harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'normal' )   
 
-    read_attrs=['readback']
+
     
     def stage(self):
 
@@ -42,9 +42,9 @@ class UndulatorShift(PVPositioner):
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name 
     
-    setpoint        = Cpt(EpicsSignal,    'SBaseParGapsel.B',kind = 'config')
+    setpoint        = Cpt(EpicsSignal,    'SBaseParGapsel.B',kind = 'normal')
     readback        = Cpt(EpicsSignalRO,  'SBaseIPmGap.E',kind = 'hinted') # parrallel
-    done            = Cpt(EpicsSignalRO,  'SBaseStatISLbl' ,string='True', kind = 'config' )
+    done            = Cpt(EpicsSignalRO,  'SBaseStatISLbl' ,string='True', kind = 'omitted' )
     actuate         = Cpt(EpicsSignal,    'SBaseCmdCalc.PROC' , kind = 'config'  ) # this will only work if the command is set to "START"
     done_value      = 'STOP'
     
@@ -70,20 +70,20 @@ class UndulatorBase(Device): # PlanarDevice
     # Commands
     id_control      = Cpt(EpicsSignal,    'BaseCmdLswitch'                  ,kind = 'config' )   # allows us to select control from the panel or from the monochromator panel
     cmd_stop        = Cpt(EpicsSignal,    'BaseCmnUsrStop',string='True'    ,kind = 'config' )   # an bo record that lets us stop or start (1=stopped, 0=enabled)
-    cmd_sel         = Cpt(EpicsSignal,    'BaseCmdMcmd'   ,string='True'    ,kind = 'config' )   # an mbbo record that lets us select what we are going to do
+
     
     # Readback
-    harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'config' )   # approximated energy of the 1stharmonic with standard electron beam condition
-    harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'config' )   
+    harmonic_01_eV  = Cpt(EpicsSignalRO,  'BasePmEnergy'                    ,kind = 'normal' )   # approximated energy of the 1stharmonic with standard electron beam condition
+    harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'normal' )   
     
-    read_attrs = ['gap','harmonic_01_eV']
+    read_attrs = ['gap','harmonic_01_eV', 'harmonic_01_nM']
     
 
 class HelicalUndulator(UndulatorBase):
     
     shift = Cpt(UndulatorShift, '') # include it as a device
     
-    read_attrs = ['gap','shift','harmonic_01_eV']
+    read_attrs = ['gap','shift','harmonic_01_eV', 'harmonic_01_nM']
 
 
 class UndulatorMetrixs(UndulatorBase):
