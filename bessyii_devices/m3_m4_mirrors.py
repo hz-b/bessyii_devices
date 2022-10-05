@@ -81,8 +81,7 @@ class SMUMetrixs(Device):
     rz   = Cpt(AxisTypeA, '', ch_name='M5', labels={"mirrors"})
 
 class SMUUE52SGM(Device):
-
-    tx   = EpicsMotor("SMUYU109L:M2", name='tx')
-    rx   = EpicsMotor("SMUYU109L:M3", name='rx')
-    ry   = EpicsMotor("SMUYU109L:M4", name='ry')
-    rz   = EpicsMotor("SMUYU109L:M5", name='rz')
+    tx   = Cpt(EpicsMotor, "M2", name='tx')
+    rx   = Cpt(EpicsMotor, "M3", name='rx')
+    ry   = Cpt(EpicsMotor, "M4", name='ry')
+    rz   = Cpt(EpicsMotor, "M5", name='rz')
