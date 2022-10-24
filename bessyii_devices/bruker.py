@@ -56,21 +56,16 @@ class MyEpicsMCA(EpicsMCA):
     #device
     #rontec = Cpt(Rontec, , kind = 'normal')
 
-    roi0 =Cpt(ROI, '', ch= 0,kind = 'normal')
-    roi1 =Cpt(ROI, '', ch= 1,kind = 'normal')
-    
-
-    roi2 =Cpt(ROI, '',ch=1, kind='normal')
-    roi3 =Cpt(ROI, '',ch=2, kind='normal')
-    #roi4 =Cpt(ROI, '.R4')
-    #roi5 =Cpt(ROI, '.R5')
-    #roi6 =Cpt(ROI, '.R6')
-    #roi7 =Cpt(ROI, '.R7')
-    #roi8 =Cpt(ROI, '.R8')
-    #roi9 =Cpt(ROI, '.R9')
-    #roi10 =Cpt(ROI, '.R10')
-    
-    #calibration
+    roi0 =Cpt(ROI, '', ch=0,kind = 'normal')
+    roi1 =Cpt(ROI, '', ch=1,kind = 'normal')
+    roi2 =Cpt(ROI, '',ch=2, kind='normal')
+    roi3 =Cpt(ROI, '',ch=3, kind='normal')
+    roi4 =Cpt(ROI, '',ch=4, kind='normal')
+    roi5 =Cpt(ROI, '',ch=5, kind='normal')
+    roi6 =Cpt(ROI, '',ch=6, kind='normal')    
+    roi7 =Cpt(ROI, '',ch=7, kind='normal')
+ 
+   #calibration
     offset = Cpt(EpicsSignalRO, '.CALO',kind='config')
     slope = Cpt(EpicsSignalRO, '.CALS',kind='config')
     quadratic = Cpt(EpicsSignalRO, '.CALQ',kind='config')
