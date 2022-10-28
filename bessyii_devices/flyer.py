@@ -41,6 +41,7 @@ import errno
 from galvani import BioLogic as BL
 import pandas as pd
 import glob
+from pathlib import Path
 import os
 from pprint import pprint
 import threading
@@ -189,19 +190,18 @@ class BiologicPotentiostat(Device):
     def latest_mpr_file(self):
         
         """
-        returns the name of the latest mpr file in the data directory
+        returns the name of the latest mpr file in the data directory, searched recursively
         """
         
 
-        list_of_files = glob.glob(self.data_dir+"*.mpr") # * means all if need specific format then *.csv
 
-        list_of_mpr_files =[]
-        for file_name in list_of_files:
-            if ".mpr" in file_name:
-                list_of_mpr_files.append(file_name)
+        list_of_mpr_files = []
 
-        latest_file = max(list_of_mpr_files, key=os.path.getmtime)
-        
+        for path in Path(self.data_dir).rglob("*.mpr"):
+            list_of_mpr_files.append(path.resolve())
+    
+
+        latest_file = str(max(list_of_mpr_files, key=os.path.getmtime))        
         return latest_file
 
 
@@ -224,7 +224,6 @@ class BiologicPotentiostat(Device):
         for i in range(len(dfs)):
             
             epoch = self.t0 + dfs["time/s"][i]
-            
             data_dict = {}
             timestamps_dict = {}
             for key in dfs:
@@ -241,7 +240,7 @@ class BiologicPotentiostat(Device):
                 timestamps_dict[f'{self.name}_{format_name}'] = epoch
                 
             d = dict(
-                time=self.t0,
+                time=epoch,
                 data=data_dict,
                 timestamps=timestamps_dict
             )
