@@ -37,8 +37,7 @@ class BESSYDevice(Device):
         """
 
         #first pass determine which parameters are configuration parameters
-        
-        seen_attrs = []
+
 
         for config_attr in self.configuration_attrs:
 
@@ -47,7 +46,13 @@ class BESSYDevice(Device):
             param_name = self.name + "_" + config_attr.replace('.','_')
             
             if param_name in d:
-                getattr(self, config_attr).set(d[param_name]).wait()
-                seen_attrs.append(param_name)
+                if hasattr(self,config_attr+'.write_access'):
+                    if getattr(self,config_attr+'.write_access'):
+                        ret = getattr(self, config_attr).set(d[param_name]).wait()
+                        
+
+        return ret
+                               
+
 
                 

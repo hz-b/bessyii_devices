@@ -43,8 +43,9 @@ class PVPositionerBessy(PVPositioner):
             param_name = self.name + "_" + config_attr.replace('.','_')
             
             if param_name in d:
-                getattr(self, config_attr).set(d[param_name]).wait()
-                seen_attrs.append(param_name)
+                if hasattr(self,config_attr+'.write_access'):
+                    if getattr(self,config_attr+'.write_access'):
+                        getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a positioner, so let's restore the position
         sta =  self.move(d[self.name + "_setpoint"])   
@@ -71,8 +72,9 @@ class PseudoPositionerBessy(PseudoPositioner):
             param_name = self.name + "_" + config_attr.replace('.','_')
             
             if param_name in d:
-                getattr(self, config_attr).set(d[param_name]).wait()
-                seen_attrs.append(param_name)
+                if hasattr(self,config_attr+'.write_access'):
+                    if getattr(self,config_attr+'.write_access'):
+                        getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a pseudo positioner, so let's restore the position
                 
