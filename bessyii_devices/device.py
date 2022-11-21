@@ -38,7 +38,7 @@ class BESSYDevice(Device):
 
         #first pass determine which parameters are configuration parameters
 
-
+        ret = None
         for config_attr in self.configuration_attrs:
 
             #Make the key as it would be found in d
