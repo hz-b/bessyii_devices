@@ -4,7 +4,96 @@ from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 from ophyd.signal import Signal, SignalRO
 from ophyd import FormattedComponent as FCpt
+from collections import OrderedDict, namedtuple
+from collections.abc import Iterable, MutableSequence
+from enum import Enum
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    DefaultDict,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
+class PVPositionerBessy(PVPositioner):
+
+    def restore(self, d: Dict[str, Any]):
+
+        """
+        parameter_dict : ordered_dict
+
+        A dictionary containing names of signals (from a baseline reading)
+        """
+
+        #first pass determine which parameters are configuration parameters
+        
+        seen_attrs = []
+
+        for config_attr in self.configuration_attrs:
+
+            #Make the key as it would be found in d
+
+            param_name = self.name + "_" + config_attr.replace('.','_')
+            
+            if param_name in d:
+                getattr(self, config_attr).set(d[param_name]).wait()
+                seen_attrs.append(param_name)
+
+        #second pass. We know we are a positioner, so let's restore the position
+        sta =  self.move(d[self.name + "_setpoint"])   
+        return sta
+
+class PseudoPositionerBessy(PseudoPositioner):
+
+    def restore(self, d: Dict[str, Any]):
+
+        """
+        parameter_dict : ordered_dict
+
+        A dictionary containing names of signals (from a baseline reading)
+        """
+
+        #first pass determine which parameters are configuration parameters
+        
+        seen_attrs = []
+
+        for config_attr in self.configuration_attrs:
+
+            #Make the key as it would be found in d
+
+            param_name = self.name + "_" + config_attr.replace('.','_')
+            
+            if param_name in d:
+                getattr(self, config_attr).set(d[param_name]).wait()
+                seen_attrs.append(param_name)
+
+        #second pass. We know we are a pseudo positioner, so let's restore the position
+                
+
+        # create a position dictionary
+        position_dict = {}
+        
+        #calculate the values that the real positioners were set to
+        for real_axis in self.real_positioners:
+            
+            signal_name = real_axis.setpoint.name
+            signal_value = d[signal_name.replace('.','_')]
+            position_dict[real_axis._attr_name] = signal_value
+        
+        #From that real position derive the pseudo position we need to drive to
+        pseudo_pos = self.inverse(position_dict)
+        
+        #Use that position dictionary as the setpoint
+
+        sta =  self.move(pseudo_pos)   
+        return sta
 
 
 #https://github.com/pcdshub/pcdsdevices/blob/master/pcdsdevices/signal.py
@@ -24,7 +113,7 @@ class InternalSignal(SignalRO):
         return Signal.set(self, value, timestamp=timestamp, force=force)
 
 # based on https://github.com/pcdshub/pcdsdevices/blob/master/pcdsdevices/pv_positioner.py with readback included
-class PVPositionerDone(PVPositioner):
+class PVPositionerDone(PVPositionerBessy):
     """
     PV Positioner with no readback that reports done immediately.
     Optionally, this PV positioner can be configured to skip small moves,
@@ -50,7 +139,7 @@ class PVPositionerDone(PVPositioner):
     setpoint = None
     readback = None
 
-    done = Cpt(InternalSignal, value=0,kind = 'config')
+    done = Cpt(InternalSignal, value=0,kind = 'omitted')
     done_value = 1
 
     
@@ -65,7 +154,7 @@ class PVPositionerDone(PVPositioner):
         
         
 
-class PVPositionerComparator(PVPositioner):
+class PVPositionerComparator(PVPositionerBessy):
     """
     PV Positioner with a software done signal.
     The done state is set by a comparison function defined in the class body.
@@ -78,7 +167,7 @@ class PVPositionerComparator(PVPositioner):
     setpoint = None
     readback = None
 
-    done = Cpt(InternalSignal, value=0,kind = 'config' )
+    done = Cpt(InternalSignal, value=0,kind = 'omitted' )
     done_value = 1
 
     # Optionally override limits to a 2-element tuple in subclass
