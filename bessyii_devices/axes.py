@@ -1,10 +1,10 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import EpicsSignal, EpicsSignalRO
 from ophyd.signal import Signal, SignalRO
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from ophyd import Kind
-from .positioners import PVPositionerComparator
-
+from .positioners import PVPositionerComparator, PVPositionerBessy as PVPositioner
+from .device import  Device
 
 # Used only for M1 uses Software done signal
 class M1Axis(PVPositioner):
@@ -45,7 +45,7 @@ class M1AxisAquarius(PVPositionerComparator):
 # Used for hexapods
 class HexapodAxis(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,    '{self.prefix}hexapod:setPose{self._ch_name}', kind='normal'   )
+    setpoint = FCpt(EpicsSignal,   '{self.prefix}hexapod:getPose{self._ch_name}', write_pv = '{self.prefix}hexapod:setPose{self._ch_name}', kind='normal'   )
     readback = FCpt(EpicsSignalRO,  '{self.prefix}hexapod:getReadPose{self._ch_name}', kind='hinted')
     done     = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='omitted'         )
     

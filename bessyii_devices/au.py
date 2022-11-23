@@ -1,11 +1,14 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import EpicsSignal, EpicsSignalRO
 from bessyii_devices.epics_motor import EpicsMotorBessy as EpicsMotor
+from bessyii_devices.device import BESSYDevice as Device
+
+from bessyii_devices.positioners import PVPositionerBessy as PVPositioner, PVPositionerComparator, PVPositionerDone, PseudoPositionerBessy as PseudoPositioner
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from .axes import AxisTypeA, AxisTypeB, AxisTypeD
-from ophyd import (PseudoPositioner, PseudoSingle, EpicsMotor)
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
+from ophyd.pseudopos import PseudoSingle
 
 # This class can be used for the motorized aperture (SLITS) AU1 and AU3
 # Starting from those motors we shoudl define gap and offset as pseudo motors

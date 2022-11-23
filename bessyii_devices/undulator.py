@@ -1,5 +1,7 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import EpicsSignal, EpicsSignalRO
 from ophyd import Component as Cpt
+from bessyii_devices.device import BESSYDevice as Device
+from bessyii_devices.positioners import PVPositionerBessy as PVPositioner
 
 
 # Based on U17IT6R. See http://wiki.trs.bessy.de/pub/IDs/WebHome/UserPanelsEnglisch.pdf for notes
@@ -48,7 +50,7 @@ class UndulatorShift(PVPositioner):
     actuate         = Cpt(EpicsSignal,    'SBaseCmdCalc.PROC' , kind = 'config'  ) # this will only work if the command is set to "START"
     done_value      = 'STOP'
     
-    readback_anti   = Cpt(EpicsSignalRO,  'SBaseIPmGap.F',kind = 'config') # anti_parrallel
+    readback_anti   = Cpt(EpicsSignalRO,  'SBaseIPmGap.F',kind = 'normal') # anti_parrallel
     cmd             = Cpt(EpicsSignal,    'SBaseCmdMcmd',string ='True', kind ='config' )
         
     vel = Cpt(EpicsSignal,    'SDiagPhyVelSet', kind ='config' )

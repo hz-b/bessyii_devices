@@ -1,4 +1,4 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import EpicsSignal, EpicsSignalRO
 from ophyd.status import DeviceStatus, StatusBase, SubscriptionStatus
 import time
 from ophyd.status import wait
@@ -8,7 +8,8 @@ from ophyd import Component as Cpt
 from .flyer import BasicFlyer
 
 from ophyd import FormattedComponent as FCpt
-from .positioners import PVPositionerComparator
+from .positioners import PVPositionerComparator, PVPositionerBessy as PVPositioner
+from .device import BESSYDevice as Device
 
 class MonoTranslationAxisSelect(PVPositioner):
 
@@ -215,6 +216,8 @@ class PGM(SoftMonoBase):
     # PGMs has a full control over cff, so override it here
     cff             = Cpt(EpicsSignal, 'cff', write_pv='SetCff', kind='config')
 
+    
+
 class IdSlopeOffset(Device):
     """
     For undulator with ID Slope Offset control
@@ -414,12 +417,47 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         
         return(status)
     
+    def restore(self, d: Dict[str, Any]):
+
+        """
+        parameter_dict : ordered_dict
+
+        A dictionary containing names of signals (from a baseline reading)
+        """
+
+        #first pass determine which parameters are configuration parameters
+        
+        seen_attrs = []
+
+        for config_attr in self.configuration_attrs:
+
+            #Make the key as it would be found in d
+
+            param_name = self.name + "_" + config_attr.replace('.','_')
+            
+            if param_name in d:
+                if hasattr(self,config_attr+'.write_access'):
+                    if getattr(self,config_attr+'.write_access'):
+                        getattr(self, config_attr).set(d[param_name]).wait()
+
+        #second pass. 
+                
+
+        
+        self.gratin .move(d[self.a.y.name +  "_setpoint"]).wait()
+        self.b.y.move(d[self.b.y.name +  "_setpoint"]).wait() # we will wait for it to complete
+        sta = self.b.x.move(d[self.b.x.name +  "_setpoint"])
+        return sta
+    
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
     en = Cpt(FlyingEnergy,'')
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', kind='normal', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', kind='normal', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1',   kind='normal', labels={'pgm'})
+
+
+
     #read_attrs          = ['en.readback']
 
 

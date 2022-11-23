@@ -1,9 +1,11 @@
-from ophyd import PVPositioner,EpicsMotor, EpicsSignal, EpicsSignalRO, Device
+from ophyd import EpicsSignal, EpicsSignalRO
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from bessyii_devices.axes import HexapodAxis, M1AxisAquarius, AxisTypeA
-from ophyd import PseudoPositioner,PseudoSingle, PositionerBase, Signal
-from bessyii_devices.positioners import  InternalSignal
+from ophyd import PseudoSingle, PositionerBase, Signal
+from bessyii_devices.positioners import  InternalSignal, PseudoPositionerBessy as PseudoPositioner, PVPositionerBessy as PVPositioner
+from bessyii_devices.device import BESSYDevice as Device
+from bessyii_devices.epics_motor import EpicsMotorBessy as EpicsMotor
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
