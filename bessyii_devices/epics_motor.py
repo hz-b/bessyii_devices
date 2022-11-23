@@ -46,6 +46,6 @@ class EpicsMotorBessy(EpicsMotor):
         sta =  self.move(d[self.name + "_setpoint"])   
         return sta
     
-    def __init__(self, prefix, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
+    #def __init__(self, prefix, **kwargs):
+    #    super().__init__(prefix, **kwargs)
+    #    self.readback.name = self.name 
