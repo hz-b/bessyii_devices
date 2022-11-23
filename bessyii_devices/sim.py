@@ -2,8 +2,55 @@
 from ophyd.sim import SynAxis
 from bessyii_devices.positioners import PVPositionerDone
 from bessyii_devices.device import BESSYDevice as Device
+from ophyd import Signal,Component as Cpt
+from ophyd.sim import SynGauss, SynAxis
+
+from ophyd.status import DeviceStatus
+
+from ophyd.pseudopos import (
+    PseudoSingle,
+    pseudo_position_argument,
+    real_position_argument
+)
+from bessyii_devices.positioners import PseudoPositionerBessy as PseudoPositioner
+from ophyd import ttime
+from ophyd.utils import (
+    InvalidState,
+    StatusTimeoutError,
+    UnknownStatusFailure,
+    WaitTimeoutError,
+)
+import threading
 import time as ttime
 import numpy as np
+from collections import OrderedDict, namedtuple
+from collections.abc import Iterable, MutableSequence
+from enum import Enum
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    DefaultDict,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
+
+
+
+
+
+class ConfigDev(Device):
+
+    config_param_a = Cpt(Signal, kind='config')
+    config_param_b = Cpt(Signal, kind='config')
+    config_param_c = Cpt(Signal, kind='config')
+
 
 class SimPositionerDone(SynAxis, PVPositionerDone):
 
@@ -16,6 +63,9 @@ class SimPositionerDone(SynAxis, PVPositionerDone):
     
     
     """
+    config_dev_1 = Cpt(ConfigDev, kind='config')
+    config_dev_2 = Cpt(ConfigDev, kind='config')
+
     def _setup_move(self, position):
         '''Move and do not wait until motion is complete (asynchronous)'''
         self.log.debug('%s.setpoint = %s', self.name, position)
@@ -38,15 +88,6 @@ class SimPositionerDone(SynAxis, PVPositionerDone):
                          **kwargs)
         self.set(value)
 
-from ophyd.status import DeviceStatus, MoveStatus
-from ophyd import ttime
-from ophyd.utils import (
-    InvalidState,
-    StatusTimeoutError,
-    UnknownStatusFailure,
-    WaitTimeoutError,
-)
-import threading
 
 class DodgyMotor(SimPositionerDone):
     
@@ -102,12 +143,6 @@ class DodgyMotor(SimPositionerDone):
         return st
 
 
-m1 = SimPositionerDone(name='m1' )
-m2 = SimPositionerDone(name='m2')
-m3 = SimPositionerDone(name='m3')
-
-
-from ophyd import EpicsMotor, Signal, Component as Cpt
 
 
 class SimStage(Device):
@@ -122,33 +157,18 @@ class SimStageOfStage(Device):
     b= Cpt(SimStage)
     config_param = Cpt(Signal, kind='config')
 
-stage = SimStageOfStage(name = 'stage')
-
-
-
-#Create a PseudoPositioner
-
-from ophyd.pseudopos import (
-    PseudoSingle,
-    pseudo_position_argument,
-    real_position_argument
-)
-from bessyii_devices.positioners import PseudoPositionerBessy as PseudoPositioner
-from ophyd import Component
-
-
 class Pseudo3x3(PseudoPositioner):
     """
     Interface to three positioners in a coordinate system that flips the sign.
     """
-    pseudo1 = Component(PseudoSingle, limits=(-10, 10), egu='a')
-    pseudo2 = Component(PseudoSingle, limits=(-10, 10), egu='b')
-    pseudo3 = Component(PseudoSingle, limits=(-10, 10), egu='c')
+    pseudo1 = Cpt(PseudoSingle, limits=(-10, 10), egu='a')
+    pseudo2 = Cpt(PseudoSingle, limits=(-10, 10), egu='b')
+    pseudo3 = Cpt(PseudoSingle, limits=(-10, 10), egu='c')
     
     #add some offset to distinguish readback and setpoint
-    real1 = Component(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x)
-    real2 = Component(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x)
-    real3 = Component(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x)
+    real1 = Cpt(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x)
+    real2 = Cpt(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x)
+    real3 = Cpt(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x)
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):
@@ -168,18 +188,9 @@ class Pseudo3x3(PseudoPositioner):
             pseudo3=-real_pos.real3
         )
 
-p3 = Pseudo3x3(name='p3')
 
 
 #integer detector
-
-# let's make a simulated detector.
-
-
-from ophyd.sim import SynGauss, SynAxis
-from ophyd import Component as Cpt
-from ophyd import Signal
-import numpy as np
 
 class SynGaussMonitorInteger(SynGauss):
     
@@ -214,27 +225,8 @@ class SynGaussMonitorInteger(SynGauss):
             v += self.random_state.uniform(-1, 1) * noise_multiplier
         return int(v)
         
-        
-sim_motor = SimPositionerDone(name='sim_motor' )
-noisy_det_monitor = SynGaussMonitorInteger('noisy_det_monitor','timer',sim_motor, 'sim_motor', center=0, Imax=1000, sigma=10,noise='uniform',noise_multiplier=4)
+   
 
-from collections import OrderedDict, namedtuple
-from collections.abc import Iterable, MutableSequence
-from enum import Enum
-from typing import (
-    Any,
-    Callable,
-    ClassVar,
-    DefaultDict,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
 
 class SimMono(SimStageOfStage):
 
@@ -272,9 +264,6 @@ class SimMono(SimStageOfStage):
         self.b.y.move(d[self.b.y.name +  "_setpoint"]).wait() # we will wait for it to complete
         sta = self.b.x.move(d[self.b.x.name +  "_setpoint"])
         return sta
-
-sim_mono = SimMono(name = 'sim_mono')
-
 
 
 ## Sim Hexapod
@@ -371,7 +360,8 @@ class SimHexapod(PseudoPositioner):
 
         self.do_it.subscribe(self._real_finished) # for simulated move
 
-sim_hex = SimHexapod(name="sim_hex")
+
+
 
 class SimSMUHexapod(SimHexapod):
 
@@ -381,4 +371,18 @@ class SimSMUHexapod(SimHexapod):
     _real = ['rrx','rry','rrz','rtx','rty','rtz']
     choice = Cpt(SimPositionerDone,kind="normal")
 
+    
+
+
+#Define some devices:
+
+m1 = SimPositionerDone(name='m1' )
+m2 = SimPositionerDone(name='m2')
+m3 = SimPositionerDone(name='m3')
+sim_motor = SimPositionerDone(name='sim_motor' )
+noisy_det_monitor = SynGaussMonitorInteger('noisy_det_monitor','timer',sim_motor, 'sim_motor', center=0, Imax=1000, sigma=10,noise='uniform',noise_multiplier=4)
+stage = SimStageOfStage(name = 'stage')
+p3 = Pseudo3x3(name='p3')
+sim_mono = SimMono(name = 'sim_mono')
+sim_hex = SimHexapod(name="sim_hex")
 sim_smu = SimSMUHexapod(name="sim_smu")
