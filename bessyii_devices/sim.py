@@ -1,6 +1,7 @@
 ##set up some test devices
 from ophyd.sim import SynAxis
 from bessyii_devices.positioners import PVPositionerDone
+from bessyii_devices.device import BESSYDevice as Device
 import time as ttime
 import numpy as np
 
@@ -106,7 +107,7 @@ m2 = SimPositionerDone(name='m2')
 m3 = SimPositionerDone(name='m3')
 
 
-from ophyd import EpicsMotor, Signal, Device, Component as Cpt
+from ophyd import EpicsMotor, Signal, Component as Cpt
 
 
 class SimStage(Device):
@@ -133,7 +134,7 @@ from ophyd.pseudopos import (
     pseudo_position_argument,
     real_position_argument
 )
-from ophyd import Component, SoftPositioner
+from ophyd import Component
 
 
 class Pseudo3x3(PseudoPositioner):
@@ -175,7 +176,7 @@ p3 = Pseudo3x3(name='p3')
 # let's make a simulated detector.
 
 
-from ophyd.sim import SynGauss, SynAxis, motor
+from ophyd.sim import SynGauss, SynAxis
 from ophyd import Component as Cpt
 from ophyd import Signal
 import numpy as np
@@ -216,3 +217,60 @@ class SynGaussMonitorInteger(SynGauss):
         
 sim_motor = SimPositionerDone(name='sim_motor' )
 noisy_det_monitor = SynGaussMonitorInteger('noisy_det_monitor','timer',sim_motor, 'sim_motor', center=0, Imax=1000, sigma=10,noise='uniform',noise_multiplier=4)
+
+from collections import OrderedDict, namedtuple
+from collections.abc import Iterable, MutableSequence
+from enum import Enum
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    DefaultDict,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
+
+class SimMono(SimStageOfStage):
+
+    en = Cpt(SimPositionerDone)
+    grating = Cpt(SimPositionerDone)
+
+    def restore(self, d: Dict[str, Any]):
+
+        """
+        parameter_dict : ordered_dict
+
+        A dictionary containing names of signals (from a baseline reading)
+        """
+
+        #first pass determine which parameters are configuration parameters
+        
+        seen_attrs = []
+
+        for config_attr in self.configuration_attrs:
+
+            #Make the key as it would be found in d
+
+            param_name = self.name + "_" + config_attr.replace('.','_')
+            
+            if param_name in d:
+                if hasattr(self,config_attr+'.write_access'):
+                    if getattr(self,config_attr+'.write_access'):
+                        getattr(self, config_attr).set(d[param_name]).wait()
+
+        #second pass. We know we are a positioner, so let's restore the position
+                
+        #In this test device we will always restore a.x then a.y, then b.y then b.x
+        self.a.x.move(d[self.a.x.name +  "_setpoint"]).wait() # we will wait for it to complete
+        self.a.y.move(d[self.a.y.name +  "_setpoint"]).wait()
+        self.b.y.move(d[self.b.y.name +  "_setpoint"]).wait() # we will wait for it to complete
+        sta = self.b.x.move(d[self.b.x.name +  "_setpoint"])
+        return sta
+
+sim_mono = SimMono(name = 'sim_mono')
