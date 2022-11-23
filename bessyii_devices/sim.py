@@ -34,7 +34,7 @@ class SimPositionerDone(SynAxis, PVPositionerDone):
                  parent=None,
                  labels=None,
                  kind=None,**kwargs):
-        super().__init__(name=name, parent=parent, labels=labels, kind=kind,readback_func=readback_func,delay=delay,precision=precision,
+        super().__init__(name=name,prefix='', parent=parent, labels=labels, kind=kind,readback_func=readback_func,delay=delay,precision=precision,
                          **kwargs)
         self.set(value)
 
@@ -129,11 +129,11 @@ stage = SimStageOfStage(name = 'stage')
 #Create a PseudoPositioner
 
 from ophyd.pseudopos import (
-    PseudoPositioner,
     PseudoSingle,
     pseudo_position_argument,
     real_position_argument
 )
+from bessyii_devices.positioners import PseudoPositionerBessy as PseudoPositioner
 from ophyd import Component
 
 
@@ -274,3 +274,111 @@ class SimMono(SimStageOfStage):
         return sta
 
 sim_mono = SimMono(name = 'sim_mono')
+
+
+
+## Sim Hexapod
+
+class SimHexapod(PseudoPositioner):
+    """
+    
+    A  simulated class for all hexapods controlled by geo-brick motion controllers
+    Using a PseudoPositioner allows us to read and set positions as groups like this:
+    
+      hex.move(tx,ty,tz,rx,ry,rz)
+    
+    as well as individually like:
+    
+      hex.ty.move(3700)
+    
+    The _concurrent_move method is rewritten to allow all axes to be written first before the move is executed.
+    
+    The error bits from the axes are reset before each move by sending the command '&1a' to the geobrick
+    
+    Note, if you are doing a mesh scan with an instance of this class, you should use 'snake' so that only one axes is moved at once
+    
+    
+    """
+    #Pseudo Axes
+    rx = Cpt(PseudoSingle)
+    ry = Cpt(PseudoSingle)
+    rz = Cpt(PseudoSingle)
+    tx = Cpt(PseudoSingle)
+    ty = Cpt(PseudoSingle)
+    tz = Cpt(PseudoSingle)
+
+    #Real Axes
+    rrx = Cpt(SimPositionerDone,kind='normal')
+    rry = Cpt(SimPositionerDone,kind='normal')
+    rrz = Cpt(SimPositionerDone,kind='normal')
+    rtx = Cpt(SimPositionerDone,kind='normal')
+    rty = Cpt(SimPositionerDone,kind='normal')
+    rtz = Cpt(SimPositionerDone,kind='normal')
+    
+    start_immediately = Cpt(Signal, kind = 'omitted')
+    do_it = Cpt(Signal, kind = 'omitted')
+    multiaxis_running = Cpt(Signal , kind='omitted'         )
+    pmac = Cpt(Signal, kind = 'omitted') #send &1a to clear errors before any move
+
+    @pseudo_position_argument
+    def forward(self, pseudo_pos):
+        '''Run a forward (pseudo -> real) calculation'''
+        return self.RealPosition(rrx=pseudo_pos.rx,
+                                 rry=pseudo_pos.ry,
+                                 rrz=pseudo_pos.rz,
+                                 rtx=pseudo_pos.tx,
+                                 rty=pseudo_pos.ty,
+                                 rtz=pseudo_pos.tz
+                                 )
+
+
+    @real_position_argument
+    def inverse(self, real_pos):
+        '''Run an inverse (real -> pseudo) calculation'''
+        return self.PseudoPosition(rx=real_pos.rrx,
+                                 ry=real_pos.rry,
+                                 rz=real_pos.rrz,
+                                 tx=real_pos.rtx,
+                                 ty=real_pos.rty,
+                                 tz=real_pos.rtz
+                                 )
+
+    def _concurrent_move(self, real_pos, **kwargs):
+        '''Move all real positioners to a certain position, in parallel'''
+        
+        #self.pmac.put('&1a')
+        #self.start_immediately.put(0)
+        for real, value in zip(self._real, real_pos):
+            self.log.debug('[concurrent] Moving %s to %s', real.name, value)
+            real.setpoint.put(value)
+        
+        #self.start_immediately.put(1)
+        self.do_it.put(1)
+        self.do_it.put(0)
+
+        #Now having put the values to the axes we need to set a done signal to 0, then initiate the move and add a callback which will
+        # move the done write 
+
+    def _real_finished(self, *args,**kwargs):
+        '''Callback: A single real positioner has finished moving. 	Used for asynchronous motion, if all have finished moving 	then fire a callback (via Positioner._done_moving)'''
+        with self._finished_lock:
+                
+            self._done_moving() #Since we are in simulation
+
+    def __init__(self,  *args, **kwargs):
+        
+        super().__init__(*args,**kwargs)
+
+        self.do_it.subscribe(self._real_finished) # for simulated move
+
+sim_hex = SimHexapod(name="sim_hex")
+
+class SimSMUHexapod(SimHexapod):
+
+    """
+    A hexapod that can change between two different co-ordinate systems
+    """
+    _real = ['rrx','rry','rrz','rtx','rty','rtz']
+    choice = Cpt(SimPositionerDone,kind="normal")
+
+sim_smu = SimSMUHexapod(name="sim_smu")

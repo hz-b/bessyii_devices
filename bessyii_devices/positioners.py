@@ -50,6 +50,10 @@ class PVPositionerBessy(PVPositioner):
         #second pass. We know we are a positioner, so let's restore the position
         sta =  self.move(d[self.name + "_setpoint"])   
         return sta
+    
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
 
 class PseudoPositionerBessy(PseudoPositioner):
 
