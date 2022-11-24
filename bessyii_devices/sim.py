@@ -4,9 +4,9 @@ from bessyii_devices.positioners import PVPositionerDone
 from bessyii_devices.device import BESSYDevice as Device
 from ophyd import Signal,Component as Cpt
 from ophyd.sim import SynGauss, SynAxis
-
+import threading
 from ophyd.status import DeviceStatus
-
+import time
 from ophyd.pseudopos import (
     PseudoSingle,
     pseudo_position_argument,
@@ -230,8 +230,15 @@ class SynGaussMonitorInteger(SynGauss):
 
 class SimMono(SimStageOfStage):
 
+    def __init__(self,  *args, **kwargs):
+        self._finished_lock = threading.RLock() #create a lock 
+        
+        super().__init__(*args,**kwargs)
+
+
     en = Cpt(SimPositionerDone)
     grating = Cpt(SimPositionerDone)
+
 
     def restore(self, d: Dict[str, Any]):
 
@@ -257,13 +264,26 @@ class SimMono(SimStageOfStage):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a positioner, so let's restore the position
-                
         #In this test device we will always restore a.x then a.y, then b.y then b.x
-        self.a.x.move(d[self.a.x.name +  "_setpoint"]).wait() # we will wait for it to complete
-        self.a.y.move(d[self.a.y.name +  "_setpoint"]).wait()
-        self.b.y.move(d[self.b.y.name +  "_setpoint"]).wait() # we will wait for it to complete
-        sta = self.b.x.move(d[self.b.x.name +  "_setpoint"])
-        return sta
+                        
+        positioners = [self.a.x,self.a.y,self.b.y,self.b.x] #in the order we want to restore
+
+        st = DeviceStatus(device=self)
+        
+        def set_positions():
+                self.a.x.move(d[self.a.x.name + "_setpoint"]).wait()
+                self.a.y.move(d[self.a.y.name + "_setpoint"]).wait()
+                self.b.y.move(d[self.b.y.name + "_setpoint"]).wait()
+                self.b.x.move(d[self.b.x.name + "_setpoint"]).wait()
+
+                st.set_finished()
+
+        threading.Thread(target=set_positions, daemon=True).start()
+
+        return st
+            
+
+
 
 
 ## Sim Hexapod

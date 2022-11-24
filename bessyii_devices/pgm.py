@@ -3,13 +3,31 @@ from ophyd.status import DeviceStatus, StatusBase, SubscriptionStatus
 import time
 from ophyd.status import wait
 from ophyd import Component as Cpt
-
-
+import threading
+import numpy as np
 from .flyer import BasicFlyer
 
 from ophyd import FormattedComponent as FCpt
 from .positioners import PVPositionerComparator, PVPositionerBessy as PVPositioner
 from .device import BESSYDevice as Device
+
+from collections import OrderedDict, namedtuple
+from collections.abc import Iterable, MutableSequence
+from enum import Enum
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    DefaultDict,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 class MonoTranslationAxisSelect(PVPositioner):
 
@@ -138,7 +156,7 @@ class SoftMonoBase(Device):
     """
     en              = Cpt(Energy, '')
     diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
-    grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='config', labels={"pgm"})
+    grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='config', labels={"pgm"}) #this takes some time, it needs either put completion or to be a positioner
     grating         = Cpt(EpicsSignalRO, 'lineDensity', kind='config') 
 
     eMin_eV         = Cpt(EpicsSignalRO, 'minEnergy', kind='config')
@@ -151,7 +169,7 @@ class UndulatorMonoBase(SoftMonoBase):
     UndulatorMonoBase contains all additional signals used for monochromators at undulator beamlines. 
     """
 
-    ID_on           = Cpt(EpicsSignal, 'SetIdOn', string='True',kind='config', labels={"pgm"})
+    ID_on           = Cpt(EpicsSignal, 'SetIdOn',kind='config', labels={"pgm"})
     mode            = Cpt(EpicsSignal, 'GetFormulaMode', write_pv = 'SetFormulaMode', string='True',kind='config') 
     table           = Cpt(EpicsSignal, 'idMbboIndex', string='True',kind='config')
     table_filename  = Cpt(EpicsSignalRO, 'idFilename', string='True',kind='config') 
@@ -290,8 +308,8 @@ class FlyingEnergy(BasicFlyer, Energy):
     #read_attrs = ['readback']
           
     #status is an mbbo record, I need to know what the different states are. 
-    sweep_status    = Cpt(EpicsSignalRO, 'GetSweepState', kind='config')
-    aktion          = Cpt(EpicsSignal, 'MonoAktion.PROC', kind='config') # writing different values to this pv causes different actions like init, start, stop
+    sweep_status    = Cpt(EpicsSignalRO, 'GetSweepState', kind='omitted')
+    aktion          = Cpt(EpicsSignal, 'MonoAktion.PROC', kind='omitted') # writing different values to this pv causes different actions like init, start, stop
     start_pos       = Cpt(EpicsSignal, 'SetSweepStart'   , kind='config')
     end_pos         = Cpt(EpicsSignal, 'SetSweepEnd'   , kind='config')
     velocity        = Cpt(EpicsSignal, 'SetSweepVel', kind='config')
@@ -370,6 +388,10 @@ class FlyingEnergy(BasicFlyer, Energy):
         return self.complete_status
        
 class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
+
+    def __init__(self,prefix,  *args, **kwargs):
+        self._finished_lock = threading.RLock() #create a lock 
+        super().__init__(prefix,*args,**kwargs)
     
   
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='config')
@@ -417,6 +439,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         
         return(status)
     
+
     def restore(self, d: Dict[str, Any]):
 
         """
@@ -440,14 +463,35 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
                     if getattr(self,config_attr+'.write_access'):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
-        #second pass. 
-                
-
+        #second pass. We know we are a positioner, so let's restore the position
         
-        self.gratin .move(d[self.a.y.name +  "_setpoint"]).wait()
-        self.b.y.move(d[self.b.y.name +  "_setpoint"]).wait() # we will wait for it to complete
-        sta = self.b.x.move(d[self.b.x.name +  "_setpoint"])
-        return sta
+
+
+        #now we want to create a zip of the positioners and the positions we want to set them to
+        self.ID_on.set(0)
+        st = DeviceStatus(device=self)
+        
+        def set_positions():
+                self.grating_translation.move(d[self.grating_translation.name + "_setpoint"]).wait()
+                self.slit.move(d[self.slit.name + "_setpoint"]).wait()
+                self.en.move(d[self.en.name + "_setpoint"]).wait()
+                param_name = self.ID_on.name
+                if param_name in d:
+
+                    self.ID_on.set(d[param_name]).wait()
+                st.set_finished()
+
+        threading.Thread(target=set_positions, daemon=True).start()
+
+        return st
+            
+   
+
+
+
+  
+
+  
     
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
