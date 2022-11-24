@@ -472,9 +472,16 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         st = DeviceStatus(device=self)
         
         def set_positions():
-                self.grating_translation.move(d[self.grating_translation.name + "_setpoint"]).wait()
-                self.slit.move(d[self.slit.name + "_setpoint"]).wait()
-                self.en.move(d[self.en.name + "_setpoint"]).wait()
+                
+                if self.grating_translation.name + "_setpoint" in d:
+                    if np.abs(self.grating_translation.readback.get() - d[self.grating_translation.name + "_setpoint"]) > 0.5:
+                        self.grating_translation.move(d[self.grating_translation.name + "_setpoint"]).wait()
+                
+                if self.slit.name + "_setpoint" in d:
+                    self.slit.move(d[self.slit.name + "_setpoint"]).wait()
+                
+                if self.en.name + "_setpoint" in d:
+                    self.en.move(d[self.en.name + "_setpoint"]).wait()
                 param_name = self.ID_on.name
                 if param_name in d:
 
