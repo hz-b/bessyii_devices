@@ -90,7 +90,7 @@ class SimPositionerDone(SynAxis,SoftPositioner):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a positioner, so let's restore the position
-        sta =  self.move(d[self.name + "_setpoint"])   
+        sta =  self.move(d[self.name + "_setpoint"], wait=False)   
         return sta
     
     def __init__(self,name, **kwargs):

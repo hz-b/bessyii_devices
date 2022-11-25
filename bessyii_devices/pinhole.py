@@ -1,4 +1,5 @@
-from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
+from ophyd import PVPositioner, EpicsSignal, DDC_EpicsSignalRO
+from bessyii_devices.device import BESSYDevice as Device
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from .axes import AxisTypeA, AxisTypeD 
