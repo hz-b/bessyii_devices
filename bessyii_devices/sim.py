@@ -42,7 +42,7 @@ from typing import (
 )
 
 
-
+from ophyd import SoftPositioner
 
 
 class ConfigDev(Device):
@@ -51,42 +51,45 @@ class ConfigDev(Device):
     config_param_b = Cpt(Signal, kind='config')
     config_param_c = Cpt(Signal, kind='config')
 
+class SimPositionerDone(SynAxis,SoftPositioner):
 
-class SimPositionerDone(SynAxis, PVPositionerDone):
-
-    """
-    A PVPositioner which reports done immediately AND conforms to the standard of other positioners with signals for 
-    
-    setpoint
-    readback
-    done
-    
-    
-    """
     config_dev_1 = Cpt(ConfigDev, kind='config')
     config_dev_2 = Cpt(ConfigDev, kind='config')
 
-    def _setup_move(self, position):
-        '''Move and do not wait until motion is complete (asynchronous)'''
-        self.log.debug('%s.setpoint = %s', self.name, position)
-        self.setpoint.put(position)
-        if self.actuate is not None:
-            self.log.debug('%s.actuate = %s', self.name, self.actuate_value)
-            self.actuate.put(self.actuate_value)
-        self._toggle_done()
+    def restore(self, d: Dict[str, Any]):
+
+        """
+        parameter_dict : ordered_dict
+
+        A dictionary containing names of signals (from a baseline reading)
+        """
+
+        #first pass determine which parameters are configuration parameters
         
-    def __init__(self,
-                 name,
-                 readback_func=None,
-                 value=0,
-                 delay=0,
-                 precision=3,
-                 parent=None,
-                 labels=None,
-                 kind=None,**kwargs):
-        super().__init__(name=name,prefix='', parent=parent, labels=labels, kind=kind,readback_func=readback_func,delay=delay,precision=precision,
-                         **kwargs)
-        self.set(value)
+        seen_attrs = []
+
+        for config_attr in self.configuration_attrs:
+
+            #Make the key as it would be found in d
+
+            param_name = self.name + "_" + config_attr.replace('.','_')
+            
+            if param_name in d:
+                if hasattr(self,config_attr+'.write_access'):
+                    if getattr(self,config_attr+'.write_access'):
+                        getattr(self, config_attr).set(d[param_name]).wait()
+
+        #second pass. We know we are a positioner, so let's restore the position
+        sta =  self.move(d[self.name + "_setpoint"])   
+        return sta
+    
+    def __init__(self,name, **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.readback.name = self.name 
+        self.setpoint.set(0)
+
+
+
 
 
 class DodgyMotor(SimPositionerDone):
@@ -166,9 +169,9 @@ class Pseudo3x3(PseudoPositioner):
     pseudo3 = Cpt(PseudoSingle, limits=(-10, 10), egu='c')
     
     #add some offset to distinguish readback and setpoint
-    real1 = Cpt(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x)
-    real2 = Cpt(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x)
-    real3 = Cpt(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x)
+    real1 = Cpt(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x, egu="egu", limits=(-10, 10))
+    real2 = Cpt(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x, egu="egu", limits=(-10, 10))
+    real3 = Cpt(SimPositionerDone,value=0.1,readback_func=lambda x: 2*x, egu="egu", limits=(-10, 10))
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):
@@ -317,12 +320,12 @@ class SimHexapod(PseudoPositioner):
     tz = Cpt(PseudoSingle)
 
     #Real Axes
-    rrx = Cpt(SimPositionerDone,kind='normal')
-    rry = Cpt(SimPositionerDone,kind='normal')
-    rrz = Cpt(SimPositionerDone,kind='normal')
-    rtx = Cpt(SimPositionerDone,kind='normal')
-    rty = Cpt(SimPositionerDone,kind='normal')
-    rtz = Cpt(SimPositionerDone,kind='normal')
+    rrx = Cpt(SimPositionerDone,kind='normal', egu="egu", limits=(-10, 10))
+    rry = Cpt(SimPositionerDone,kind='normal', egu="egu", limits=(-10, 10))
+    rrz = Cpt(SimPositionerDone,kind='normal', egu="egu", limits=(-10, 10))
+    rtx = Cpt(SimPositionerDone,kind='normal', egu="egu", limits=(-10, 10))
+    rty = Cpt(SimPositionerDone,kind='normal', egu="egu", limits=(-10, 10))
+    rtz = Cpt(SimPositionerDone,kind='normal', egu="egu", limits=(-10, 10))
     
     start_immediately = Cpt(Signal, kind = 'omitted')
     do_it = Cpt(Signal, kind = 'omitted')
@@ -389,17 +392,17 @@ class SimSMUHexapod(SimHexapod):
     A hexapod that can change between two different co-ordinate systems
     """
     _real = ['rrx','rry','rrz','rtx','rty','rtz']
-    choice = Cpt(SimPositionerDone,kind="normal")
+    choice = Cpt(SimPositionerDone,kind="normal", egu="egu", limits=(-10, 10))
 
     
 
 
 #Define some devices:
 
-m1 = SimPositionerDone(name='m1' )
-m2 = SimPositionerDone(name='m2')
-m3 = SimPositionerDone(name='m3')
-sim_motor = SimPositionerDone(name='sim_motor' )
+m1 = SimPositionerDone(name='m1' , egu="egu", limits=(-10, 10))
+m2 = SimPositionerDone(name='m2', egu="egu", limits=(-10, 10))
+m3 = SimPositionerDone(name='m3', egu="egu", limits=(-10, 10))
+sim_motor = SimPositionerDone(name='sim_motor' , egu="egu", limits=(-10, 10))
 noisy_det_monitor = SynGaussMonitorInteger('noisy_det_monitor','timer',sim_motor, 'sim_motor', center=0, Imax=1000, sigma=10,noise='uniform',noise_multiplier=4)
 stage = SimStageOfStage(name = 'stage')
 p3 = Pseudo3x3(name='p3')
