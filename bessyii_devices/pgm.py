@@ -1,5 +1,5 @@
-from ophyd import EpicsSignal, EpicsSignalRO
-from ophyd.status import DeviceStatus, StatusBase, SubscriptionStatus
+from ophyd import EpicsSignal, EpicsSignalRO, PositionerBase
+from ophyd.status import DeviceStatus, StatusBase, SubscriptionStatus, wait as status_wait
 import time
 from ophyd.status import wait
 from ophyd import Component as Cpt
@@ -52,8 +52,9 @@ class MonoTranslationAxisSelect(PVPositioner):
 # Note that changing the grating translation DOES NOT change the MONO calculation parameters
 class MonoTranslationAxis(PVPositioner):
 
-    def __init__(self, prefix, ch_num=None, **kwargs):
+    def __init__(self, prefix,atol=0, ch_num=None, **kwargs):
         self._ch_num = ch_num
+        self._atol = atol
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
     """
@@ -62,7 +63,71 @@ class MonoTranslationAxis(PVPositioner):
     setpoint = FCpt(EpicsSignal,'{self.prefix}PH_{self._ch_num}_SET', kind='normal')
     readback = FCpt(EpicsSignalRO,'{self.prefix}PH_{self._ch_num}_GET', kind = 'hinted')
     done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS', kind='omitted')
+    stop_signal= FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_AKTION', kind='omitted')
+    stop_value = 0
     done_value = 0
+
+    def move(self, position, wait=True, timeout=None, moved_cb=None):
+        """Move to a specified position, optionally waiting for motion to
+        complete.
+        Parameters
+        ----------
+        position
+            Position to move to
+        moved_cb : callable
+            Call this callback when movement has finished. This callback must
+            accept one keyword argument: 'obj' which will be set to this
+            positioner instance.
+        timeout : float, optional
+            Maximum time to wait for the motion. If None, the default timeout
+            for this positioner is used.
+        Returns
+        -------
+        status : MoveStatus
+        Raises
+        ------
+        TimeoutError
+            When motion takes longer than `timeout`
+        ValueError
+            On invalid positions
+        RuntimeError
+            If motion fails other than timing out
+        """
+        # Before moving, ensure we can stop (if a stop_signal is configured).
+        if self.stop_signal is not None:
+            self.stop_signal.wait_for_connection()
+        status = PositionerBase.move(self,position, timeout=timeout, moved_cb=moved_cb) #doesn't a
+
+        
+                
+        has_done = self.done is not None
+        if not has_done:
+            moving_val = 1 - self.done_value
+            self._move_changed(value=self.done_value)
+            self._move_changed(value=moving_val)
+
+        try:
+            if np.abs(self.readback.get() - position) > self._atol:
+                self._setup_move(position)
+            else:
+                moving_val = 1 - self.done_value
+                self._move_changed(value=self.done_value)
+                self._move_changed(value=moving_val)
+                self._move_changed(value=self.done_value)
+
+                PositionerBase._done_moving(self)
+            if wait:
+                status_wait(status)
+        except KeyboardInterrupt:
+            self.stop()
+            raise
+  
+            
+
+        return status
+
+
+
 
 
 
@@ -240,22 +305,22 @@ class IdSlopeOffset(Device):
     """
     For undulator with ID Slope Offset control
     """
-    energy1_nominal       = Cpt(EpicsSignal, 'Energy1', kind='config')
-    energy1_measured      = Cpt(EpicsSignal, 'Meas1'  , kind='config')
-    energy2_nominal       = Cpt(EpicsSignal, 'Energy2', kind='config')
-    energy2_measured      = Cpt(EpicsSignal, 'Meas2'  , kind='config')
+    energy1_nominal       = Cpt(EpicsSignal, 'Energy1', kind='omitted')
+    energy1_measured      = Cpt(EpicsSignal, 'Meas1'  , kind='omitted')
+    energy2_nominal       = Cpt(EpicsSignal, 'Energy2', kind='omitted')
+    energy2_measured      = Cpt(EpicsSignal, 'Meas2'  , kind='omitted')
 
-    IdSlope               = Cpt(EpicsSignalRO, 'aiIdSlope', kind='config')
-    IdSlope_old           = Cpt(EpicsSignal  , 'OldSlope' , kind='config')
-    IdSlope_new           = Cpt(EpicsSignal  , 'NewSlope' , kind='config') 
+    IdSlope               = Cpt(EpicsSignal, 'aiIdSlope',write_pv = 'aoIdSlope', kind='config')
+    IdSlope_old           = Cpt(EpicsSignal  , 'OldSlope' , kind='omitted')
+    IdSlope_new           = Cpt(EpicsSignal  , 'NewSlope' , kind='omitted') 
 
-    IdOffset              = Cpt(EpicsSignalRO, 'aiIdOffset', kind='config')
-    IdOffset_old          = Cpt(EpicsSignal  , 'OldOffset' , kind='config')
-    IdOffset_new          = Cpt(EpicsSignal  , 'NewOffset' , kind='config')
+    IdOffset              = Cpt(EpicsSignal, 'aiIdOffset',write_pv = 'aoIdOffset', kind='config')
+    IdOffset_old          = Cpt(EpicsSignal  , 'OldOffset' , kind='omitted')
+    IdOffset_new          = Cpt(EpicsSignal  , 'NewOffset' , kind='omitted')
 
-    use_current           = Cpt(EpicsSignal  , 'UseCurSO.PROC' , kind='config')
-    calculate             = Cpt(EpicsSignal  , 'CalcSlope.PROC'   , kind='config')
-    accept                = Cpt(EpicsSignal  , 'AcceptSO.PROC' , kind='config')
+    use_current           = Cpt(EpicsSignal  , 'UseCurSO.PROC' , kind='omitted')
+    calculate             = Cpt(EpicsSignal  , 'CalcSlope.PROC'   , kind='omitted')
+    accept                = Cpt(EpicsSignal  , 'AcceptSO.PROC' , kind='omitted')
 
     
    
@@ -391,12 +456,13 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
 
     def __init__(self,prefix,  *args, **kwargs):
         self._finished_lock = threading.RLock() #create a lock 
+        self._move_queue = []
         super().__init__(prefix,*args,**kwargs)
     
   
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='config')
     m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"})
-    grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"})
+    grating_translation = Cpt(MonoTranslationAxis, '',atol = 0.5, ch_num='1',labels={"pgm"})
     grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"})
     slit                = Cpt(ExitSlitEMIL, '')
 
@@ -439,6 +505,42 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         
         return(status)
     
+    def stop(self, success=False):
+
+        del self._move_queue[:]
+
+        exc_list = []
+
+        for attr in self._sub_devices:
+            dev = getattr(self, attr)
+
+            if isinstance(dev, PseudoSingle) or not dev.connected:
+                continue
+
+            try:
+                dev.stop(success=success)
+            except ExceptionBundle as ex:
+                exc_list.extend(
+                    [
+                        ("{}.{}".format(attr, sub_attr), ex)
+                        for sub_attr, ex in ex.exceptions.items()
+                    ]
+                )
+            except Exception as ex:
+                exc_list.append((attr, ex))
+                self.log.exception("Device %s (%s) stop failed", attr, dev)
+
+        if exc_list:
+            exc_info = "\n".join(
+                "{} raised {!r}".format(attr, ex) for attr, ex in exc_list
+            )
+            raise ExceptionBundle(
+                "{} exception(s) were raised during stop: \n"
+                "{}".format(len(exc_list), exc_info),
+                exceptions=dict(exc_list),
+            )
+        
+    
 
     def restore(self, d: Dict[str, Any]):
 
@@ -448,9 +550,8 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         A dictionary containing names of signals (from a baseline reading)
         """
 
-        #first pass determine which parameters are configuration parameters
-        
-        seen_attrs = []
+        #first pass determine which parameters are configuration parameter
+        self.ID_on.set(0)
 
         for config_attr in self.configuration_attrs:
 
@@ -464,41 +565,57 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a positioner, so let's restore the position
-        
-
-
-        #now we want to create a zip of the positioners and the positions we want to set them to
+                        
         self.ID_on.set(0)
         st = DeviceStatus(device=self)
-        
-        def set_positions():
-                
-                if self.grating_translation.name + "_setpoint" in d:
-                    if np.abs(self.grating_translation.readback.get() - d[self.grating_translation.name + "_setpoint"]) > 0.5:
-                        self.grating_translation.move(d[self.grating_translation.name + "_setpoint"]).wait()
-                
-                if self.slit.name + "_setpoint" in d:
-                    self.slit.move(d[self.slit.name + "_setpoint"]).wait()
-                
-                if self.en.name + "_setpoint" in d:
-                    self.en.move(d[self.en.name + "_setpoint"]).wait()
-                param_name = self.ID_on.name
-                if param_name in d:
+        #populate the move queue 
+        positioners = [self.grating_translation,self.slit,self.en] #grating, then slit then energy
+        positions = []
 
-                    self.ID_on.set(d[param_name]).wait()
-                st.set_finished()
+        for positioner in positioners:
 
-        threading.Thread(target=set_positions, daemon=True).start()
-
-        return st
+            param_name = positioner.setpoint.name
+            positions.append(d[param_name])
             
+        self._move_queue[:] = list(zip(positioners, positions))
+        pending_status = []
+    
+        #Define a recursive function that itterates through the queue 
+        def move_next(status=None, obj=None):
+            
+            with self._finished_lock:
+
+                if pending_status:
+                    last_status = pending_status[-1]
+                    if not last_status.success:
+                        self.log.error("Failing due to last motion")
+                        st.set_exception(last_status.exception)
+                        return
+
+                try:
+                    real, position = self._move_queue.pop(0)
+                except IndexError:
+                    #we've finished the queue
+                    
+
+                    self.ID_on.set(d[self.ID_on.name]).wait()
+
+                    st.set_finished()
+                    return 
+
+                status = real.move(
+                        position,
+                        wait=False,
+                        moved_cb=move_next
+                    )
+                pending_status.append(status)
+        
+        #start the queue
+        move_next()
+          
+        return st
    
 
-
-
-  
-
-  
     
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):

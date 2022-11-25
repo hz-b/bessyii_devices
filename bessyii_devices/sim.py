@@ -56,6 +56,16 @@ class SimPositionerDone(SynAxis,SoftPositioner):
     config_dev_1 = Cpt(ConfigDev, kind='config')
     config_dev_2 = Cpt(ConfigDev, kind='config')
 
+    
+    def _set_position(self, value, **kwargs):
+        '''Set the current internal position, run the readback subscription'''
+        self.setpoint.put(value)
+
+        timestamp = kwargs.pop('timestamp', time.time())
+        self._run_subs(sub_type=self.SUB_READBACK, timestamp=timestamp,
+                       value=value, **kwargs)
+        
+
     def restore(self, d: Dict[str, Any]):
 
         """
@@ -87,6 +97,7 @@ class SimPositionerDone(SynAxis,SoftPositioner):
         super().__init__(name=name, **kwargs)
         self.readback.name = self.name 
         self.setpoint.set(0)
+        
 
 
 
@@ -233,15 +244,56 @@ class SynGaussMonitorInteger(SynGauss):
 
 class SimMono(SimStageOfStage):
 
+    """
+    Simulated PGM
+    """
+
+    en = Cpt(SimPositionerDone,settle_time = 4)
+    grating_translation = Cpt(SimPositionerDone,settle_time = 4)
+    slit = Cpt(SimPositionerDone,settle_time = 4)
+    ID_on = Cpt(Signal, value=0,kind="config")
+
     def __init__(self,  *args, **kwargs):
         self._finished_lock = threading.RLock() #create a lock 
-        
+        self._move_queue = []
+
         super().__init__(*args,**kwargs)
 
+    def stop(self, success=False):
 
-    en = Cpt(SimPositionerDone)
-    grating = Cpt(SimPositionerDone)
+        del self._move_queue[:]
 
+        exc_list = []
+
+        for attr in self._sub_devices:
+            dev = getattr(self, attr)
+
+            if isinstance(dev, PseudoSingle) or not dev.connected:
+                continue
+
+            try:
+                dev.stop(success=success)
+            except ExceptionBundle as ex:
+                exc_list.extend(
+                    [
+                        ("{}.{}".format(attr, sub_attr), ex)
+                        for sub_attr, ex in ex.exceptions.items()
+                    ]
+                )
+            except Exception as ex:
+                exc_list.append((attr, ex))
+                self.log.exception("Device %s (%s) stop failed", attr, dev)
+
+        if exc_list:
+            exc_info = "\n".join(
+                "{} raised {!r}".format(attr, ex) for attr, ex in exc_list
+            )
+            raise ExceptionBundle(
+                "{} exception(s) were raised during stop: \n"
+                "{}".format(len(exc_list), exc_info),
+                exceptions=dict(exc_list),
+            )
+    
 
     def restore(self, d: Dict[str, Any]):
 
@@ -266,23 +318,55 @@ class SimMono(SimStageOfStage):
                     if getattr(self,config_attr+'.write_access'):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
-        #second pass. We know we are a positioner, so let's restore the position
-        #In this test device we will always restore a.x then a.y, then b.y then b.x
-                        
-        positioners = [self.a.x,self.a.y,self.b.y,self.b.x] #in the order we want to restore
-
+        #second pass        
         st = DeviceStatus(device=self)
         
-        def set_positions():
-                self.a.x.move(d[self.a.x.name + "_setpoint"]).wait()
-                self.a.y.move(d[self.a.y.name + "_setpoint"]).wait()
-                self.b.y.move(d[self.b.y.name + "_setpoint"]).wait()
-                self.b.x.move(d[self.b.x.name + "_setpoint"]).wait()
+        #populate the move queue 
+        positioners = [self.grating_translation,self.slit,self.en]
+        positions = []
 
-                st.set_finished()
+        for positioner in positioners:
 
-        threading.Thread(target=set_positions, daemon=True).start()
+            param_name = positioner.setpoint.name
+            positions.append(d[param_name])
+            
+        self._move_queue[:] = list(zip(positioners, positions))
+        pending_status = []
 
+       
+            
+        def move_next(status=None, obj=None):
+            
+            with self._finished_lock:
+
+                if pending_status:
+                    last_status = pending_status[-1]
+                    if not last_status.success:
+                        self.log.error("Failing due to last motion")
+                        st.set_exception(last_status.exception)
+                        return
+
+                try:
+                    real, position = self._move_queue.pop(0)
+                except IndexError:
+                    #we've finished the queue
+                    
+
+                    self.ID_on.set(d[self.ID_on.name]).wait()
+
+                    st.set_finished()
+                    return 
+
+                status = real.move(
+                        position,
+                        wait=False,
+                        moved_cb=move_next
+                    )
+                pending_status.append(status)
+        
+        #start the queue
+        move_next()
+          
         return st
             
 
@@ -399,7 +483,7 @@ class SimSMUHexapod(SimHexapod):
 
 #Define some devices:
 
-m1 = SimPositionerDone(name='m1' , egu="egu", limits=(-10, 10))
+m1 = SimPositionerDone(name='m1', egu="egu", limits=(-10, 10))
 m2 = SimPositionerDone(name='m2', egu="egu", limits=(-10, 10))
 m3 = SimPositionerDone(name='m3', egu="egu", limits=(-10, 10))
 sim_motor = SimPositionerDone(name='sim_motor' , egu="egu", limits=(-10, 10))

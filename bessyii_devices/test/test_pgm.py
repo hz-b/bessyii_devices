@@ -10,7 +10,7 @@ u49_2_pgm = PGM_Aquarius('pgm2os15l:', name='pgm',read_attrs=['en.readback'])
 
 ue48_pgm.wait_for_connection()
 u17_pgm.wait_for_connection()
-u49_2_pgm.wait_for_connection()
+#u49_2_pgm.wait_for_connection()
 
 
 #### Check the structure of the devices ####
@@ -55,10 +55,14 @@ def check_moves(axis):
 #### Perform the tests #####
 def test_connection_ue48_pgm():
     assert ue48_pgm.connected == True
-    
+
+   
+   
+@pytest.mark.skip()
 def test_connection_u17_pgm():
     assert u17_pgm.connected == True
-    
+
+@pytest.mark.skip()   
 def test_connection_u49_2_pgm():
     assert u49_2_pgm.connected == True
 
@@ -70,18 +74,22 @@ def test_en_get_ue48_pgm():
     
     assert check_en_get(ue48_pgm) == True
     
+@pytest.mark.skip()
 def test_en_exists_u17_pgm():
     
     assert check_en_struct(u17_pgm) == True
 
+@pytest.mark.skip()
 def test_en_get_u17_pgm():
     
     assert check_en_get(u17_pgm) == True
 
+@pytest.mark.skip()
 def test_en_exists_u49_2_pgm():
     
     assert check_en_struct(u49_2_pgm) == True
 
+@pytest.mark.skip()
 def test_en_get_u49_2_pgm():
     
     assert check_en_get(u49_2_pgm) == True
@@ -97,3 +105,40 @@ def test_grating_readback_struct():
 def test_m2_readback_struct():
     
     assert check_positioner_readback_struct(ue48_pgm.m2_translation) == True
+
+def test_ue48_pgm_struct():
+
+    assert isinstance(ue48_pgm,Device) == True
+    assert hasattr(ue48_pgm,"restore") == True
+    assert isinstance(ue48_pgm.en,PositionerBase) == True
+    assert isinstance(ue48_pgm.grating_translation,PositionerBase) == True
+    assert isinstance(ue48_pgm.slit,PositionerBase) == True
+
+def test_sim_mono_restore():
+
+    #start a resotore
+    initial_positions = {ue48_pgm.slit.setpoint.name : ue48_pgm.slit.setpoint.get(),ue48_pgm.en.setpoint.name : ue48_pgm.en.setpoint.get(),ue48_pgm.grating_translation.setpoint.name : ue48_pgm.grating_translation.setpoint.get()}
+
+    restore_dict = {sim_mono.slit.setpoint.name : 1,sim_mono.en.setpoint.name : 2,sim_mono.grating_translation.setpoint.name: 2}
+
+    status = sim_mono.restore(restore_dict)
+    status.wait()
+    assert status.success == True
+
+def test_sim_mono_restore_stops():
+
+    #start a resotore
+    sim_mono.en.settle_time = 0.1
+    sim_mono.slit.settle_time = 0.1
+    sim_mono.grating_translation.settle_time = 2
+
+    restore_dict = {sim_mono.slit.setpoint.name : 1,sim_mono.en.setpoint.name : 2,sim_mono.grating_translation.setpoint.name: 2}
+
+    status = sim_mono.restore(restore_dict)
+    time.sleep(1)
+
+    sim_mono.stop()
+
+    assert status.success == False
+
+    
