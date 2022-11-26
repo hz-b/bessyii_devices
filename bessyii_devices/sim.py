@@ -76,7 +76,7 @@ class SimPositionerDone(SynAxis,SoftPositioner):
 
         #first pass determine which parameters are configuration parameters
         
-        seen_attrs = []
+        sta = None
 
         for config_attr in self.configuration_attrs:
 
@@ -90,7 +90,8 @@ class SimPositionerDone(SynAxis,SoftPositioner):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a positioner, so let's restore the position
-        sta =  self.move(d[self.name + "_setpoint"], wait=False)   
+        if self.name + "_setpoint" in d:
+            sta =  self.move(d[self.name + "_setpoint"],wait=False)   
         return sta
     
     def __init__(self,name, **kwargs):

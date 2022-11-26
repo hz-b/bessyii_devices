@@ -34,7 +34,7 @@ class PVPositionerBessy(PVPositioner):
 
         #first pass determine which parameters are configuration parameters
         
-        seen_attrs = []
+        sta = []
 
         for config_attr in self.configuration_attrs:
 
@@ -48,7 +48,8 @@ class PVPositionerBessy(PVPositioner):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a positioner, so let's restore the position
-        sta =  self.move(d[self.name + "_setpoint"],wait=False)   
+        if self.name + "_setpoint" in d:
+            sta =  self.move(d[self.name + "_setpoint"],wait=False)   
         return sta
     
     def __init__(self, prefix, **kwargs):

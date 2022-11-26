@@ -29,6 +29,8 @@ class UndulatorGap(PVPositioner):
     harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'normal' )   
 
 
+
+
     
     def stage(self):
 
@@ -79,6 +81,14 @@ class UndulatorBase(Device): # PlanarDevice
     harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'normal' )   
     
     read_attrs = ['gap','harmonic_01_eV', 'harmonic_01_nM']
+
+    def restore(self, d: Dict[str, Any]):
+
+        ret = Device.restore(self, d)
+
+        self.id_control.set(0) #set to local
+ 
+
     
 
 class HelicalUndulator(UndulatorBase):

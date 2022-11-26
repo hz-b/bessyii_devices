@@ -1,4 +1,5 @@
 from ophyd import Device
+from ophyd.status import AndStatus
 from collections import OrderedDict, namedtuple
 from collections.abc import Iterable, MutableSequence
 from enum import Enum
@@ -51,6 +52,16 @@ class BESSYDevice(Device):
                         ret = getattr(self, config_attr).set(d[param_name]).wait()
                         
 
+        #now call restore on any component devices
+        for component_name in self.component_names:
+            component = getattr(self,component_name)
+            if hasattr(component, "restore"):
+                comp_ret = component.restore(d) #should return a status object 
+                if ret and comp_ret:
+                    ret = AndStatus(ret,comp_ret)
+                else:
+                    ret = comp_ret
+                
         return ret
                                
 
