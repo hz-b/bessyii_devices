@@ -514,7 +514,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         for attr in self._sub_devices:
             dev = getattr(self, attr)
 
-            if isinstance(dev, PseudoSingle) or not dev.connected:
+            if not dev.connected:
                 continue
 
             try:

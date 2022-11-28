@@ -55,12 +55,15 @@ class BESSYDevice(Device):
         #now call restore on any component devices
         for component_name in self.component_names:
             component = getattr(self,component_name)
+            
             if hasattr(component, "restore"):
-                comp_ret = component.restore(d) #should return a status object 
+                comp_ret = component.restore(d) #should return a status object or None
                 if ret and comp_ret:
                     ret = AndStatus(ret,comp_ret)
-                else:
+                elif comp_ret:
                     ret = comp_ret
+
+
                 
         return ret
                                
