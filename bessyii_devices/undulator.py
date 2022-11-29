@@ -46,8 +46,38 @@ class UndulatorGap(PVPositioner):
     harmonic_01_nM  = Cpt(EpicsSignalRO,  'BasePmWLength'                   ,kind = 'normal' )   
 
 
+    def restore(self, d: Dict[str, Any]):
+
+        """
+        parameter_dict : ordered_dict
+
+        A dictionary containing names of signals (from a baseline reading)
+        """
+
+        #first pass determine which parameters are configuration parameters
+        
+        sta = []
+
+        if hasattr(self.root, "id_control"):
+            self.root.id_control.set(0)
+
+        for config_attr in self.configuration_attrs:
+
+            #Make the key as it would be found in d
+
+            param_name = self.name + "_" + config_attr.replace('.','_')
+            
+            if param_name in d and param_name != self.root.id_control.name:
+                if hasattr(self,config_attr+'.write_access'):
+                    if getattr(self,config_attr+'.write_access'):
+                        getattr(self, config_attr).set(d[param_name]).wait()
 
 
+        #second pass. We know we are a positioner, so let's restore the position
+        if self.name + "_setpoint" in d:
+            self.cmd.set('START') .wait()
+            sta =  self.move(d[self.name + "_setpoint"],wait=False)   
+        return sta
     
     def stage(self):
 
@@ -76,12 +106,47 @@ class UndulatorShift(PVPositioner):
     delta = Cpt(EpicsSignal,    'SBaseParGapTrs', kind ='config' )
     
     read_attrs=['readback']
+
+    def restore(self, d: Dict[str, Any]):
+
+        """
+        parameter_dict : ordered_dict
+
+        A dictionary containing names of signals (from a baseline reading)
+        """
+
+        #first pass determine which parameters are configuration parameters
+        
+        sta = []
+
+        if hasattr(self.root, "id_control"):
+            self.root.id_control.set(0)
+
+        for config_attr in self.configuration_attrs:
+
+            #Make the key as it would be found in d
+
+            param_name = self.name + "_" + config_attr.replace('.','_')
+            
+            if param_name in d and param_name != self.root.id_control.name:
+                if hasattr(self,config_attr+'.write_access'):
+                    if getattr(self,config_attr+'.write_access'):
+                        getattr(self, config_attr).set(d[param_name]).wait()
+
+
+        #second pass. We know we are a positioner, so let's restore the position
+        if self.name + "_setpoint" in d:
+            self.cmd.set('START') .wait()
+            sta =  self.move(d[self.name + "_setpoint"],wait=False)   
+        return sta
+    
     
     def stage(self):
 
-        self.cmd.set('START')      # update the EPICS PV as quick as we can
+        self.cmd.set('START').wait()     # update the EPICS PV as quick as we can
         
         super().stage()
+
 
 
 class UndulatorBase(Device): # PlanarDevice
@@ -103,10 +168,19 @@ class UndulatorBase(Device): # PlanarDevice
 
         ret = Device.restore(self, d)
 
-        self.id_control.set(0) #set to local
- 
+        id_control_status = self.id_control.set(d[self.id_control.name])
 
-    
+        
+        if ret and id_control_status:
+            ret = AndStatus(ret,id_control_status)
+        else:
+            ret = id_control_status
+
+        return ret
+
+
+
+
 
 class HelicalUndulator(UndulatorBase):
     

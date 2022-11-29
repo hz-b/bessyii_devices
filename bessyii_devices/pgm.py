@@ -559,14 +559,13 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
 
             param_name = self.name + "_" + config_attr.replace('.','_')
             
-            if param_name in d:
+            if param_name in d and param_name != self.ID_on.name:
                 if hasattr(self,config_attr+'.write_access'):
                     if getattr(self,config_attr+'.write_access'):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a positioner, so let's restore the position
                         
-        self.ID_on.set(0)
         st = DeviceStatus(device=self)
         #populate the move queue 
         positioners = [self.grating_translation,self.slit,self.en] #grating, then slit then energy
@@ -575,7 +574,8 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         for positioner in positioners:
 
             param_name = positioner.setpoint.name
-            positions.append(d[param_name])
+            if param_name in d:
+                positions.append(d[param_name])
             
         self._move_queue[:] = list(zip(positioners, positions))
         pending_status = []
