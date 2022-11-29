@@ -472,11 +472,11 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
 
 
     # experts settings of flyscan
-    offset = Cpt(EpicsSignal,'SetSweepOffset' , kind='config')
-    vmin_fak = Cpt(EpicsSignal,'SetSweepVminFak' , kind='config')
-    vmax_fak = Cpt(EpicsSignal,'SetSweepVmaxFak' , kind='config')
-    max_gain_output = Cpt(EpicsSignal,'SetSweepOutLim' , kind='config')
-    open_loop_pvt =  Cpt(EpicsSignal,'SetSweepPVTM' , kind='config')
+    offset = Cpt(EpicsSignal,'GetSweepOffset', write_pv = 'SetSweepOffset' , kind='config')
+    vmin_fak = Cpt(EpicsSignal,'GetSweepVminFak', write_pv = 'SetSweepVminFak' , kind='config')
+    vmax_fak = Cpt(EpicsSignal,'GetSweepVmaxFak' , write_pv = 'SetSweepVmaxFak', kind='config')
+    max_gain_output = Cpt(EpicsSignal, 'GetSweepOutLim', write_pv = 'SetSweepOutLim' , kind='config')
+    open_loop_pvt =  Cpt(EpicsSignal,'GetSweepPVTM', write_pv ='SetSweepPVTM' , kind='config')
     hold_start = Cpt(EpicsSignal,'SetSweepSUSSTART1' , kind='config')
     hold_stop = Cpt(EpicsSignal,'SetSweepSUSSTOP1' , kind='config')
     hold_vel = Cpt(EpicsSignal,'SetSweepSUSVEL1' , kind='config')
@@ -485,10 +485,10 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
     filt_phi_ena = Cpt(EpicsSignal,'SetSweepMFOnOff' , kind='config')
     filt_psi = Cpt(EpicsSignal,'SetSweepGFDly' , kind='config')
     filt_psi_ena = Cpt(EpicsSignal,'SetSweepGFOnOff' , kind='config')
-    cycle_time = Cpt(EpicsSignal,'SetSweepTics' , kind='config')
+    cycle_time = Cpt(EpicsSignal,'SweepTics', write_pv = 'SetSweepTics' , kind='config')
     kp_mirror = Cpt(EpicsSignal,'SetKpMirror' , kind='config')
     kp_grating = Cpt(EpicsSignal,'SetKpGrating' , kind='config')
-    gap_method = Cpt(EpicsSignal,'SetSweepGapMeth' , kind='config')
+    gap_method = Cpt(EpicsSignal,'GetSweepGapMeth', write_pv = 'SetSweepGapMeth' , kind='config')
 
     
     def set_grating_400(self, wait=False):
