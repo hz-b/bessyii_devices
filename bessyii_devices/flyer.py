@@ -223,7 +223,7 @@ class BiologicPotentiostat(Device):
         
         for i in range(len(dfs)):
             
-            epoch = self.t0 + dfs["time/s"][i]
+            epoch = self.t0 + dfs["time/s"][i] - dfs["time/s"][0]
             data_dict = {}
             timestamps_dict = {}
             for key in dfs:
