@@ -14,7 +14,7 @@ from .camera_ad33 import SingleTriggerV33, TIFFPluginWithFileStore
 from matplotlib.pyplot import imshow
 
 import matplotlib.pyplot as plt
-    
+import numpy as np    
 class ElectronAnalyserCamV33(CamBase):
     
     """
@@ -101,7 +101,8 @@ def plot_ea_image( run, idx =0):
     The index within that run to plot if there are many, default 0
     
     """
-    image_array = data['ea_image'][0].values
+    data = run.primary.read()
+    image_array = data['ea_image'][idx].values
     config = run.primary.config['ea'].read()
 
    
@@ -116,11 +117,13 @@ def plot_ea_image( run, idx =0):
 
     energy_vector = np.linspace(low,high+step,num_regions)
     image = image_array.reshape(slices,num_regions)
-
+    
+    plt.figure()
     plt.rcParams['figure.figsize'] = [10, 10]
     imshow(image,interpolation='none', aspect='auto',extent=[energy_vector[0],energy_vector[-1],slices,1])
     plt.xlabel('Kinetic Energy (eV)')
     plt.ylabel('slice')
+    plt.title(str(run.metadata['start']['scan_id'])+" itteration " + str(idx) +  " image")
 
 def plot_ea_spectrum(run, idx = 0):
     
@@ -136,7 +139,7 @@ def plot_ea_spectrum(run, idx = 0):
     """
         
     config = run.primary.config['ea'].read()
-
+    data = run.primary.read()
    
     num=idx
     slices = config["ea_cam_slices"][num].values
@@ -150,6 +153,9 @@ def plot_ea_spectrum(run, idx = 0):
     energy_vector = np.linspace(low,high+step,num_regions)
     
     array = data['ea_spectrum'].values[idx]
+    plt.figure()
     plt.plot(energy_vector,array)
     plt.xlabel('Kinetic Energy (Ev)')
     plt.ylabel('counts')
+    plt.title(str(run.metadata['start']['scan_id'])+" itteration " + str(idx) +  " image")
+

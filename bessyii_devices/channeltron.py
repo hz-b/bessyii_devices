@@ -4,6 +4,17 @@ from ophyd import status, DeviceStatus, Signal
 from ophyd.status import SubscriptionStatus, MoveStatus, AndStatus 
 import time
 from types import SimpleNamespace
+from .positioners import PVPositionerComparator
+
+
+class HVPositioner(PVPositionerComparator):
+
+    setpoint = Cpt(EpicsSignal,  'HighVoltage-SP',   kind='normal')
+    readback = Cpt(EpicsSignal,  'HighVoltage-RB',   kind='hinted')
+    atol = 1
+    def done_comparator(self, readback, setpoint):
+
+        return setpoint-self.atol <readback <setpoint+self.atol
 
 class Channeltron(Device):
 
@@ -16,7 +27,7 @@ class Channeltron(Device):
  
     interval    = Cpt(EpicsSignal,  'Interval-SP',      kind='config')
     threshold   = Cpt(EpicsSignal,  'Threshold-SP',     kind='config')
-    high_voltage = Cpt(EpicsSignal,  'HighVoltage-SP',   kind='config')
+    high_voltage = Cpt(HVPositioner, '')
     dead_time    = Cpt(EpicsSignal,  'DeadTime-SP',      kind='config')
     
     

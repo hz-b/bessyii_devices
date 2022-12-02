@@ -10,7 +10,7 @@ from ophyd import ( Component as Cpt, ADComponent, Device, PseudoPositioner,
 from ophyd.areadetector.filestore_mixins import FileStoreTIFFIterativeWrite
 from ophyd import Component as Cpt
 from ophyd.areadetector.base import (ADBase, ADComponent as ADCpt, ad_group, EpicsSignalWithRBV)
-from ophyd.areadetector.plugins import StatsPlugin_V33, TIFFPlugin_V33, HDF5Plugin_V33, ImagePlugin_V33
+from ophyd.areadetector.plugins import StatsPlugin_V33, TIFFPlugin_V33, HDF5Plugin_V33, ImagePlugin_V33, ROIPlugin_V33
 #from bessyii.ad33 import StatsPluginV33
 from bessyii.ad33 import SingleTriggerV33
 from bessyii_devices.positioners import PVPositionerComparator
@@ -115,6 +115,7 @@ class MyURLDetectorV33(SingleTriggerV33, URLDetector):
     tiff = Cpt(TIFFPluginWithFileStore,
                suffix="TIFF1:",
                write_path_template="/home/emil/Apps/autosave/images/")
+    roi1  = Cpt(ROIPlugin_V33, "ROI1:")
     stats = Cpt(StatsPlugin_V33, 'Stats1:')
     image = Cpt(ImagePlugin_V33, 'image1:')
     #colour = Cpt(ColorConvPlugin, 'CC1:')
@@ -153,7 +154,7 @@ class PointGreyDetector(PointGreyDetector):
 class MyPointGreyDetectorV33(SingleTriggerV33, PointGreyDetector):
     tiff = Cpt(TIFFPluginWithFileStore,
                suffix="TIFF1:",
-               write_path_template="/home/emil/Apps/autosave/images/")
+               write_path_template="/home/emil/Apps/mnt/sambashare/acquired_images/bluesky/")
     stats = Cpt(StatsPlugin_V33, 'Stats1:')
     image = Cpt(ImagePlugin_V33, 'image1:')
     #colour = Cpt(ColorConvPlugin, 'CC1:')
@@ -166,7 +167,7 @@ def set_detectorV33(det):
 
     det.tiff.kind = 'normal' 
     det.stats.kind = 'hinted'
-    det.colour.kind = 'normal'
+    #det.colour.kind = 'normal'
     det.image.kind = 'hinted'
     det.stats.fwhm_x.kind = 'hinted'
     det.stats.fwhm_y.kind = 'hinted'
@@ -176,7 +177,7 @@ def set_detectorV33(det):
     det.stats.centroid.y.kind = 'hinted' 
     det.stats.read_attrs= ['centroid.x', 'centroid.y', 'total', 'fwhm_x', 'fwhm_y', 'sigma_x', 'sigma_y', 'max_value']
     det.cam.ensure_nonblocking()
-    det.tiff.nd_array_port.put(det.colour.port_name.get()) # makes the tiff plugin take the output of the colour change plugin
+    det.tiff.nd_array_port.put(det.image.port_name.get()) # makes the tiff plugin take the output of the colour change plugin
     
     
 ##### Great Eyes Cam
