@@ -75,6 +75,7 @@ class BiologicPotentiostat(Device):
         self.kickoff_status = None
         self.complete_status = None
         self._acquiring = False
+        self.list_of_mpr_files = []
         self.t0 = 0
         self.sim = sim_delay
         if data_dir != None:
@@ -140,16 +141,35 @@ class BiologicPotentiostat(Device):
         """
         Describe details for ``collect()`` method
         
-        fetch the mps file parse it to find out the data structure of the techniques
+        fetch the mps, use it's name to find the name of the other mpr files (note that some techniques don't make mpr files)
         https://nsls-ii.github.io/bluesky/event_descriptors.html
         """
         #Open the file and peak inside:
         print("describing data format")
         
-        #get the most recent .mpr file from the directory
-        filename = self.latest_mps_file()
-        mpss=self.par(filename) #parse the file into a dict of metadata and techniques
-        
+        #get the most recent .mps file in the directory
+        filename = self.latest_mps_file().split(".")[0]
+        list_of_mps_files = []
+        for path in Path(self.data_dir).rglob("*.mps"):
+            list_of_mps_files.append(path.resolve())
+
+        file = max(list_of_mps_files, key=os.path.getmtime)
+
+        #Find all of the mpr files in this directory with that filename in them, followed by a _0
+
+
+        dir = file.parents[0]
+        file_name = file.name.split(".")[0]
+
+        self.list_of_mpr_files = []
+        for path in dir.rglob("*.mpr"):
+            if  str(path.name).startswith(file_name + "_0"):
+                self.list_of_mpr_files.append(path.resolve())
+
+        filename = str(self.list_of_mpr_files[0])
+        mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
+        dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
+
 
         #column names
         item_names = list(dfs.columns)
@@ -230,7 +250,7 @@ class BiologicPotentiostat(Device):
         self.complete_status = None
         
         #get the most recent .mpr file from the directory
-        filename = self.latest_mpr_file()
+        filename = str(self.list_of_mpr_files[0])
         mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
         dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
         
