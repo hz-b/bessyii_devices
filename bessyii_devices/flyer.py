@@ -140,16 +140,15 @@ class BiologicPotentiostat(Device):
         """
         Describe details for ``collect()`` method
         
-        fetch the file once and sniff the header to find out the data structure
+        fetch the mps file parse it to find out the data structure of the techniques
         https://nsls-ii.github.io/bluesky/event_descriptors.html
         """
         #Open the file and peak inside:
         print("describing data format")
         
         #get the most recent .mpr file from the directory
-        filename = self.latest_mpr_file()
-        mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
-        dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
+        filename = self.latest_mps_file()
+        mpss=self.par(filename) #parse the file into a dict of metadata and techniques
         
 
         #column names
@@ -203,6 +202,24 @@ class BiologicPotentiostat(Device):
 
         latest_file = str(max(list_of_mpr_files, key=os.path.getmtime))        
         return latest_file
+
+    def latest_mps_file(self):
+        
+        """
+        returns the name of the latest mps file in the data directory, searched recursively
+        """
+        
+
+
+        list_of_mps_files = []
+
+        for path in Path(self.data_dir).rglob("*.mps"):
+            list_of_mps_files.append(path.resolve())
+    
+
+        latest_file = str(max(list_of_mps_files, key=os.path.getmtime))        
+        return latest_file
+
 
 
     def collect(self):
