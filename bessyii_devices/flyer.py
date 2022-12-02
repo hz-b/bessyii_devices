@@ -166,40 +166,42 @@ class BiologicPotentiostat(Device):
             if  str(path.name).startswith(file_name + "_0"):
                 self.list_of_mpr_files.append(path.resolve())
 
-        filename = str(self.list_of_mpr_files[0])
-        mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
-        dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
+        return_dict = {}
+        for file_path in self.list_of_mpr_files:
+            filename = str(file_path)
+            mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
+            dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
 
 
-        #column names
-        item_names = list(dfs.columns)
-        
-        item_units = []
-        for item in dfs.columns:
-            if "/" in item:
-                item_units.append(item.split('/')[1])
-            else:
-                item_units.append("")
-                
-                
-        num_items = len(item_names)
+            #column names
+            item_names = list(dfs.columns)
+            
+            item_units = []
+            for item in dfs.columns:
+                if "/" in item:
+                    item_units.append(item.split('/')[1])
+                else:
+                    item_units.append("")
+                    
+                    
+            num_items = len(item_names)
 
-        return_dict = {self.name:{}}
-        
-        for key in item_names:
-            format_name = key.replace(" ","_")
-            if "/" in format_name:
-                split = format_name.split('/')
-                format_name = split[0]
-                units = split[1]
-                
-            else:
-                units = ""
-                
-            return_dict[self.name][f'{self.name}_{format_name}'] = {'source': f'{self.name}_{format_name}',
-                                                                    'dtype': 'number',
-                                                                    'units': units,
-                                                                    'shape': []}
+            technique_name = filename.split(".")[0].split("_")[-2] + "_"+ filename.split(".")[0].split("_")[-3]
+            return_dict[self.name+"_"+technique_name]={}
+            for key in item_names:
+                format_name = key.replace(" ","_")
+                if "/" in format_name:
+                    split = format_name.split('/')
+                    format_name = split[0]
+                    units = split[1]
+                    
+                else:
+                    units = ""
+                    
+                return_dict[self.name+"_"+technique_name][f'{self.name}_{technique_name}_{format_name}'] = {'source': f'{filename}',
+                                                                        'dtype': 'number',
+                                                                        'units': units,
+                                                                        'shape': []}
             
 
         
@@ -250,38 +252,37 @@ class BiologicPotentiostat(Device):
         self.complete_status = None
         
         #get the most recent .mpr file from the directory
-        filename = str(self.list_of_mpr_files[0])
-        mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
-        dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
-        
-        #for now we will assume it's always OCV
-        item_names = list(dfs.columns)       
-        data = {}
-        
-        for i in range(len(dfs)):
-            
-            epoch = self.t0 + dfs["time/s"][i] - dfs["time/s"][0]
-            data_dict = {}
-            timestamps_dict = {}
-            for key in dfs:
-                format_name = key.replace(" ","_")
-                if "/" in format_name:
-                    split = format_name.split('/')
-                    format_name = split[0]
-                    units = split[1]
+        for file_path in self.list_of_mpr_files:
+            filename = str(file_path)
+            mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
+            dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
+            technique_name = filename.split(".")[0].split("_")[-2] + "_"+ filename.split(".")[0].split("_")[-3]
+            print(f"working on {technique_name}, number of entries is: {len(dfs)} \n")
 
-                else:
-                    units = ""
+            for i in range(len(dfs)):
                 
-                data_dict[f'{self.name}_{format_name}'] = dfs[key][i]
-                timestamps_dict[f'{self.name}_{format_name}'] = epoch
-                
-            d = dict(
-                time=epoch,
-                data=data_dict,
-                timestamps=timestamps_dict
-            )
-            yield d
+                epoch = self.t0 + dfs["time/s"][i] - dfs["time/s"][0]
+                data_dict = {}
+                timestamps_dict = {}
+                for key in dfs:
+                    format_name = key.replace(" ","_")
+                    if "/" in format_name:
+                        split = format_name.split('/')
+                        format_name = split[0]
+                        units = split[1]
+
+                    else:
+                        units = ""
+                    
+                    data_dict[f'{self.name}_{technique_name}_{format_name}'] = dfs[key][i]
+                    timestamps_dict[f'{self.name}_{technique_name}_{format_name}'] = epoch
+                    
+                d = dict(
+                    time=epoch,
+                    data=data_dict,
+                    timestamps=timestamps_dict
+                )
+                yield d
         
         
         
