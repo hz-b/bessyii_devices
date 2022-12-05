@@ -126,8 +126,38 @@ class MonoTranslationAxis(PVPositioner):
 
         return status
 
+class MonoGratingTranslationAxis(MonoTranslationAxis):
 
+    """
+    The same as a normal translation axis, but always use the readback
+    """
+    def restore(self, d: Dict[str, Any]):
 
+            """
+            parameter_dict : ordered_dict
+
+            A dictionary containing names of signals (from a baseline reading)
+            """
+
+            #first pass determine which parameters are configuration parameters
+            
+            sta = []
+
+            for config_attr in self.configuration_attrs:
+
+                #Make the key as it would be found in d
+
+                param_name = self.name + "_" + config_attr.replace('.','_')
+                
+                if param_name in d:
+                    if hasattr(self,config_attr+'.write_access'):
+                        if getattr(self,config_attr+'.write_access'):
+                            getattr(self, config_attr).set(d[param_name]).wait()
+
+            #second pass. We know we are a positioner, so let's restore the position
+            if self.name in d:
+                sta =  self.move(d[self.name],wait=False)   
+            return sta
 
 
 
@@ -462,7 +492,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
   
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='config')
     m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"})
-    grating_translation = Cpt(MonoTranslationAxis, '',atol = 0.5, ch_num='1',labels={"pgm"})
+    grating_translation = Cpt(MonoGratingTranslationAxis, '',atol = 0.5, ch_num='1',labels={"pgm"})
     grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"})
     slit                = Cpt(ExitSlitEMIL, '')
 
@@ -574,6 +604,10 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         for positioner in positioners:
 
             param_name = positioner.setpoint.name
+
+            #If it's the grating translation, then take the readback
+            if positioner.name == self.grating_translation.name:
+                param_name = positioner.name
             if param_name in d:
                 positions.append(d[param_name])
             
@@ -596,12 +630,18 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
                     real, position = self._move_queue.pop(0)
                 except IndexError:
                     #we've finished the queue
+
+
                     
 
                     self.ID_on.set(d[self.ID_on.name]).wait()
 
                     st.set_finished()
                     return 
+
+                if real.name == self.en.name:
+                    self.IdOffset.set(d[self.IdOffset.name]).wait()
+                    self.IdSlope.set(d[self.IdSlope.name]).wait()
 
                 status = real.move(
                         position,
