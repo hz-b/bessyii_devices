@@ -7,7 +7,7 @@ from bessyii.plans.flying import flycount
 from databroker.v2 import temp
 
 
-from bluesky.plans import count
+from bluesky.plans import count, fly
 from bluesky.callbacks.best_effort import BestEffortCallback
 import bluesky.preprocessors as bpp
 import bluesky.plan_stubs as bps
@@ -49,8 +49,6 @@ flyer = biologic
 def describe_collect_type_check(flyer):
     return isinstance(flyer.describe_collect(), dict)
 
-def describe_collect_name_check(flyer):
-    return flyer.name in flyer.describe_collect()
 
 
 
@@ -65,12 +63,18 @@ def test_connected():
 def test_describe_collect_type():
     assert describe_collect_type_check(flyer) == True
 
-def test_describe_collect_name():
-    assert describe_collect_name_check(flyer) == True
+
+def test_in_plan():
+
+    RE(fly([biologic]))
+
+    run = db[-1]
+
+    run.biologic_CV_02.read()
+    run.biologic_CA_03.read()
+    run.biologic_OCV_04.read()
 
 
-## Run a plan to test
 
-RE(flycount([det],biologic))
 
 
