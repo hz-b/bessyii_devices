@@ -3,11 +3,11 @@ from ophyd.signal import Signal, SignalRO
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from ophyd import Kind
-from .positioners import PVPositionerComparator, PVPositionerBessy as PVPositioner
+from .positioners import PVPositionerComparator, PVPositionerBessy
 from .device import  Device
 
 # Used only for M1 uses Software done signal
-class M1Axis(PVPositioner):
+class M1Axis(PVPositionerBessy):
 
     setpoint    = FCpt(EpicsSignal,    '{self.prefix}{self._ch_name}Abs', kind='normal' )
     readback    = FCpt(EpicsSignalRO,  '{self.prefix}rd{self._ch_name}', kind='hinted')
@@ -43,7 +43,7 @@ class M1AxisAquarius(PVPositionerComparator):
 
 
 # Used for hexapods
-class HexapodAxis(PVPositioner):
+class HexapodAxis(PVPositionerBessy):
 
     setpoint = FCpt(EpicsSignal,   '{self.prefix}hexapod:getPose{self._ch_name}', write_pv = '{self.prefix}hexapod:setPose{self._ch_name}', kind='normal'   )
     readback = FCpt(EpicsSignalRO,  '{self.prefix}hexapod:getReadPose{self._ch_name}', kind='hinted')
@@ -58,7 +58,7 @@ class HexapodAxis(PVPositioner):
 # EMIL
 # Used on AU1, AU3 and Pinhole
 
-class AxisTypeA(PVPositioner):
+class AxisTypeA(PVPositionerBessy):
 
     setpoint = FCpt(EpicsSignal,    '{self.prefix}Abs{self._ch_name}',kind='normal')
     readback = FCpt(EpicsSignalRO,  '{self.prefix}rdPos{self._ch_name}', kind='hinted')
@@ -100,28 +100,22 @@ class AxisTypeA(PVPositioner):
         self.running_signal.subscribe(self.cb_running)
 
 # Used on AU2 and Diamond Filter        
-class AxisTypeB(PVPositioner):
+class AxisTypeB(PVPositionerBessy):
 
     setpoint = Cpt(EpicsSignal,    '_SET', kind='normal')                   
     readback = Cpt(EpicsSignalRO,  '_GET', kind='hinted')
     done     = Cpt(EpicsSignalRO,  '_STATUS', kind='omitted')
     done_value = 0 
     
-    def __init__(self, prefix, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
 
-class AxisTypeBChoice(PVPositioner):
+
+class AxisTypeBChoice(PVPositionerBessy):
 
     setpoint = Cpt(EpicsSignal,    '_GON', kind='normal')                   
     readback = Cpt(EpicsSignalRO,  '_GETN',string=True, kind='hinted')
     done     = Cpt(EpicsSignalRO,  '_STATUS', kind='omitted')
     done_value = 0 
     
-    def __init__(self, prefix, **kwargs):
-
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
 
 # Aquarius
 #Set			AUYU15L:Top.VAL

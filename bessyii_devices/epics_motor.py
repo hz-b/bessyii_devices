@@ -45,13 +45,20 @@ class EpicsMotorBessy(EpicsMotor):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a positioner, so let's restore the position
-        if self.name + "_user_setpoint" in d:
-            sta =  self.move(d[self.name + "_user_setpoint"],wait=False)  
+        if self._restore_readback == True:
+            if self.name+ "_user_readback" in d:
+                sta =  self.move(d[self.name+"_user_readback"],wait=False) 
+            else:
+                sta = None  
         else:
-            sta = None
+            if self.name + "_user_setpoint" in d:
+                sta =  self.move(d[self.name + "_user_setpoint"],wait=False)   
+            else:
+                sta = None
+        
        
         return sta
     
-    #def __init__(self, prefix, **kwargs):
-    #    super().__init__(prefix, **kwargs)
-    #    self.readback.name = self.name 
+    def __init__(self, prefix,restore_readback=False, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self._restore_readback = restore_readback

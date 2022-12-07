@@ -1,8 +1,8 @@
 from ophyd import EpicsSignal, EpicsSignalRO
-from bessyii_devices.epics_motor import EpicsMotorBessy as EpicsMotor
-from bessyii_devices.device import BESSYDevice as Device
+from bessyii_devices.epics_motor import EpicsMotorBessy
+from bessyii_devices.device import BESSYDevice
 
-from bessyii_devices.positioners import PVPositionerBessy as PVPositioner, PVPositionerComparator, PVPositionerDone, PseudoPositionerBessy as PseudoPositioner
+from bessyii_devices.positioners import PseudoPositionerBessy
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from .axes import AxisTypeA, AxisTypeB, AxisTypeD
@@ -28,19 +28,19 @@ from ophyd.pseudopos import PseudoSingle
 # AU1: WAUY01U012L
 # AU3 SISSY: AUY02U112L   
 # AU3 CAT: AUY02U212L
-class AU4(Device):
+class AU4(BESSYDevice):
 
-    top = Cpt(EpicsMotor, "M3", labels={"apertures"})
-    bottom = Cpt(EpicsMotor, "M1", labels={"apertures"})
-    left = Cpt(EpicsMotor, "M2", labels={"apertures"})
-    right = Cpt(EpicsMotor, "M0", labels={"apertures"})
+    top = Cpt(EpicsMotorBessy, "M3", labels={"apertures"})
+    bottom = Cpt(EpicsMotorBessy, "M1", labels={"apertures"})
+    left = Cpt(EpicsMotorBessy, "M2", labels={"apertures"})
+    right = Cpt(EpicsMotorBessy, "M0", labels={"apertures"})
 
-class AU13(Device):
+class AU13(BESSYDevice):
     #_default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
-    top         = Cpt(AxisTypeA, '', ch_name='M1', labels={"apertures"})
-    bottom      = Cpt(AxisTypeA, '', ch_name='M2', labels={"apertures"})
-    left        = Cpt(AxisTypeA, '', ch_name='M3', labels={"apertures"}) # wall in old convention
-    right       = Cpt(AxisTypeA, '', ch_name='M4', labels={"apertures"}) #ring in old convention
+    top         = Cpt(AxisTypeA, '', ch_name='M1',restore_readback=True, labels={"apertures"})
+    bottom      = Cpt(AxisTypeA, '', ch_name='M2',restore_readback=True, labels={"apertures"})
+    left        = Cpt(AxisTypeA, '', ch_name='M3',restore_readback=True, labels={"apertures"}) # wall in old convention
+    right       = Cpt(AxisTypeA, '', ch_name='M4',restore_readback=True, labels={"apertures"}) #ring in old convention
     
 
 #prefix list U17
@@ -51,21 +51,21 @@ class AU13(Device):
 # AU2: ue481pgm1
 
     
-class AU2(Device):
+class AU2(BESSYDevice):
     
     #_default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
-    top         = Cpt(AxisTypeB,      'PH_2', labels={"apertures"})
-    bottom      = Cpt(AxisTypeB,      'PH_3', labels={"apertures"})
-    left        = Cpt(AxisTypeB,      'PH_4', labels={"apertures"}) # wall in old convention
-    right       = Cpt(AxisTypeB,      'PH_5', labels={"apertures"}) #ring in old convention
+    top         = Cpt(AxisTypeB,      'PH_2',restore_readback=True, labels={"apertures"})
+    bottom      = Cpt(AxisTypeB,      'PH_3',restore_readback=True, labels={"apertures"})
+    left        = Cpt(AxisTypeB,      'PH_4',restore_readback=True, labels={"apertures"}) # wall in old convention
+    right       = Cpt(AxisTypeB,      'PH_5',restore_readback=True, labels={"apertures"}) #ring in old convention
 
 # EMIL STXM Horizontal slit
-class STXM_HS(Device):
+class STXM_HS(BESSYDevice):
     
     #_default_read_attrs = ['trans.readback', 'width.readback', 'b_axis.readback' ]
-    trans   = Cpt(AxisTypeB,      'PH_0', labels={"slit"}) # horizontal translation
-    width      = Cpt(AxisTypeB,      'PH_1', labels={"slit"}) # horizontal slitwidth
-    b_axis    = Cpt(AxisTypeB,      'PH_3', labels={"slit"}) # beam-axis
+    trans   = Cpt(AxisTypeB,      'PH_0',restore_readback=True, labels={"slit"}) # horizontal translation
+    width      = Cpt(AxisTypeB,      'PH_1',restore_readback=True, labels={"slit"}) # horizontal slitwidth
+    b_axis    = Cpt(AxisTypeB,      'PH_3',restore_readback=True, labels={"slit"}) # beam-axis
     
 
 
@@ -80,7 +80,7 @@ class STXM_HS(Device):
 #Stop			AUYU15L:Top.stMotor
 
 # AQUARIUS
-class AU1Aquarius(Device):
+class AU1Aquarius(BESSYDevice):
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
     top         = Cpt(AxisTypeD, 'Top')
     bottom      = Cpt(AxisTypeD, 'Bottom')
@@ -91,7 +91,7 @@ class AU1Aquarius(Device):
 
 # METRIXS
 # not in use since end of shutdown august 2020 
-class AU1Metrixs(Device):
+class AU1Metrixs(BESSYDevice):
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
     top         = Cpt(AxisTypeD, 'AUTOPES6L')
     bottom      = Cpt(AxisTypeD, 'AUBOTES6L')
@@ -99,7 +99,7 @@ class AU1Metrixs(Device):
     right       = Cpt(AxisTypeD, 'AURINGES6L') 
 
 # METRIXS Spectrometer AU
-class AUspecMETRIXS(Device):
+class AUspecMETRIXS(BESSYDevice):
     #_default_read_attrs = ['top.user_readback', 'bottom.user_readback', 'left.user_readback', 'right.user_readback']
     top    = Cpt(EpicsMotor, 'Blade-Up', labels={"aperture"})
     bottom = Cpt(EpicsMotor, 'Blade-Down', labels={"aperture"})
@@ -109,14 +109,14 @@ class AUspecMETRIXS(Device):
 
     
 # UE52-SGM
-class AU1UE52SGM(Device):
+class AU1UE52SGM(BESSYDevice):
     _default_read_attrs = ['top.readback', 'bottom.readback', 'left.readback', 'right.readback']
     top         = Cpt(AxisTypeD, '0')
     bottom      = Cpt(AxisTypeD, '1')
     left        = Cpt(AxisTypeD, '4') 
     right       = Cpt(AxisTypeD, '5') 
 
-class AU1UE52SGM(PseudoPositioner):
+class AU1UE52SGM(PseudoPositionerBessy):
     ''' This class implements apertures with four blades (top, bottom, left, right)
     and four pseudo motors (htop,hoffset,vgap,voffset)
     '''

@@ -1,7 +1,7 @@
 ##set up some test devices
 from ophyd.sim import SynAxis
 from bessyii_devices.positioners import PVPositionerDone
-from bessyii_devices.device import BESSYDevice as Device
+from bessyii_devices.device import BESSYDevice
 from ophyd import Signal,Component as Cpt
 from ophyd.sim import SynGauss, SynAxis
 import threading
@@ -12,7 +12,7 @@ from ophyd.pseudopos import (
     pseudo_position_argument,
     real_position_argument
 )
-from bessyii_devices.positioners import PseudoPositionerBessy as PseudoPositioner
+from bessyii_devices.positioners import PseudoPositionerBessy 
 from ophyd import ttime
 from ophyd.utils import (
     InvalidState,
@@ -45,7 +45,7 @@ from typing import (
 from ophyd import SoftPositioner
 
 
-class ConfigDev(Device):
+class ConfigDev(BESSYDevice):
 
     config_param_a = Cpt(Signal, kind='config')
     config_param_b = Cpt(Signal, kind='config')
@@ -90,14 +90,22 @@ class SimPositionerDone(SynAxis,SoftPositioner):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
         #second pass. We know we are a positioner, so let's restore the position
-        if self.name + "_setpoint" in d:
-            sta =  self.move(d[self.name + "_setpoint"],wait=False)   
-        return sta
+        if self._restore_readback == True:
+            if self.name in d:
+                sta =  self.move(d[self.name],wait=False)   
+            else:
+                sta = None
+        else:
+            if self.name + "_setpoint" in d:
+                sta =  self.move(d[self.name + "_setpoint"],wait=False)   
+            else:
+                sta = None
     
-    def __init__(self,name, **kwargs):
+    def __init__(self,name, restore_readback = False,**kwargs):
         super().__init__(name=name, **kwargs)
         self.readback.name = self.name 
         self.setpoint.set(0)
+        self._restore_readback = restore_readback 
         
 
 
@@ -160,19 +168,19 @@ class DodgyMotor(SimPositionerDone):
 
 
 
-class SimStage(Device):
+class SimStage(BESSYDevice):
     
-    x = Cpt(SimPositionerDone)
+    x = Cpt(SimPositionerDone,restore_readback=True )
     y = Cpt(SimPositionerDone)
     config_param = Cpt(Signal, kind='config')
     
-class SimStageOfStage(Device):
+class SimStageOfStage(BESSYDevice):
     
     a = Cpt(SimStage)
     b= Cpt(SimStage)
     config_param = Cpt(Signal, kind='config')
 
-class Pseudo3x3(PseudoPositioner):
+class Pseudo3x3(PseudoPositionerBessy):
     """
     Interface to three positioners in a coordinate system that flips the sign.
     """
@@ -376,7 +384,7 @@ class SimMono(SimStageOfStage):
 
 ## Sim Hexapod
 
-class SimHexapod(PseudoPositioner):
+class SimHexapod(PseudoPositionerBessy):
     """
     
     A  simulated class for all hexapods controlled by geo-brick motion controllers
