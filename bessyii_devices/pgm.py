@@ -35,16 +35,81 @@ class MonoTranslationAxisSelect(PVPositioner):
     This axis is used for moving things inside the mono. It does not change the calc params. They must be changed seperately
     
     This axis is not intended to be, and cannot be scanned. It's used so that we have a status object to know when the move is complete
+    
+    The move method is overwritten so that the device will only move if the setpoint is not where the readback is
+    
     """
     
     def __init__(self, prefix, ch_num=None, **kwargs):
         self._ch_num = ch_num
         super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
         
     setpoint = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_GON', kind='normal')
     readback = FCpt(EpicsSignalRO, '{self.prefix}PH_{self._ch_num}_GETN',string='True', kind='hinted')
     done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS.RVAL', kind='omitted')
-    done_value = 0.0
+    stop_signal= FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_AKTION', kind='omitted')
+    stop_value = 0
+    done_value = 0
+
+    def move(self, position, wait=True, timeout=None, moved_cb=None):
+        """Move to a specified position, optionally waiting for motion to
+        complete.
+        Parameters
+        ----------
+        position
+            Position to move to
+        moved_cb : callable
+            Call this callback when movement has finished. This callback must
+            accept one keyword argument: 'obj' which will be set to this
+            positioner instance.
+        timeout : float, optional
+            Maximum time to wait for the motion. If None, the default timeout
+            for this positioner is used.
+        Returns
+        -------
+        status : MoveStatus
+        Raises
+        ------
+        TimeoutError
+            When motion takes longer than `timeout`
+        ValueError
+            On invalid positions
+        RuntimeError
+            If motion fails other than timing out
+        """
+        # Before moving, ensure we can stop (if a stop_signal is configured).
+        if self.stop_signal is not None:
+            self.stop_signal.wait_for_connection()
+        status = PositionerBase.move(self,position, timeout=timeout, moved_cb=moved_cb) #doesn't a
+
+        
+                
+        has_done = self.done is not None
+        if not has_done:
+            moving_val = 1 - self.done_value
+            self._move_changed(value=self.done_value)
+            self._move_changed(value=moving_val)
+
+        try:
+            if self.readback.get() != position:
+                self._setup_move(position)
+            else:
+                moving_val = 1 - self.done_value
+                self._move_changed(value=self.done_value)
+                self._move_changed(value=moving_val)
+                self._move_changed(value=self.done_value)
+
+                PositionerBase._done_moving(self)
+            if wait:
+                status_wait(status)
+        except KeyboardInterrupt:
+            self.stop()
+            raise
+  
+            
+
+        return status
        
       
         
@@ -598,7 +663,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
                         
         st = DeviceStatus(device=self)
         #populate the move queue 
-        positioners = [self.grating_translation,self.slit,self.en] #grating, then slit then energy
+        positioners = [self.grating_trans_sel,self.slit,self.en] #grating, then slit then energy
         positions = []
 
         for positioner in positioners:
@@ -606,7 +671,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
             param_name = positioner.setpoint.name
 
             #If it's the grating translation, then take the readback
-            if positioner.name == self.grating_translation.name:
+            if positioner.name == self.grating_trans_sel.name:
                 param_name = positioner.name
             if param_name in d:
                 positions.append(d[param_name])
