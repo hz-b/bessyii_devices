@@ -3,7 +3,7 @@ from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from bessyii_devices.axes import HexapodAxis, M1AxisAquarius, AxisTypeA
 from ophyd import PseudoSingle, PositionerBase, Signal
-from bessyii_devices.positioners import  InternalSignal, PseudoPositionerBessy as PseudoPositioner, PVPositionerBessy as PVPositioner
+from bessyii_devices.positioners import  InternalSignal, PseudoPositionerBessy , PVPositionerBessy
 from bessyii_devices.device import BESSYDevice as Device
 from bessyii_devices.epics_motor import EpicsMotorBessy as EpicsMotor
 from ophyd.pseudopos import (pseudo_position_argument,
@@ -60,7 +60,7 @@ class SMUChoiceCoordSysPositions(Device):
         super().__init__(prefix, **kwargs)
         
 
-class SMU2Choice(PVPositioner):
+class SMU2Choice(PVPositionerBessy):
 
     """
     A Positioner to change co-ordinate systems for an SMU
@@ -93,7 +93,7 @@ class SMU3Choice(SMU2Choice):
     pos3 = Cpt(SMUChoiceCoordSysPositions,'',mirror=3,kind = 'config')
 
     
-class Hexapod(PseudoPositioner):
+class Hexapod(PseudoPositionerBessy):
     """
     
     A class for all hexapods controlled by geo-brick motion controllers
@@ -114,22 +114,22 @@ class Hexapod(PseudoPositioner):
     
     """
     #Pseudo Axes
-    rx = Cpt(PseudoSingle)
-    ry = Cpt(PseudoSingle)
-    rz = Cpt(PseudoSingle)
-    tx = Cpt(PseudoSingle)
-    ty = Cpt(PseudoSingle)
-    tz = Cpt(PseudoSingle)
+    prx = Cpt(PseudoSingle)
+    pry = Cpt(PseudoSingle)
+    prz = Cpt(PseudoSingle)
+    ptx = Cpt(PseudoSingle)
+    pty = Cpt(PseudoSingle)
+    ptz = Cpt(PseudoSingle)
 
     #Real Axes
-    rrx = Cpt(HexapodAxis, '', ch_name='A', labels={"mirrors"},kind='normal')
-    rry = Cpt(HexapodAxis, '', ch_name='B', labels={"mirrors"},kind='normal')
-    rrz = Cpt(HexapodAxis, '', ch_name='C', labels={"mirrors"},kind='normal')
-    rtx = Cpt(HexapodAxis, '', ch_name='X', labels={"mirrors"},kind='normal')
-    rty = Cpt(HexapodAxis, '', ch_name='Y', labels={"mirrors"},kind='normal')
-    rtz = Cpt(HexapodAxis, '', ch_name='Z', labels={"mirrors"},kind='normal')
+    rx = Cpt(HexapodAxis, '', ch_name='A', labels={"mirrors"},kind='normal')
+    ry = Cpt(HexapodAxis, '', ch_name='B', labels={"mirrors"},kind='normal')
+    rz = Cpt(HexapodAxis, '', ch_name='C', labels={"mirrors"},kind='normal')
+    tx = Cpt(HexapodAxis, '', ch_name='X', labels={"mirrors"},kind='normal')
+    ty = Cpt(HexapodAxis, '', ch_name='Y', labels={"mirrors"},kind='normal')
+    tz = Cpt(HexapodAxis, '', ch_name='Z', labels={"mirrors"},kind='normal')
     
-    start_immediately = Cpt(EpicsSignal, 'hexapod:mbboRunAfterValue', kind = 'omitted')
+    start_immediately = Cpt(EpicsSignal, 'hexapod:mbboRunAfterValue',string=True, kind = 'omitted')
     do_it = Cpt(EpicsSignal, 'hexapod:setPoseA.PROC', kind = 'omitted')
     multiaxis_running = Cpt(EpicsSignalRO,   'multiaxis:running' , kind='omitted'         )
     pmac = Cpt(EpicsSignal, 'pmac.AOUT',string='True', kind = 'omitted') #send &1a to clear errors before any move
@@ -137,36 +137,36 @@ class Hexapod(PseudoPositioner):
     @pseudo_position_argument
     def forward(self, pseudo_pos):
         '''Run a forward (pseudo -> real) calculation'''
-        return self.RealPosition(rrx=pseudo_pos.rx,
-                                 rry=pseudo_pos.ry,
-                                 rrz=pseudo_pos.rz,
-                                 rtx=pseudo_pos.tx,
-                                 rty=pseudo_pos.ty,
-                                 rtz=pseudo_pos.tz
+        return self.RealPosition(rx=pseudo_pos.prx,
+                                 ry=pseudo_pos.pry,
+                                 rz=pseudo_pos.prz,
+                                 tx=pseudo_pos.ptx,
+                                 ty=pseudo_pos.pty,
+                                 tz=pseudo_pos.ptz
                                  )
 
 
     @real_position_argument
     def inverse(self, real_pos):
         '''Run an inverse (real -> pseudo) calculation'''
-        return self.PseudoPosition(rx=real_pos.rrx,
-                                 ry=real_pos.rry,
-                                 rz=real_pos.rrz,
-                                 tx=real_pos.rtx,
-                                 ty=real_pos.rty,
-                                 tz=real_pos.rtz
+        return self.PseudoPosition(prx=real_pos.rx,
+                                 pry=real_pos.ry,
+                                 prz=real_pos.rz,
+                                 ptx=real_pos.tx,
+                                 pty=real_pos.ty,
+                                 ptz=real_pos.tz
                                  )
 
     def _concurrent_move(self, real_pos, **kwargs):
         '''Move all real positioners to a certain position, in parallel'''
         
         self.pmac.put('&1a')
-        self.start_immediately.put(0)
+        self.start_immediately.put('OFF')
         for real, value in zip(self._real, real_pos):
             self.log.debug('[concurrent] Moving %s to %s', real.name, value)
-            real.setpoint.put(value)
+            real.setpoint.set(value).wait()
         
-        self.start_immediately.put(1)
+        self.start_immediately.set('ON').wait()
         self.do_it.put(1)
 
         #Now having put the values to the axes we need to set a done signal to 0, then initiate the move and add a callback which will
@@ -177,10 +177,13 @@ class Hexapod(PseudoPositioner):
         with self._finished_lock:
                 if self.multiaxis_running.get() == 0:
                         self._done_moving()
+
+    
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
         self.multiaxis_running.subscribe(self._real_finished)
-        #self.read_attrs = ['rtx','rty','rtz','rrx','rry','rrz']
+        self.start_immediately.set('ON')
+        self.read_attrs = ['tx','ty','tz','rx','ry','rz']
 
         
     
@@ -190,7 +193,7 @@ class SMU2(Hexapod):
     """
     A hexapod that can change between two different co-ordinate systems
     """
-    _real = ['rrx','rry','rrz','rtx','rty','rtz']
+    _real = ['rx','ry','rz','tx','ty','tz']
     choice = Cpt(SMU2Choice,'',kind="normal")
  
     
