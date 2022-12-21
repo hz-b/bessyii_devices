@@ -65,9 +65,8 @@ class AxisTypeA(PVPositionerBessy):
     done = Cpt(Signal, value=True)
     done_value = True
     running_signal = FCpt(EpicsSignalRO,  '{self.prefix}Run{self._ch_name}',kind='omitted')
+    velocity = FCpt(EpicsSignal,  '{self.prefix}rdSpeed{self._ch_name}', write_pv = '{self.prefix}Speed{self._ch_name}',kind='config')
     
-  
-
     def cb_setpoint(self, *args, **kwargs):
         """
         Called when setpoint changes (EPICS CA monitor event).
