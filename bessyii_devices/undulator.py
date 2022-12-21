@@ -30,6 +30,7 @@ class UndulatorGap(PVPositioner):
     def __init__(self, prefix, *args, **kwargs):
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name 
+        self.cmd.set('START').wait() 
     
     setpoint        = Cpt(EpicsSignal,    'BaseParGapsel.B', kind='normal')
     readback        = Cpt(EpicsSignalRO,  'BaseIPmGap.A',labels={"motors", "undulators"},kind = 'hinted')
@@ -37,6 +38,7 @@ class UndulatorGap(PVPositioner):
     actuate         = Cpt(EpicsSignal,    'BaseCmdCalc.PROC'  , kind = 'config'                     )
     done_value      = 'STOP'
     cmd             = Cpt(EpicsSignal,    'BaseCmdMcmd',string ='True', kind ='config' )
+    stop_signal     = Cpt(EpicsSignal,    'BaseCmnUsrStop',kind = 'omitted')
     
     vel = Cpt(EpicsSignal,    'DiagPhyVelSet', kind ='config' )
     delta = Cpt(EpicsSignal,    'BaseParGapTrs', kind ='config' )
@@ -92,6 +94,7 @@ class UndulatorShift(PVPositioner):
     def __init__(self, prefix, *args, **kwargs):
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name 
+        self.cmd.set('START').wait() 
     
     setpoint        = Cpt(EpicsSignal,    'SBaseParGapsel.B',kind = 'normal')
     readback        = Cpt(EpicsSignalRO,  'SBaseIPmGap.E',kind = 'hinted') # parrallel
@@ -99,12 +102,15 @@ class UndulatorShift(PVPositioner):
     actuate         = Cpt(EpicsSignal,    'SBaseCmdCalc.PROC' , kind = 'config'  ) # this will only work if the command is set to "START"
     done_value      = 'STOP'
     
+    stop_signal     = Cpt(EpicsSignal,    'BaseCmnUsrStop',kind = 'omitted')
     readback_anti   = Cpt(EpicsSignalRO,  'SBaseIPmGap.F',kind = 'normal') # anti_parrallel
     cmd             = Cpt(EpicsSignal,    'SBaseCmdMcmd',string ='True', kind ='config' )
         
     vel = Cpt(EpicsSignal,    'SDiagPhyVelSet', kind ='config' )
     delta = Cpt(EpicsSignal,    'SBaseParGapTrs', kind ='config' )
-    
+    drv_mode = Cpt(EpicsSignal,    'SBaseCmdDriveMode', kind ='config' )
+
+
     read_attrs=['readback']
 
     def restore(self, d: Dict[str, Any]):

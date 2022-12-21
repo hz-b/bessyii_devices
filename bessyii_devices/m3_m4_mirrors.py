@@ -182,7 +182,7 @@ class Hexapod(PseudoPositionerBessy):
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
         self.multiaxis_running.subscribe(self._real_finished)
-        self.start_immediately.set('ON')
+        self.start_immediately.set('ON').wait()
         self.read_attrs = ['tx','ty','tz','rx','ry','rz']
 
         
@@ -195,6 +195,11 @@ class SMU2(Hexapod):
     """
     _real = ['rx','ry','rz','tx','ty','tz']
     choice = Cpt(SMU2Choice,'',kind="normal")
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.multiaxis_running.subscribe(self._real_finished)
+        self.start_immediately.set('ON').wait()
+        self.read_attrs = ['tx','ty','tz','rx','ry','rz', 'choice']
  
     
 class SMU3(Hexapod):
@@ -203,8 +208,13 @@ class SMU3(Hexapod):
     """
     A hexapod that can change between three different co-ordinate systems
     """
-    _real = ['rrx','rry','rrz','rtx','rty','rtz']
-    choice = Cpt(SMU3Choice,'')  
+    _real = ['rx','ry','rz','tx','ty','tz']
+    choice = Cpt(SMU3Choice,'', kind="normal")  
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.multiaxis_running.subscribe(self._real_finished)
+        self.start_immediately.set('ON')
+        self.read_attrs = ['tx','ty','tz','rx','ry','rz', 'choice']
 
     
  
