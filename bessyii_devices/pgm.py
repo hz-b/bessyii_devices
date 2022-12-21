@@ -1,5 +1,5 @@
 from ophyd import EpicsSignal, EpicsSignalRO, PositionerBase
-from ophyd.status import DeviceStatus, StatusBase, SubscriptionStatus, wait as status_wait
+from ophyd.status import DeviceStatus, StatusBase, SubscriptionStatus,AndStatus, wait as status_wait
 import time
 from ophyd.status import wait
 from ophyd import Component as Cpt
@@ -8,7 +8,7 @@ import numpy as np
 from .flyer import BasicFlyer
 
 from ophyd import FormattedComponent as FCpt
-from .positioners import PVPositionerComparator, PVPositionerBessy as PVPositioner
+from .positioners import PVPositionerComparator, PVPositionerBessy
 from .device import BESSYDevice as Device
 
 from collections import OrderedDict, namedtuple
@@ -29,7 +29,7 @@ from typing import (
     Union,
 )
 
-class MonoTranslationAxisSelect(PVPositioner):
+class MonoTranslationAxisSelect(PVPositionerBessy):
 
     """
     This axis is used for moving things inside the mono. It does not change the calc params. They must be changed seperately
@@ -46,7 +46,7 @@ class MonoTranslationAxisSelect(PVPositioner):
         self.readback.name = self.name
         
     setpoint = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_GON', kind='normal')
-    readback = FCpt(EpicsSignalRO, '{self.prefix}PH_{self._ch_num}_GETN',string='True', kind='hinted')
+    readback = FCpt(EpicsSignalRO, '{self.prefix}PH_{self._ch_num}_GETN',string=True, kind='hinted')
     done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS.RVAL', kind='omitted')
     stop_signal= FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_AKTION', kind='omitted')
     stop_value = 0
@@ -92,7 +92,7 @@ class MonoTranslationAxisSelect(PVPositioner):
             self._move_changed(value=moving_val)
 
         try:
-            if self.readback.get() != position:
+            if self.readback.get() != self.readback.enum_strs[int(position)]:
                 self._setup_move(position)
             else:
                 moving_val = 1 - self.done_value
@@ -115,7 +115,7 @@ class MonoTranslationAxisSelect(PVPositioner):
         
         
 # Note that changing the grating translation DOES NOT change the MONO calculation parameters
-class MonoTranslationAxis(PVPositioner):
+class MonoTranslationAxis(PVPositionerBessy):
 
     def __init__(self, prefix,atol=0, ch_num=None, **kwargs):
         self._ch_num = ch_num
@@ -191,42 +191,10 @@ class MonoTranslationAxis(PVPositioner):
 
         return status
 
-class MonoGratingTranslationAxis(MonoTranslationAxis):
-
-    """
-    The same as a normal translation axis, but always use the readback
-    """
-    def restore(self, d: Dict[str, Any]):
-
-            """
-            parameter_dict : ordered_dict
-
-            A dictionary containing names of signals (from a baseline reading)
-            """
-
-            #first pass determine which parameters are configuration parameters
-            
-            sta = []
-
-            for config_attr in self.configuration_attrs:
-
-                #Make the key as it would be found in d
-
-                param_name = self.name + "_" + config_attr.replace('.','_')
-                
-                if param_name in d:
-                    if hasattr(self,config_attr+'.write_access'):
-                        if getattr(self,config_attr+'.write_access'):
-                            getattr(self, config_attr).set(d[param_name]).wait()
-
-            #second pass. We know we are a positioner, so let's restore the position
-            if self.name in d:
-                sta =  self.move(d[self.name],wait=False)   
-            return sta
 
 
 
-class PGMScannableAxis(PVPositioner):
+class PGMScannableAxis(PVPositionerBessy):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
     readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}', kind='hinted')
@@ -252,9 +220,8 @@ class MonoComparatorAxis(PVPositionerComparator):
         self._ch_name = ch_name
         self.atol = atol
         super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
 
-class MonoThetaAxis(PVPositioner):
+class MonoThetaAxis(PVPositionerBessy):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
     readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}', kind = 'hinted')
@@ -263,10 +230,9 @@ class MonoThetaAxis(PVPositioner):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
-        self.readback.name = self.name
     done_value = 1.0
 
-class MonoAlphaBetaAxis(PVPositioner):
+class MonoAlphaBetaAxis(PVPositionerBessy):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
     readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}', kind = 'hinted')
@@ -275,20 +241,15 @@ class MonoAlphaBetaAxis(PVPositioner):
     def __init__(self, prefix, ch_name=None, **kwargs):
         self._ch_name = ch_name
         super().__init__(prefix, **kwargs)
-        self.readback.name = self.name
     done_value = 1.0
 
-class Energy(PVPositioner):
+class Energy(PVPositionerBessy):
 
     """
     Energy is a PVPositioner which also reimplements the get() method
     It is intended that this class is included as a component to monochromators
     
     """
-
-    def __init__(self, prefix, *args, **kwargs):
-        super().__init__(prefix, **kwargs)
-        self.readback.name = self.name 
 
     # this is an initial API 
     setpoint        = Cpt(EpicsSignal,      'monoSetEnergy' , kind='normal'  )
@@ -345,11 +306,9 @@ class ExitSlitBase(Device):
     # Many monos will allow also set "wish" energy resolution by driving exit slit. This shall be included in this class
 
 
-class ExitSlitEMIL(PVPositioner):
+class ExitSlitEMIL(PVPositionerBessy):
     """
     EMIL specific exit slit implementation. EMIL beamlines uses different PV name for setting the slit
-
-    Since we always read ue48_pgm.en and not the entire mono device, making it hinted is acceptable for now. Should be a PVPositioner!
     """
     setpoint      = Cpt(EpicsSignal,  'SlitInput', kind='normal')
     readback =  Cpt(EpicsSignalRO, 'slitwidth', kind='hinted')
@@ -366,7 +325,7 @@ class ExitSlitMetrixs(ExitSlitBase):
     bandwidth       = Cpt(EpicsSignalRO,  'bandwidth'                       ,     kind='config')
 
 
-class ExitSlitSlitUE52SGM(PVPositioner):
+class ExitSlitSlitUE52SGM(PVPositionerBessy):
     """
     UE52SGM" specific exit slit implementation. 
     """
@@ -470,9 +429,9 @@ class FlyingEnergy(BasicFlyer, Energy):
     #status is an mbbo record, I need to know what the different states are. 
     sweep_status    = Cpt(EpicsSignalRO, 'GetSweepState', kind='omitted')
     aktion          = Cpt(EpicsSignal, 'MonoAktion.PROC', kind='omitted') # writing different values to this pv causes different actions like init, start, stop
-    start_pos       = Cpt(EpicsSignal, 'SetSweepStart'   , kind='config')
-    end_pos         = Cpt(EpicsSignal, 'SetSweepEnd'   , kind='config')
-    velocity        = Cpt(EpicsSignal, 'SetSweepVel', kind='config')
+    start_pos       = Cpt(EpicsSignal,'GetSweepStart', write_pv ='SetSweepStart'   , kind='config')
+    end_pos         = Cpt(EpicsSignal, 'GetSweepEnd', write_pv = 'SetSweepEnd'   , kind='config')
+    velocity        = Cpt(EpicsSignal, 'GetSweepVel', write_pv = 'SetSweepVel', kind='config')
     
     
         
@@ -551,15 +510,15 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
 
     def __init__(self,prefix,  *args, **kwargs):
         self._finished_lock = threading.RLock() #create a lock 
-        self._move_queue = []
+        self._allow_moves = True
         super().__init__(prefix,*args,**kwargs)
     
   
     positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='config')
-    m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"})
-    grating_translation = Cpt(MonoGratingTranslationAxis, '',atol = 0.5, ch_num='1',labels={"pgm"})
-    grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"})
-    slit                = Cpt(ExitSlitEMIL, '')
+    m2_translation      = Cpt(MonoTranslationAxis, '',restore_readback=True, ch_num='0',labels={"pgm"})
+    grating_translation = Cpt(MonoTranslationAxis, '',atol = 0.5,restore_readback=True, ch_num='1',labels={"pgm"})
+    grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',restore_readback=False,ch_num='1',labels={"pgm"})
+    slit                = Cpt(ExitSlitEMIL, '',restore_readback=True)
 
     alpha               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0)
     beta                = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta', settle_time=10.0)
@@ -602,7 +561,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
     
     def stop(self, success=False):
 
-        del self._move_queue[:]
+        self._allow_moves = False
 
         exc_list = []
 
@@ -643,88 +602,78 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         parameter_dict : ordered_dict
 
         A dictionary containing names of signals (from a baseline reading)
+
+        first we configure everything, then we set the grating and slit, then we set the energy
         """
 
         #first pass determine which parameters are configuration parameter
         self.ID_on.set(0)
 
+        #First set the branch so that we don't overwrite the settings of some other branch!
+        param_name = self.slit.branch.name
+        if param_name in d:
+            if self.slit.branch.write_access:
+                self.slit.branch.set(d[param_name]).wait()
+
         for config_attr in self.configuration_attrs:
 
             #Make the key as it would be found in d
-
             param_name = self.name + "_" + config_attr.replace('.','_')
-            
+          
             if param_name in d and param_name != self.ID_on.name:
                 if hasattr(self,config_attr+'.write_access'):
                     if getattr(self,config_attr+'.write_access'):
                         getattr(self, config_attr).set(d[param_name]).wait()
 
-        #second pass. We know we are a positioner, so let's restore the position
-                        
-        st = DeviceStatus(device=self)
-        #populate the move queue 
-        positioners = [self.grating_trans_sel,self.slit,self.en] #grating, then slit then energy
-        positions = []
-
-        for positioner in positioners:
+        #Move the grating and slit at the same time, use their setpoints
+        simul_move_positioners = [self.grating_trans_sel,self.slit]
+        sta = None
+        for positioner in simul_move_positioners:
 
             param_name = positioner.setpoint.name
 
-            #If it's the grating translation, then take the readback
-            if positioner.name == self.grating_trans_sel.name:
-                param_name = positioner.name
             if param_name in d:
-                positions.append(d[param_name])
+                move_sta = positioner.move(d[param_name], wait=False)
+
+                #If there has been another positioner, then take the status of both
+                if sta:
+
+                    sta = AndStatus(sta,move_sta)
+
+                else:
+
+                    sta = move_sta
+
+        #If we have tried to move anything then wait for it to complete
+        if sta:
+
+            sta.wait()            
+
+        #When it's done, then move the energy if no stop has been requested
+        move_sta = None
+        if self._allow_moves:
+
+            positioner = self.en
+            param_name = positioner.setpoint.name
+            if param_name in d:
+                move_sta = positioner.move(d[param_name], wait=True)
             
-        self._move_queue[:] = list(zip(positioners, positions))
-        pending_status = []
-    
-        #Define a recursive function that itterates through the queue 
-        def move_next(status=None, obj=None):
+        sta = self.ID_on.set(d[self.ID_on.name])
+        if move_sta:
+
+            sta = AndStatus(sta,move_sta)
+
+        else:
+
+            sta = move_sta
             
-            with self._finished_lock:
-
-                if pending_status:
-                    last_status = pending_status[-1]
-                    if not last_status.success:
-                        self.log.error("Failing due to last motion")
-                        st.set_exception(last_status.exception)
-                        return
-
-                try:
-                    real, position = self._move_queue.pop(0)
-                except IndexError:
-                    #we've finished the queue
-
-
-                    
-
-                    self.ID_on.set(d[self.ID_on.name]).wait()
-
-                    st.set_finished()
-                    return 
-
-                if real.name == self.en.name:
-                    self.IdOffset.set(d[self.IdOffset.name]).wait()
-                    self.IdSlope.set(d[self.IdSlope.name]).wait()
-
-                status = real.move(
-                        position,
-                        wait=False,
-                        moved_cb=move_next
-                    )
-                pending_status.append(status)
-        
-        #start the queue
-        move_next()
-          
-        return st
-   
-
+        self._allow_moves = True #whether the move has been requested or not, clear the stop flag
+        return sta
     
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
     en = Cpt(FlyingEnergy,'')
+    stxm_energy_ena = Cpt(EpicsSignal,"monoGetEnergySTXM.DISA", kind = "config" )
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', kind='normal', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', kind='normal', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1',   kind='normal', labels={'pgm'})
