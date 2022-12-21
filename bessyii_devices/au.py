@@ -1,4 +1,4 @@
-from ophyd import EpicsSignal, EpicsSignalRO
+from ophyd import EpicsSignal, EpicsSignalRO, EpicsMotor
 from bessyii_devices.epics_motor import EpicsMotorBessy
 from bessyii_devices.device import BESSYDevice
 
