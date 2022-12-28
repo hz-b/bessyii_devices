@@ -523,6 +523,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
     alpha               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0)
     beta                = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta', settle_time=10.0)
     theta               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Theta', settle_time=10.0)
+    stxm_energy_disa     = Cpt(EpicsSignal, 'monoGetEnergySTXM.DISA', kind='omitted')
 
 
     # experts settings of flyscan
@@ -608,6 +609,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
 
         #first pass determine which parameters are configuration parameter
         self.ID_on.set(0)
+        self.stxm_energy_disa.set(1) #disable the STXM energy PV
 
         #First set the branch so that we don't overwrite the settings of some other branch!
         param_name = self.slit.branch.name
@@ -650,22 +652,27 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
             sta.wait()            
 
         #When it's done, then move the energy if no stop has been requested
-        move_sta = None
+        en_move_sta = None
         if self._allow_moves:
 
             positioner = self.en
             param_name = positioner.setpoint.name
             if param_name in d:
-                move_sta = positioner.move(d[param_name], wait=True)
+                en_move_sta = positioner.move(d[param_name], wait=True)
             
         sta = self.ID_on.set(d[self.ID_on.name])
-        if move_sta:
 
-            sta = AndStatus(sta,move_sta)
+        #if the branch we are going to is stxm, enable the energy readback PV
+        if self.slit.branch.get() == "STXM":
+            sta = self.stxm_energy_disa.set(0) # Set the STXM Energy PV to enabled
+
+        if en_move_sta:
+
+            sta = AndStatus(sta,en_move_sta)
 
         else:
 
-            sta = move_sta
+            sta = en_move_sta
             
         self._allow_moves = True #whether the move has been requested or not, clear the stop flag
         return sta
@@ -673,7 +680,6 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
     en = Cpt(FlyingEnergy,'')
-    stxm_energy_ena = Cpt(EpicsSignal,"monoGetEnergySTXM.DISA", kind = "config" )
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', kind='normal', labels={'pgm'})
     grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', kind='normal', labels={'pgm'})
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1',   kind='normal', labels={'pgm'})
