@@ -58,13 +58,14 @@ class BESSYDevice(Device):
             
             if hasattr(component, "restore"):
                 comp_ret = component.restore(d) #should return a status object or None
+               
+                
                 if ret and comp_ret:
                     ret = AndStatus(ret,comp_ret)
                 elif comp_ret:
                     ret = comp_ret
+               
 
-
-                
         return ret
                                
 
