@@ -24,7 +24,7 @@ from typing import (
 
 class PVPositionerBessy(PVPositioner):
 
-    def restore(self, d: Dict[str, Any]):
+    def restore(self, d: Dict[str, Any]) -> list:
 
         """
         parameter_dict : ordered_dict
@@ -59,7 +59,7 @@ class PVPositionerBessy(PVPositioner):
             else:
                 sta = None
         
-        return sta
+        return [sta]
     
     def __init__(self, prefix,restore_readback=False, **kwargs):
         super().__init__(prefix, **kwargs)
@@ -68,7 +68,7 @@ class PVPositionerBessy(PVPositioner):
 
 class PseudoPositionerBessy(PseudoPositioner):
 
-    def restore(self, d: Dict[str, Any]):
+    def restore(self, d: Dict[str, Any]) -> list:
 
         """
         parameter_dict : ordered_dict
@@ -110,7 +110,7 @@ class PseudoPositionerBessy(PseudoPositioner):
         #Use that position dictionary as the setpoint
 
         sta =  self.move(pseudo_pos)   
-        return sta
+        return [sta]
 
 
 #https://github.com/pcdshub/pcdsdevices/blob/master/pcdsdevices/signal.py

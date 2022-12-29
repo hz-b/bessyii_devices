@@ -21,7 +21,7 @@ from ophyd.status import DeviceStatus, StatusBase, SubscriptionStatus, wait as s
 
 class EpicsMotorBessy(EpicsMotor):
 
-    def restore(self, d: Dict[str, Any]):
+    def restore(self, d: Dict[str, Any]) ->list:
 
         """
         parameter_dict : ordered_dict
@@ -57,7 +57,7 @@ class EpicsMotorBessy(EpicsMotor):
                 sta = None
         
        
-        return sta
+        return [sta]
     
     def __init__(self, prefix,restore_readback=False, **kwargs):
         super().__init__(prefix, **kwargs)

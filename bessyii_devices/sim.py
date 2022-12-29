@@ -304,7 +304,7 @@ class SimMono(SimStageOfStage):
             )
     
 
-    def restore(self, d: Dict[str, Any]):
+    def restore(self, d: Dict[str, Any])-> list:
 
         """
         parameter_dict : ordered_dict
@@ -376,7 +376,7 @@ class SimMono(SimStageOfStage):
         #start the queue
         move_next()
           
-        return st
+        return [st]
             
 
 

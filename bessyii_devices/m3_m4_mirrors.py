@@ -65,7 +65,7 @@ class SMU2Choice(PVPositionerBessy):
     """
     A Positioner to change co-ordinate systems for an SMU
     """
-    setpoint = Cpt(EpicsSignal,    'hexapod:mbboMirrorChoicerRun'               )                   
+    setpoint = Cpt(EpicsSignal,    'hexapod:mbboMirrorChoicerRun' ,string='True')                   
     readback = Cpt(EpicsSignalRO,  'hexapod:mbboMirrorChoicerRun',string='True', kind='hinted', labels={"mirrors", "SMU"})
     done     = Cpt(EpicsSignalRO,  'multiaxis:running'                  )
     pmac = Cpt(EpicsSignal, 'pmac.AOUT',string='True', kind = 'omitted') #send &1a to clear errors

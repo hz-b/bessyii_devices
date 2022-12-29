@@ -597,7 +597,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         
     
 
-    def restore(self, d: Dict[str, Any]):
+    def restore(self, d: Dict[str, Any]) -> list:
 
         """
         parameter_dict : ordered_dict
@@ -629,53 +629,54 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
 
         #Move the grating and slit at the same time, use their setpoints
         simul_move_positioners = [self.grating_trans_sel,self.slit]
+        status_objects = []
         sta = None
         for positioner in simul_move_positioners:
 
             param_name = positioner.setpoint.name
 
             if param_name in d:
+                print(f"{positioner.name:30s} moving from {positioner.readback.get()} to {d[param_name]}") 
+                def callback(status):
+                    if status.success :
+                        print(f"{status.pos.name:30s} finished moving to {status.target} in {status.elapsed:.1f}s")
+                    else:
+                        print(f"{status.pos.name:30s} failed to reach  {status.target}")
                 move_sta = positioner.move(d[param_name], wait=False)
+                move_sta.add_callback(callback)
+                status_objects.append(move_sta)
 
-                #If there has been another positioner, then take the status of both
-                if sta:
+        for sta in status_objects:
 
-                    sta = AndStatus(sta,move_sta)
-
-                else:
-
-                    sta = move_sta
-
-        #If we have tried to move anything then wait for it to complete
-        if sta:
-
-            sta.wait()            
+            sta.wait()
 
         #When it's done, then move the energy if no stop has been requested
-        en_move_sta = None
+        sta = None
         if self._allow_moves:
 
             positioner = self.en
             param_name = positioner.setpoint.name
             if param_name in d:
-                en_move_sta = positioner.move(d[param_name], wait=True)
+                print(f"{positioner.name:30s} moving from {positioner.readback.get()} to {d[param_name]}")
+                sta = positioner.move(d[param_name], wait=True)
+                def callback(status):
+                    if status.success :
+                        print(f"{status.pos.name:30s} finished moving to {status.target} in {status.elapsed:.1f}s")
+                    else:
+                        print(f"{status.pos.name:30s} failed to reach  {status.target}")
+                
+                sta.add_callback(callback)
+                
             
         sta = self.ID_on.set(d[self.ID_on.name])
 
         #if the branch we are going to is stxm, enable the energy readback PV
         if self.slit.branch.get() == "STXM":
-            sta = self.stxm_energy_disa.set(0) # Set the STXM Energy PV to enabled
+            self.stxm_energy_disa.set(0) # Set the STXM Energy PV to enabled
 
-        if en_move_sta:
 
-            sta = AndStatus(sta,en_move_sta)
-
-        else:
-
-            sta = en_move_sta
-            
         self._allow_moves = True #whether the move has been requested or not, clear the stop flag
-        return sta
+        return [sta]
     
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):

@@ -29,17 +29,20 @@ class BESSYDevice(Device):
     It is intended that this method is overwritten for devices which need some special restore order (like a hexapod or monochromator)
     """
 
-    def restore(self, d: Dict[str, Any]):
+    def restore(self, d: Dict[str, Any]) -> list: 
 
         """
         parameter_dict : ordered_dict
 
         A dictionary containing names of signals (from a baseline reading)
+
+        returns a list of status objects for things that will take time
         """
 
         #first pass determine which parameters are configuration parameters
 
-        ret = None
+        
+        status_objects = []
         for config_attr in self.configuration_attrs:
 
             #Make the key as it would be found in d
@@ -50,6 +53,7 @@ class BESSYDevice(Device):
                 if hasattr(self,config_attr+'.write_access'):
                     if getattr(self,config_attr+'.write_access'):
                         ret = getattr(self, config_attr).set(d[param_name]).wait()
+                        status_objects.append(ret)
                         
 
         #now call restore on any component devices
@@ -57,17 +61,20 @@ class BESSYDevice(Device):
             component = getattr(self,component_name)
             
             if hasattr(component, "restore"):
-                comp_ret = component.restore(d) #should return a status object or None
+                component_status_list = component.restore(d) #should return a status object or None
+                if component_status_list:
+                    status_objects = status_objects + component_status_list
                
+                """
                 
                 if ret and comp_ret:
                     ret = AndStatus(ret,comp_ret)
                 elif comp_ret:
                     ret = comp_ret
-               
+                """
 
-        return ret
-                               
+        return status_objects
+                            
 
 
                 
