@@ -10,17 +10,16 @@ class Channeltron(Device):
 
     #Define the signals in our component
     
-    read_cmd    = Cpt(EpicsSignal,  'Start-CMD')         # Starts a read
+    read_cmd    = Cpt(EpicsSignal,  'Start-CMD', kind='omitted')         # Starts a read
     count       = Cpt(EpicsSignalRO,'Counter-RB',       kind='hinted') # hinted makes it show up in visualisations.
  
  
     interval    = Cpt(EpicsSignal,  'Interval-SP',      kind='config')
     threshold   = Cpt(EpicsSignal,  'Threshold-SP',     kind='config')
-    high_voltage = Cpt(EpicsSignal,  'HighVoltage-SP',   kind='config')
+    high_voltage = Cpt(EpicsSignal, 'HighVoltage-RB', write_pv = 'HighVoltage-SP',   kind='config')
     dead_time    = Cpt(EpicsSignal,  'DeadTime-SP',      kind='config')
-    
-    
-    
+
+
     def trigger(self):
     
         #variable used as an event flag
