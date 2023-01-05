@@ -14,5 +14,5 @@ class U17_DCM(Device):
 
     en = Cpt(EpicsMotor, "axis_Energy")
     theta = Cpt(EpicsMotor, "axis_Theta")
-    theta_cryo = Cpt(EpicsMotor, "pmaxAxis4")
+    theta_cryo = Cpt(EpicsMotor, "pmacAxis4")
 
