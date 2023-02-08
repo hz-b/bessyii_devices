@@ -30,7 +30,9 @@ class Channeltron(Device):
 
     #Define the signals in our component
     
-    start_cmd   = Cpt(EpicsSignal,  'Start-CMD',    kind='omitted')         # Starts a read
+    acq_mode        = Cpt(EpicsSignal, 'Mode-SP', string=True,kind= "config")
+    trigger_cmd = Cpt(EpicsSignal,  'Trigger',put_complete=True, kind='omitted')
+    busy =  Cpt(EpicsSignalRO,  'ActualBusy', kind='omitted')
     count       = Cpt(EpicsSignalRO,'Counter-RB',   kind='hinted') # hinted makes it show up in visualisations.
 
     hv          = Cpt(ChanneltronHV,"HighVoltage",  kind='config')
@@ -38,9 +40,8 @@ class Channeltron(Device):
     threshold   = Cpt(EpicsSignal,  'Threshold-RB',  write_pv='Threshold-SP', kind='config')
     dead_time   = Cpt(EpicsSignal,  'DeadTime-RB',    write_pv = 'DeadTime-SP', string=True,  kind='config')
 
-    def stage(self):
+    def trigger(self):
 
-        self.start_cmd.set(1) #start the measurement
+        stat = self.trigger_cmd.set(1)
 
-
-   
+        return stat
