@@ -100,23 +100,28 @@ class Piezo3Axis(PseudoPositioner):
                                    height = d[2])
 
        
-        
+class DCMEMIL_PitchPiezoAxis(PVPositionerComparator):
+
+    setpoint = Cpt(EpicsSignal, 'pitch:setpoint')
+    readback = Cpt(EpicsSignal, 'calc:pitch:avg')
+
+    atol = 0.2
+
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+
+
     
 class DCMEMIL(Device):
 
 
     prefix_1 = 'u171dcm1:'
     prefix_2 = 'MONOY01U112L:'
+    prefix_3 = 'PINK:DCMSTAB:'
 
     en              = Cpt(Energy,  prefix_1,kind='hinted')
-
-
-    # horizontal translation to select the Si 111,311,422 crystal 
-    # Si111: 108 +/- 10, Si311: 66  +/- 10, Si 422: 24  +/- 10
-    
-    cr1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR1', kind=Kind.config|Kind.normal)
-    cr2             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CR2', kind=Kind.config|Kind.normal)
     ct1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CT', kind=Kind.config|Kind.normal)
+    cr1             = Cpt(DCMEMIL_PitchPiezoAxis, prefix_3, kind=Kind.config|Kind.normal)
     
     crystal_translate = Cpt(AxisTypeB, prefix_1+'PH_0',labels={"dcm","motors"},kind=Kind.config|Kind.normal)
     crystal_select  = Cpt(AxisTypeBChoice, prefix_1+'PH_0',labels={"dcm","motors"},kind=Kind.config|Kind.normal)
@@ -143,10 +148,3 @@ class DCMEMIL(Device):
     temp1_422           = Cpt(EpicsSignalRO,    prefix_2+'Crystal1T3', labels={"dcm"},kind='normal')
     temp2_422           = Cpt(EpicsSignalRO,    prefix_2+'Crystal2T3', labels={"dcm"},kind='normal')
 
-    # Piezo
-    piezo           = Cpt(Piezo3Axis,'',kind=Kind.config|Kind.normal)
-    
-    # Mostab 
-    
-    pitch_mostab = Cpt(Mostab,'EMILEL:Mostab0:',kind=Kind.config|Kind.normal)
-    roll_mostab = Cpt(Mostab,'EMILEL:Mostab1:',kind=Kind.config|Kind.normal)
