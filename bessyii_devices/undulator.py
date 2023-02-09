@@ -99,5 +99,15 @@ class UndulatorUE52(HelicalUndulator):
     mode             = Cpt(EpicsSignal,  'DiagTmdSet',kind = 'config') # where shall this be put? 
     couple_gap_shift = Cpt(EpicsSignal,  'DiagCplSet',kind = 'config') # where shall this be put? Do we need this?
     dynamic_vel      = Cpt(EpicsSignal,  'SBaseCmdDriveMode',kind = 'config') # where shall this be put? Do we need this?
+
+
+class UndulatorUE56_2(HelicalUndulator):
+  
+    gap_velocity     = Cpt(EpicsSignal,    'DiagPhyVelSet', kind ='config', labels={"motors", "undulators"}) # shall we put velocity and delta into 'UndulatorGap'?
+    gap_delta        = Cpt(EpicsSignal,    'BaseParGapTrs', kind ='config', labels={"motors", "undulators"})
+    
+    mode             = Cpt(EpicsSignal,  'SBaseCmdDriveMode',kind = 'config') # where shall this be put? 
+    couple_gap_shift = Cpt(EpicsSignal,  'DiagCplSet',kind = 'config') # where shall this be put? Do we need this?
+    dynamic_vel      = Cpt(EpicsSignal,  'DiagTmdSet',kind = 'config') # where shall this be put? Do we need this?
     
 
