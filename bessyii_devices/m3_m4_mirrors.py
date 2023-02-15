@@ -207,18 +207,18 @@ class SMU3(Hexapod):
     
 class SMUAquariusPGM1(Device):
 
-    tx   = Cpt(M1AxisAquarius, 'M2', labels={"mirrors"})
-    rx   = Cpt(M1AxisAquarius, 'M3', labels={"mirrors"})
-    ry   = Cpt(M1AxisAquarius, 'M4', labels={"mirrors"})
-    rz   = Cpt(M1AxisAquarius, 'M5', labels={"mirrors"})
+    tx = Cpt(M1AxisAquarius, 'M2', labels={"mirrors"})
+    rx = Cpt(M1AxisAquarius, 'M3', labels={"mirrors"})
+    ry = Cpt(M1AxisAquarius, 'M4', labels={"mirrors"})
+    rz = Cpt(M1AxisAquarius, 'M5', labels={"mirrors"})
 
 
 class SMUAquariusPGM2(Device):
 
-    tx   = Cpt(M1AxisAquarius, 'M6', labels={"mirrors"})
-    rx   = Cpt(M1AxisAquarius, 'M7', labels={"mirrors"})
-    ry   = Cpt(M1AxisAquarius, 'M8', labels={"mirrors"})
-    rz   = Cpt(M1AxisAquarius, 'M9', labels={"mirrors"})
+    tx = Cpt(M1AxisAquarius, 'M6', labels={"mirrors"})
+    rx = Cpt(M1AxisAquarius, 'M7', labels={"mirrors"})
+    ry = Cpt(M1AxisAquarius, 'M8', labels={"mirrors"})
+    rz = Cpt(M1AxisAquarius, 'M9', labels={"mirrors"})
 
 
 # used for METRIXS and UE52-SGM
@@ -226,14 +226,14 @@ class SMUAquariusPGM2(Device):
 #Metrixs implementation should be changed similar to ue52-sgm
 class SMUMetrixs(Device):
 
-    tx   = Cpt(EpicsMotor, 'M2', labels={"mirrors"})
-    rx   = Cpt(EpicsMotor, 'M3', labels={"mirrors"})
-    ry   = Cpt(EpicsMotor, 'M4', labels={"mirrors"})
-    rz   = Cpt(EpicsMotor, 'M5', labels={"mirrors"})
+    tx = Cpt(EpicsMotor, 'M2', labels={"mirrors"})
+    rx = Cpt(EpicsMotor, 'M3', labels={"mirrors"})
+    ry = Cpt(EpicsMotor, 'M4', labels={"mirrors"})
+    rz = Cpt(EpicsMotor, 'M5', labels={"mirrors"})
 
 
 class SMUUE52SGM(Device):
-    tx   = Cpt(EpicsMotor, "M2", name='tx')
-    rx   = Cpt(EpicsMotor, "M3", name='rx')
-    ry   = Cpt(EpicsMotor, "M4", name='ry')
-    rz   = Cpt(EpicsMotor, "M5", name='rz')
+    tx = Cpt(EpicsMotor, "M2", name='tx')
+    rx = Cpt(EpicsMotor, "M3", name='rx')
+    ry = Cpt(EpicsMotor, "M4", name='ry')
+    rz = Cpt(EpicsMotor, "M5", name='rz')
