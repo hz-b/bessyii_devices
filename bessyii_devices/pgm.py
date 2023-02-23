@@ -496,7 +496,7 @@ class SGMUE52(IdSlopeOffset, UndulatorMonoBase, PGM):
     
 
 # Needs to be tested by Peter Baumg.    
-class PGMEnergize(PGM):
+class PGMEnergize(PGM, ExitSlitBase):
 
     # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
     # the read PV at Aquarius is different compared to UndulatorMonoBase
