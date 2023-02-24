@@ -14,16 +14,17 @@ class Keithley6514(Device):
     
     # Ophyd Device for https://gitlab.helmholtz-berlin.de/sissy/support/keithley/-/blob/master/keithleyApp/Db/Keithley6514Main.template
     
-    init_cmd            = Cpt(EpicsSignal, 'cmdStart')
-    abort               = Cpt(EpicsSignal, 'cmdCancel')
-    trigger_cmd         = Cpt(EpicsSignal, 'rdCur.PROC')
+    init_cmd            = Cpt(EpicsSignal, 'cmdStart', kind="omitted")
+    abort               = Cpt(EpicsSignal, 'cmdCancel', kind="omitted")
+    trigger_cmd         = Cpt(EpicsSignal, 'rdCur.PROC', kind="omitted")
     readback            = Cpt(EpicsSignalRO, 'rdCur', kind='hinted', labels={"detectors", "keithley"})
     zero_check  		= Cpt(EpicsSignal, 'cmdZeroCheck', kind='config')
     mdel                = Cpt(EpicsSignal, 'rdCur.MDEL', kind='config')
     
-    mode    		    = Cpt(EpicsSignal, 'rbkFunc', write_pv='setFunc', string='True', kind='config')
+    func    		    = Cpt(EpicsSignal, 'rbkFunc', write_pv='setFunc', string='True', kind='config')
+
     reset               = Cpt(EpicsSignal, 'cmdReset.PROC', kind='config')
-    scan                = Cpt(EpicsSignal, 'fwdMeas.SCAN', kind='config')                               #the rate at which the PV will update.
+    scan                = Cpt(EpicsSignal, 'fwdMeas.SCAN',string='True', kind='config')                               #the rate at which the PV will update.
     
     ## -----  configuration ------
     
@@ -58,12 +59,12 @@ class Keithley6514(Device):
  
     def stage(self):
 
-        self.scan.put('.1 second')      # update the EPICS PV as quick as we can, modified 2.03.2022 to not shift values
+        self.scan.put('Passive')      # update the EPICS PV as quick as we can, modified 2.03.2022 to not shift values
         self.front_panel.put('On')      # Turn the front panel on (might be bad for readback)
         self.avg_type.put('Moving')     # Moving average filter, for speed of readback
         self.arm_src.put('Immediate')   # Immediate arm to give the fastest update possible
         self.trig_src.put('Immediate')  # Immediate trigger to give the fastest update possible
-        self.mdel.put(-1)
+
 
         # deal with zero_check
         if self.zero_check.get() == 1 :
@@ -71,15 +72,15 @@ class Keithley6514(Device):
             self.zero_check.put(0)
             time.sleep(10) 
         
-        self.mode.put('Current')        # Make sure we are in current mode
+        self.func.put('Current')        # Make sure we are in current mode
         
         self.init_cmd.put(1)            # start the aquisition if it isn't already
 
+        self.mdel.put(-1)
         super().stage()
 
     def unstage(self):
         self.scan.put('.1 second')
-        self.mdel.put(0) 
         super().unstage()  
      
 
@@ -99,7 +100,7 @@ class Keithley6514(Device):
         #Connect the callback that will set finished and clear sub
         self.readback.subscribe(new_value,event_type=Signal.SUB_VALUE,run=False)
         
-        #Start the acquisition
+
         self.trigger_cmd.put(1)     # will have started anyway since we set scan to .1 second
         
         return status
@@ -108,6 +109,10 @@ class Keithley6514(Device):
 class Keithley6517(Keithley6514):
 
        
-    vsrc_ena            = Cpt(EpicsSignal, 'cmdVoltSrcEna', kind='config')
+    vsrc_ena            = Cpt(EpicsSignal, 'cmdVoltSrcEna', kind="omitted")
     vsrc                = Cpt(EpicsSignal, 'rbkVoltSrc' , write_pv='setVoltSrc',       kind='config')
     trig_mode    		= Cpt(EpicsSignal, 'rbkTrigCont', write_pv='setTrigCont',        string='True',      kind='config')    #single or continuous mode. Bypasses event detection (trig_src)
+
+    def unstage(self):
+        self.trig_mode.put("Continuous")
+        super().unstage()  
