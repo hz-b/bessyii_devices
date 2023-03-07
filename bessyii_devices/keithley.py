@@ -36,7 +36,7 @@ class Keithley6514(Device):
     
     # integration time
     nplc                = Cpt(EpicsSignal, 'rbkIntegrTime',write_pv = 'setIntegrTime', kind='config') #Number of power line cycles
-    int_time            = Cpt(EpicsSignal, 'rbkIntegrTimeSec',write_pv = 'setIntegrTimeSec', kind='config') 
+    #int_time            = Cpt(EpicsSignal, 'rbkIntegrTimeSec',write_pv = 'setIntegrTimeSec', kind='config') 
     #Damping            
     analog_dmp_ena      = Cpt(EpicsSignal, 'rbkFiltDampEnable', write_pv='cmdFiltDampEnable', kind='config')
     
@@ -116,6 +116,18 @@ class Keithley6517(Keithley6514):
     def unstage(self):
         self.trig_mode.put("Continuous")
         super().unstage()  
+
+class Keithley6517Old(Keithley6514):
+
+
+    vsrc_ena            = Cpt(EpicsSignal, 'cmdVoltSrcEna', kind="omitted")
+    vsrc                = Cpt(EpicsSignal, 'rbkVoltSrc' , write_pv='setVoltSrc',       kind='config')
+    #trig_mode                   = Cpt(EpicsSignal, 'rbkTrigCont', write_pv='setTrigCont',        string='True',      kind='config')    #single or continuous mode. Bypasses event detectio>
+
+    #def unstage(self):
+    #    self.trig_mode.put("Continuous")
+    #    super().unstage()  
+
 
 class KeysightB2985A(Keithley6514):
 

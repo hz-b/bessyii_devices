@@ -13,7 +13,7 @@ class UndulatorGap(PVPositioner):
         self.readback.name = self.name 
     
     setpoint        = Cpt(EpicsSignal,    'BaseParGapsel.B', kind='normal')
-    readback        = Cpt(EpicsSignalRO,  'BaseIPmGap.A',labels={"motors", "undulators"},kind = 'hinted')
+    readback        = Cpt(EpicsSignalRO,  'Ndi1PmsPos',labels={"motors", "undulators"},kind = 'hinted')
     done            = Cpt(EpicsSignalRO,  'BaseStatISLbl' ,string='True'    ,kind = 'omitted' )
     actuate         = Cpt(EpicsSignal,    'BaseCmdCalc.PROC'  , kind = 'config'                     )
     done_value      = 'STOP'
