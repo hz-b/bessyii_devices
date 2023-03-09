@@ -78,7 +78,7 @@ class PVPositionerComparator(PVPositioner):
     setpoint = None
     readback = None
 
-    done = Cpt(InternalSignal, value=0,kind = 'config' )
+    done = Cpt(InternalSignal, value=0,kind = 'omitted' )
     done_value = 1
 
     # Optionally override limits to a 2-element tuple in subclass

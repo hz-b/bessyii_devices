@@ -30,6 +30,269 @@ from ophyd import Component as Cpt
 from .positioners import PVPositionerComparator
 import time
 
+
+from ophyd import Device, Component as Cpt, EpicsSignal, EpicsSignalRO
+from ophyd.status import DeviceStatus, StatusBase
+
+from ophyd.utils import OrderedDefaultDict
+from ophyd.status import SubscriptionStatus, DeviceStatus
+import os
+import errno
+from galvani import BioLogic as BL
+import pandas as pd
+import glob
+from pathlib import Path
+import os
+from pprint import pprint
+import threading
+from time import sleep
+
+class BiologicPotentiostat(Device):
+    
+    """
+    data_dir: path
+    
+        The path to the location containing the files
+    
+    sim_delay: int (optional)
+        
+        the delay in seconds before the complete status will return true
+    
+    example: 
+    
+        data_dir = "/home/jupyter-will/EMIL_Bluesky_Notebooks/Biologic/Data/"
+        biologic = BiologicPotentiostat("SISSY2EX:BIOLOGIC:", name="biologic",sim_delay=10, data_dir=data_dir)
+    """
+    
+    trigger_out = Cpt(EpicsSignal, "TRIGGER:SEND", kind='omitted', put_complete=True)
+    done = Cpt(EpicsSignalRO, "TRIGGER:DONE", kind='omitted')
+    
+    def __init__(self, prefix='',data_dir=None, *, limits=None, name=None, read_attrs=None,
+                 configuration_attrs=None, parent=None,sim_delay=None, egu='', **kwargs):
+        super().__init__(prefix=prefix, read_attrs=read_attrs,
+                         configuration_attrs=configuration_attrs,
+                         name=name, parent=parent, **kwargs)  
+        self.kickoff_status = None
+        self.complete_status = None
+        self._acquiring = False
+        self.list_of_mpr_files = []
+        self.t0 = 0
+        self.sim = sim_delay
+        if data_dir != None:
+            if os.path.exists(data_dir):
+                self.data_dir = data_dir
+            else:
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), data_dir)
+        
+        
+    def kickoff(self):
+        """
+        Trigger the acquisition to start, take a note of the start time
+        """
+        
+
+        self.complete_status = DeviceStatus(self)
+        self._acquiring = True
+        
+        #send the trigger
+        status = self.trigger_out.set(1)
+        self.t0 = time.time()
+        
+        if self.sim:
+            self.kickoff_status = DeviceStatus(self)
+            self.kickoff_status._finished(success=True)
+            
+            def sim_worker():
+                sleep(self.sim)
+                self.complete_status._finished(success=True)
+                
+            threading.Thread(target=sim_worker, daemon=True).start()
+            return self.kickoff_status
+        
+        else:
+            return status
+    
+    def complete(self):
+        """
+        Wait for flying to be complete, get the status object that will tell us when we are done
+        """
+
+        def check_value(*,old_value, value, **kwargs):
+            #Return True when the acquisition is complete, False otherwise.   
+            if not self._acquiring:  #But only report done if acquisition was already started 
+                return False
+            return (value != 0)
+
+        if self.complete_status is None:
+            raise RuntimeError("No collection in progress")
+        
+        if self.sim:
+            
+            pass
+            
+        else:
+            self.complete_status = SubscriptionStatus(self.done,check_value)
+            
+        return self.complete_status
+        
+    
+    
+    def describe_collect(self):
+        """
+        Describe details for ``collect()`` method
+        
+        fetch the mps, use it's name to find the name of the other mpr files (note that some techniques don't make mpr files)
+        https://nsls-ii.github.io/bluesky/event_descriptors.html
+        """
+        #Open the file and peak inside:
+        print("describing data format")
+        
+        #get the most recent .mps file in the directory
+        filename = self.latest_mps_file().split(".")[0]
+        list_of_mps_files = []
+        for path in Path(self.data_dir).rglob("*.mps"):
+            list_of_mps_files.append(path.resolve())
+
+        file = max(list_of_mps_files, key=os.path.getmtime)
+
+        #Find all of the mpr files in this directory with that filename in them, followed by a _0
+
+
+        dir = file.parents[0]
+        file_name = file.name.split(".")[0]
+
+        self.list_of_mpr_files = []
+        for path in dir.rglob("*.mpr"):
+            if  str(path.name).startswith(file_name + "_0"):
+                self.list_of_mpr_files.append(path.resolve())
+
+        return_dict = {}
+        for file_path in self.list_of_mpr_files:
+            filename = str(file_path)
+            mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
+            dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
+
+
+            #column names
+            item_names = list(dfs.columns)
+            
+            item_units = []
+            for item in dfs.columns:
+                if "/" in item:
+                    item_units.append(item.split('/')[1])
+                else:
+                    item_units.append("")
+                    
+                    
+            num_items = len(item_names)
+
+            technique_name = filename.split(".")[0].split("_")[-2] + "_"+ filename.split(".")[0].split("_")[-3]
+            return_dict[self.name+"_"+technique_name]={}
+            for key in item_names:
+                format_name = key.replace(" ","_")
+                if "/" in format_name:
+                    split = format_name.split('/')
+                    format_name = split[0]
+                    units = split[1]
+                    
+                else:
+                    units = ""
+                    
+                return_dict[self.name+"_"+technique_name][f'{self.name}_{technique_name}_{format_name}'] = {'source': f'{filename}',
+                                                                        'dtype': 'number',
+                                                                        'units': units,
+                                                                        'shape': []}
+            
+
+        
+        return return_dict
+        
+        
+    def latest_mpr_file(self):
+        
+        """
+        returns the name of the latest mpr file in the data directory, searched recursively
+        """
+        
+
+
+        list_of_mpr_files = []
+
+        for path in Path(self.data_dir).rglob("*.mpr"):
+            list_of_mpr_files.append(path.resolve())
+    
+
+        latest_file = str(max(list_of_mpr_files, key=os.path.getmtime))        
+        return latest_file
+
+    def latest_mps_file(self):
+        
+        """
+        returns the name of the latest mps file in the data directory, searched recursively
+        """
+        
+
+
+        list_of_mps_files = []
+
+        for path in Path(self.data_dir).rglob("*.mps"):
+            list_of_mps_files.append(path.resolve())
+    
+
+        latest_file = str(max(list_of_mps_files, key=os.path.getmtime))        
+        return latest_file
+
+
+
+    def collect(self):
+        """
+        fetch and parse the file
+        
+        """
+        self.complete_status = None
+        
+        #get the most recent .mpr file from the directory
+        for file_path in self.list_of_mpr_files:
+            filename = str(file_path)
+            mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
+            dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
+            technique_name = filename.split(".")[0].split("_")[-2] + "_"+ filename.split(".")[0].split("_")[-3]
+            print(f"working on {technique_name}, number of entries is: {len(dfs)} \n")
+
+            for i in range(len(dfs)):
+                
+                epoch = self.t0 + dfs["time/s"][i] - dfs["time/s"][0]
+                data_dict = {}
+                timestamps_dict = {}
+                for key in dfs:
+                    format_name = key.replace(" ","_")
+                    if "/" in format_name:
+                        split = format_name.split('/')
+                        format_name = split[0]
+                        units = split[1]
+
+                    else:
+                        units = ""
+                    
+                    data_dict[f'{self.name}_{technique_name}_{format_name}'] = dfs[key][i]
+                    timestamps_dict[f'{self.name}_{technique_name}_{format_name}'] = epoch
+                    
+                d = dict(
+                    time=epoch,
+                    data=data_dict,
+                    timestamps=timestamps_dict
+                )
+                yield d
+        
+        
+        
+        
+        
+        
+        
+    
+
+
 class BasicFlyer(Device):   
 
     def __init__(self, prefix='', *, limits=None, name=None, read_attrs=None,
