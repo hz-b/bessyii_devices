@@ -35,8 +35,8 @@ class Keithley6514(Device):
     auto_rnge_ulim      = Cpt(EpicsSignal, 'setRangeCurAutoULIM', kind='config')
     
     # integration time
-    nplc                = Cpt(EpicsSignal, 'setIntegrTime', kind='config') #Number of power line cycles
-    
+    nplc                = Cpt(EpicsSignal, 'rbkIntegrTime',write_pv = 'setIntegrTime', kind='config') #Number of power line cycles
+    int_time            = Cpt(EpicsSignal, 'rbkIntegrTimeSec',write_pv = 'setIntegrTimeSec', kind='config') 
     #Damping            
     analog_dmp_ena      = Cpt(EpicsSignal, 'rbkFiltDampEnable', write_pv='cmdFiltDampEnable', kind='config')
     
@@ -115,4 +115,25 @@ class Keithley6517(Keithley6514):
 
     def unstage(self):
         self.trig_mode.put("Continuous")
+        super().unstage()  
+
+class KeysightB2985A(Keithley6514):
+
+       
+    
+    def stage(self):
+
+        self.scan.put('Passive')      # update the EPICS PV as quick as we can, modified 2.03.2022 to not shift values
+       
+        # deal with zero_check
+        if self.zero_check.get() == 1 :
+            
+            self.zero_check.put(0)
+            time.sleep(10) 
+        
+        self.mdel.put(-1)
+        super().stage()
+
+    def unstage(self):
+        self.scan.put('.1 second')
         super().unstage()  

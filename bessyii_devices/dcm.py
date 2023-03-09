@@ -100,18 +100,33 @@ class Piezo3Axis(PseudoPositioner):
                                    height = d[2])
 
        
-class DCMEMIL_PitchPiezoAxis(PVPositionerComparator):
 
-    setpoint = Cpt(EpicsSignal, 'pitch:setpoint')
-    readback = Cpt(EpicsSignal, 'calc:pitch:avg')
 
-    atol = 0.2
+
+class EMILDCMPitchFeedbackPositioner(PVPositionerComparator):
+
+    """
+    A positioner that allows us to set the DCM pitch and wait for it to get there
+
+    example instantiation:
+
+        dcm_pitch = EMILDCMPitchFeedbackPositioner("PINK:DCMSTAB:", name = dcm_pitch)
+
+
+    """
+
+    setpoint = Cpt(EpicsSignal,"pitch:setpoint", kind = "normal")
+    readback = Cpt(EpicsSignalRO,"calc:pitch:avg", kind = "hinted")
+    atol = 0.4 # urad below which we say we are done moving
 
     def done_comparator(self, readback, setpoint):
         return setpoint-self.atol < readback < setpoint+self.atol
-
-
     
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+        self.settle_time = 5.0
+
 class DCMEMIL(Device):
 
 
@@ -120,8 +135,8 @@ class DCMEMIL(Device):
     prefix_3 = 'PINK:DCMSTAB:'
 
     en              = Cpt(Energy,  prefix_1,kind='hinted')
-    ct1             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CT', kind=Kind.config|Kind.normal)
-    cr1             = Cpt(DCMEMIL_PitchPiezoAxis, prefix_3, kind=Kind.config|Kind.normal)
+    c2t             = Cpt(DCMCrystalAxis,    prefix_1, ch_name = 'CT', kind=Kind.config|Kind.normal)
+    cr1             = Cpt(EMILDCMPitchFeedbackPositioner, prefix_3, kind=Kind.config|Kind.normal)
     
     crystal_translate = Cpt(AxisTypeB, prefix_1+'PH_0',labels={"dcm","motors"},kind=Kind.config|Kind.normal)
     crystal_select  = Cpt(AxisTypeBChoice, prefix_1+'PH_0',labels={"dcm","motors"},kind=Kind.config|Kind.normal)
