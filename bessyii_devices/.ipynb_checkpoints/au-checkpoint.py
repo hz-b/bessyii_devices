@@ -24,28 +24,12 @@ from ophyd.pseudopos import (pseudo_position_argument,
 # AU1: WAUY01U012L
 # AU3 SISSY: AUY02U112L   
 # AU3 CAT: AUY02U212L
-
-class ShutterAU4(EpicsMotor):
-
-    """
-    A child of the AU4 class that implements an open and close method
-    """ 
-     
-    def __init__(self, prefix, open_value=15,close_value=0, **kwargs):
-        self.open_value = open_value
-        self.close_value = close_value
-        super().__init__(prefix, **kwargs)
-
-        self.open_value = open_value
-        self.close_value = close_value
-    
-
 class AU4(Device):
 
-    top = Cpt(ShutterAU4, "M3", labels={"apertures"})
-    bottom = Cpt(ShutterAU4, "M1", labels={"apertures"})
-    left = Cpt(ShutterAU4, "M2", labels={"apertures"})
-    right = Cpt(ShutterAU4, "M0", labels={"apertures"})
+    top = Cpt(EpicsMotor, "M3", labels={"apertures"})
+    bottom = Cpt(EpicsMotor, "M1", labels={"apertures"})
+    left = Cpt(EpicsMotor, "M2", labels={"apertures"})
+    right = Cpt(EpicsMotor, "M0", labels={"apertures"})
 
     
 class AU13(Device):

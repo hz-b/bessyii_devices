@@ -10,6 +10,7 @@ from .flyer import BasicFlyer
 from ophyd import FormattedComponent as FCpt
 from .positioners import PVPositionerComparator
 
+
 class MonoTranslationAxisSelect(PVPositioner):
 
     """
@@ -27,9 +28,7 @@ class MonoTranslationAxisSelect(PVPositioner):
     done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS.RVAL', kind='omitted')
     done_value = 0.0
        
-      
-        
-        
+                      
 # Note that changing the grating translation DOES NOT change the MONO calculation parameters
 class MonoTranslationAxis(PVPositioner):
 
@@ -46,7 +45,6 @@ class MonoTranslationAxis(PVPositioner):
     done_value = 0
 
 
-
 class PGMScannableAxis(PVPositioner):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
@@ -58,6 +56,7 @@ class PGMScannableAxis(PVPositioner):
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
 
+        
 class MonoComparatorAxis(PVPositionerComparator):
 
     setpoint    = FCpt(EpicsSignal,    '{self.prefix}Set{self._ch_name}', kind='normal' )
@@ -75,6 +74,7 @@ class MonoComparatorAxis(PVPositionerComparator):
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name 
 
+        
 class MonoThetaAxis(PVPositioner):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
@@ -87,6 +87,7 @@ class MonoThetaAxis(PVPositioner):
         self.readback.name = self.name
     done_value = 1.0
 
+    
 class MonoAlphaBetaAxis(PVPositioner):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
@@ -99,6 +100,7 @@ class MonoAlphaBetaAxis(PVPositioner):
         self.readback.name = self.name
     done_value = 1.0
 
+    
 class Energy(PVPositioner):
 
     """
@@ -144,7 +146,6 @@ class SoftMonoBase(Device):
     eMax_eV         = Cpt(EpicsSignalRO, 'maxEnergy', kind='config')
 
 
-
 class UndulatorMonoBase(SoftMonoBase):
     """
     UndulatorMonoBase contains all additional signals used for monochromators at undulator beamlines. 
@@ -155,6 +156,7 @@ class UndulatorMonoBase(SoftMonoBase):
     table           = Cpt(EpicsSignal, 'idMbboIndex', string='True',kind='config')
     table_filename  = Cpt(EpicsSignalRO, 'idFilename', string='True',kind='config') 
     harmonic        = Cpt(EpicsSignal, 'GetIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
+    
     
 class ExitSlitBase(Device):
     """
@@ -207,6 +209,7 @@ class ExitSlitSlitUE52SGM(PVPositioner):
         
         return self.readback.get()
 
+    
 class PGM(SoftMonoBase):
     """
     PGM is a core class for PGM monochromators
@@ -215,6 +218,7 @@ class PGM(SoftMonoBase):
     # PGMs has a full control over cff, so override it here
     cff             = Cpt(EpicsSignal, 'cff', write_pv='SetCff', kind='config')
 
+    
 class IdSlopeOffset(Device):
     """
     For undulator with ID Slope Offset control
@@ -236,8 +240,6 @@ class IdSlopeOffset(Device):
     calculate             = Cpt(EpicsSignal  , 'CalcSlope.PROC'   , kind='config')
     accept                = Cpt(EpicsSignal  , 'AcceptSO.PROC' , kind='config')
 
-    
-   
 
 class SGM(SoftMonoBase):
     """
@@ -366,6 +368,7 @@ class FlyingEnergy(BasicFlyer, Energy):
 
         return self.complete_status
        
+        
 class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
     
   
@@ -414,6 +417,7 @@ class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
         
         return(status)
     
+    
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
     en = Cpt(FlyingEnergy,'')
@@ -423,7 +427,6 @@ class PGMSoft(PGMEmil):
     #read_attrs          = ['en.readback']
 
 
-
 class PGMHard(PGMEmil):
     en = Cpt(FlyingEnergy,'')
     grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', kind='normal', labels={'pgm'})
@@ -431,8 +434,7 @@ class PGMHard(PGMEmil):
     mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1',   kind='normal', labels={'pgm'})
     #read_attrs          = ['en.readback']
     
-    
-    
+        
 class PGM_Aquarius(UndulatorMonoBase, PGM):
 
     # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
@@ -466,7 +468,6 @@ class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):
     position_timer   = Cpt(EpicsSignal, 'PositionTimer', write_pv = 'SetPositionTimer', string='True',kind='config')
     
 
-
 class SGMUE52(IdSlopeOffset, UndulatorMonoBase, PGM):    
     en = Cpt(FlyingEnergy,'')
     slitwidth        = Cpt(ExitSlitSlitUE52SGM,'')
@@ -493,3 +494,16 @@ class SGMUE52(IdSlopeOffset, UndulatorMonoBase, PGM):
     # IdOffset ? 
     #position_timer   = Cpt(EpicsSignal, 'PositionTimer', write_pv = 'SetPositionTimer', string='True',kind='config')
     
+
+# Needs to be tested by Peter Baumg.    
+class PGMEnergize(PGM, ExitSlitBase):
+
+    # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
+    # the read PV at Aquarius is different compared to UndulatorMonoBase
+    #harmonic        = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config') ? 
+    
+    alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
+    beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config', labels={'pgm'})
+    theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=10.0, kind='config', labels={'pgm'})
+    fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
+    read_attrs       = ['en.readback', 'beta.readback', 'theta.readback']
