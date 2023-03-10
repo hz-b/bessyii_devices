@@ -18,4 +18,4 @@ default_http_server_uri = "http://localhost:60610"  # Default URI (for testing a
 default_wait_timeout = 600  # Timeout for wait operations in seconds
 
 default_user_name = "Queue Server API User"
-default_user_group = "primary"
+default_user_group = "admin"
