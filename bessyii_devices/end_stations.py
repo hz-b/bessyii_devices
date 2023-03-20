@@ -21,6 +21,8 @@ class OAESE(PseudoPositioner):
     x = Cpt(EpicsMotor, 'motor0:mx')
     y = Cpt(EpicsMotor, 'motor0:my')
     z = Cpt(EpicsMotor, 'motor0:mz')
+    filt = Cpt(EpicsMotor, 'FILT:M0')
+    mesh = Cpt(EpicsMotor, 'MESH:M0')
     kth00 = Cpt(Keithley6514, 'Keithley00:',read_attrs=['readback'])
     kth01 = Cpt(Keithley6514, 'Keithley01:',read_attrs=['readback'])
     temp1 = Cpt(EpicsSignal,'TEMPERATURE01:getTemp', name = 'temp1',auto_monitor =True, kind ='hinted')
