@@ -111,10 +111,10 @@ class Keithley6517(Keithley6514):
        
     vsrc_ena            = Cpt(EpicsSignal, 'cmdVoltSrcEna', kind="omitted")
     vsrc                = Cpt(EpicsSignal, 'rbkVoltSrc' , write_pv='setVoltSrc',       kind='config')
-    trig_mode    		= Cpt(EpicsSignal, 'rbkTrigCont', write_pv='setTrigCont',        string='True',      kind='config')    #single or continuous mode. Bypasses event detection (trig_src)
+    acq_mode    		= Cpt(EpicsSignal, 'rbkTrigCont', write_pv='setTrigCont',        string='True',      kind='config')    #single or continuous mode. Bypasses event detection (trig_src)
 
     def unstage(self):
-        self.trig_mode.put("Continuous")
+        self.acq_mode.put("Continuous")
         super().unstage()  
 
 class Keithley6517Old(Keithley6514):

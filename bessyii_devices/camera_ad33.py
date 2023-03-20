@@ -10,7 +10,8 @@ from ophyd import ( Component as Cpt, ADComponent, Device, PseudoPositioner,
 from ophyd.areadetector.filestore_mixins import FileStoreTIFFIterativeWrite
 from ophyd import Component as Cpt
 from ophyd.areadetector.base import (ADBase, ADComponent as ADCpt, ad_group, EpicsSignalWithRBV)
-from ophyd.areadetector.plugins import StatsPlugin_V33, TIFFPlugin_V33, HDF5Plugin_V33, ImagePlugin_V33
+from ophyd.areadetector.plugins import StatsPlugin_V33, TIFFPlugin_V33, HDF5Plugin_V33, ImagePlugin_V33, ProcessPlugin_V33, ROIPlugin_V33
+
 #from bessyii.ad33 import StatsPluginV33
 from bessyii.ad33 import SingleTriggerV33
 from bessyii_devices.positioners import PVPositionerComparator
@@ -46,10 +47,6 @@ class SimDetectorCamV33(SimDetectorCam):
                 continue
             if hasattr(cpt, 'ensure_nonblocking'):
                 cpt.ensure_nonblocking()
-    
-    
-    
-    
 
 
 class SimDetector(SimDetector):
@@ -89,9 +86,7 @@ from ophyd.areadetector import URLDetector, URLDetectorCam
 class URLDetectorCamV33(URLDetectorCam):
     '''This is used to update the URLDetectorCam to AD33.'''
 
-    wait_for_plugins = Cpt(EpicsSignal, 'WaitForPlugins',
-                           string=True, kind='config')
-
+    wait_for_plugins = Cpt(EpicsSignal, 'WaitForPlugins',string=True, kind='config')
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stage_sigs['wait_for_plugins'] = 'Yes'
@@ -150,13 +145,13 @@ class PointGreyDetector(PointGreyDetector):
 
 
 
-class MyPointGreyDetectorV33(SingleTriggerV33, PointGreyDetector):
+class SISSY1FocusCam(SingleTriggerV33, PointGreyDetector):
     tiff = Cpt(TIFFPluginWithFileStore,
                suffix="TIFF1:",
                write_path_template="/home/emil/Apps/autosave/images/")
     stats = Cpt(StatsPlugin_V33, 'Stats1:')
-    image = Cpt(ImagePlugin_V33, 'image1:')
-    #colour = Cpt(ColorConvPlugin, 'CC1:')
+    proc = Cpt(ProcessPlugin_V33, 'Proc1:')
+    roi1 = Cpt(ROIPlugin_V33, 'ROI1:')
 
     
     
@@ -166,18 +161,16 @@ def set_detectorV33(det):
 
     det.tiff.kind = 'normal' 
     det.stats.kind = 'hinted'
-    det.colour.kind = 'normal'
-    det.image.kind = 'hinted'
-    det.stats.fwhm_x.kind = 'hinted'
-    det.stats.fwhm_y.kind = 'hinted'
-    det.stats.total.kind = 'normal' 
-    det.stats.centroid.kind = 'hinted'  # We need both to display the bottom...
+    det.stats.total.kind = 'hinted' 
+    det.stats.sigma_readout.kind = 'hinted'
+    det.stats.max_value.kind = 'hinted'
+    det.stats.centroid.kind = 'hinted' 
     det.stats.centroid.x.kind = 'hinted' 
     det.stats.centroid.y.kind = 'hinted' 
-    det.stats.read_attrs= ['centroid.x', 'centroid.y', 'total', 'fwhm_x', 'fwhm_y', 'sigma_x', 'sigma_y', 'max_value']
+    det.stats.read_attrs= ['centroid.x', 'centroid.y', 'total','sigma_readout', 'max_value']
     det.cam.ensure_nonblocking()
-    det.tiff.nd_array_port.put(det.colour.port_name.get()) # makes the tiff plugin take the output of the colour change plugin
-    
+    det.tiff.nd_array_port.put(det.proc.port_name.get()) # makes the tiff plugin take the output of the colour change plugin
+    det.stats.nd_array_port.put(det.roi1.port_name.get())
     
 ##### Great Eyes Cam
 
