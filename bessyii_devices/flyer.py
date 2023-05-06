@@ -65,7 +65,11 @@ class BiologicPotentiostat(Device):
     """
     
     trigger_out = Cpt(EpicsSignal, "TRIGGER:SEND", kind='omitted', put_complete=True)
+    trigger_pin = Cpt(EpicsSignal, "TRIGGER:OUTRB", write_pv="TRIGGER:OUTSP", kind='omitted', put_complete=True)
+    trigger_in_count = Cpt(EpicsSignal, "TRIGGER:INCOUNT", kind='config')
+    trigger_out_count = Cpt(EpicsSignal, "TRIGGER:OUTCOUNT", kind='config')
     done = Cpt(EpicsSignalRO, "TRIGGER:DONE", kind='omitted')
+    
     
     def __init__(self, prefix='',data_dir=None, *, limits=None, name=None, read_attrs=None,
                  configuration_attrs=None, parent=None,sim_delay=None, egu='', **kwargs):
@@ -76,7 +80,8 @@ class BiologicPotentiostat(Device):
         self.complete_status = None
         self._acquiring = False
         self.list_of_mpr_files = []
-        self.t0 = 0
+        self.t0 = 0 #The time that the trigger is sent, could be read from the trigger unit
+        self.t1 = 0 #The time from the first value of the first mpr file
         self.sim = sim_delay
         if data_dir != None:
             if os.path.exists(data_dir):
@@ -161,10 +166,12 @@ class BiologicPotentiostat(Device):
         dir = file.parents[0]
         file_name = file.name.split(".")[0]
 
-        self.list_of_mpr_files = []
+        unsorted_list_of_mpr_files = []
         for path in dir.rglob("*.mpr"):
             if  str(path.name).startswith(file_name + "_0"):
-                self.list_of_mpr_files.append(path.resolve())
+                unsorted_list_of_mpr_files.append(path.resolve())
+                
+        self.list_of_mpr_files = sorted(unsorted_list_of_mpr_files, key=os.path.getmtime)
 
         return_dict = {}
         for file_path in self.list_of_mpr_files:
@@ -208,23 +215,6 @@ class BiologicPotentiostat(Device):
         return return_dict
         
         
-    def latest_mpr_file(self):
-        
-        """
-        returns the name of the latest mpr file in the data directory, searched recursively
-        """
-        
-
-
-        list_of_mpr_files = []
-
-        for path in Path(self.data_dir).rglob("*.mpr"):
-            list_of_mpr_files.append(path.resolve())
-    
-
-        latest_file = str(max(list_of_mpr_files, key=os.path.getmtime))        
-        return latest_file
-
     def latest_mps_file(self):
         
         """
@@ -250,18 +240,27 @@ class BiologicPotentiostat(Device):
         
         """
         self.complete_status = None
+        self.t1 = 0 #reset the t1 time
+        file_counter = 0 
         
-        #get the most recent .mpr file from the directory
+        #get the most recent .mpr files from the directory
         for file_path in self.list_of_mpr_files:
             filename = str(file_path)
             mprs=BL.MPRfile(filename) #--import MPR file with galvani\n",
             dfs=pd.DataFrame(mprs.data) #--change mpr file to data frame\n",
             technique_name = filename.split(".")[0].split("_")[-2] + "_"+ filename.split(".")[0].split("_")[-3]
             print(f"working on {technique_name}, number of entries is: {len(dfs)} \n")
-
+            
+            if file_counter == 0:
+                # If this is the first mpr file, then take this as t1
+                
+                self.t1 = dfs["time/s"][0]
+                print(f"Using time offset value {self.t0}, and {self.t1}")                
+                
             for i in range(len(dfs)):
                 
-                epoch = self.t0 + dfs["time/s"][i] - dfs["time/s"][0]
+                epoch = self.t0 + dfs["time/s"][i] - self.t1
+                                 
                 data_dict = {}
                 timestamps_dict = {}
                 for key in dfs:
@@ -283,6 +282,8 @@ class BiologicPotentiostat(Device):
                     timestamps=timestamps_dict
                 )
                 yield d
+                
+            file_counter = file_counter +1
         
         
         

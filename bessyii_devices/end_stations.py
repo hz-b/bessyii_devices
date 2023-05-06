@@ -30,7 +30,7 @@ class OAESE(PseudoPositioner):
     temp3 = Cpt(EpicsSignal,'TEMPERATURE03:getTemp', name = 'temp3',auto_monitor =True,  kind ='hinted')
     temp4 = Cpt(EpicsSignal,'TEMPERATURE04:getTemp', name = 'temp4',auto_monitor =True,  kind ='hinted')
     temp5 = Cpt(EpicsSignal,'TEMPERATURE05:getTemp', name = 'temp5',auto_monitor =True,  kind ='hinted')
-    bruker = Cpt(Bruker,'SDD00:')
+    #bruker = Cpt(Bruker,'SDD00:')
     
     #Pseudo Axis
     pos = Cpt(PseudoSingle, name='pos')

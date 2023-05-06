@@ -293,7 +293,6 @@ class FlyingEnergy(BasicFlyer, Energy):
     end_pos         = Cpt(EpicsSignal, 'SetSweepEnd'   , kind='config')
     velocity        = Cpt(EpicsSignal, 'SetSweepVel', kind='config')
     
-    
         
   
     def kickoff(self):
@@ -304,7 +303,11 @@ class FlyingEnergy(BasicFlyer, Energy):
         self._acquiring = True
         self.t0 = time.time()
 
+        if self.parent.harmonic.get() == '11' and self.parent.ID_on.get() == "Id On":
+            raise ValueError("The monochromator and the undulator cannot perform a continuous energy scan with the harmonic set to Auto")
+
         if self.aktion is not None:
+            print("Moving Mono to just under start energy")
             self.aktion.put(20)     # init
         
         def check_ready(*,old_value, value, **kwargs):
@@ -322,6 +325,7 @@ class FlyingEnergy(BasicFlyer, Energy):
         wait(SubscriptionStatus(self.sweep_status, check_ready))
         
         if self.aktion is not None:
+            print("Moving towards start energy from below. Scan will start soon.")
             self.aktion.put(21)
 
         self.kickoff_status = SubscriptionStatus(self.sweep_status, check_started)

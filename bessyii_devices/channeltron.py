@@ -32,6 +32,7 @@ class Channeltron(Device):
     
     acq_mode        = Cpt(EpicsSignal, 'Mode-SP', string=True,kind= "config")
     trigger_cmd = Cpt(EpicsSignal,  'Trigger',put_complete=True, kind='omitted')
+    trigger_scan = Cpt(EpicsSignal, 'Trigger.SCAN',kind='config')
     busy =  Cpt(EpicsSignalRO,  'ActualBusy', kind='omitted')
     count       = Cpt(EpicsSignalRO,'Counter-RB',   kind='hinted') # hinted makes it show up in visualisations.
 
@@ -45,3 +46,17 @@ class Channeltron(Device):
         stat = self.trigger_cmd.set(1)
 
         return stat
+
+    def stage(self):
+
+        self.acq_mode.set("Single")
+        self.trigger_scan.set("Passive")
+
+        super().stage()
+
+    def unstage(self):
+    
+        self.acq_mode.set("Single")
+        self.trigger_scan.set("1 second")
+
+        super().unstage()
