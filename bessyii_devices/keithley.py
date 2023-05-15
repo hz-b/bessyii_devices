@@ -1,4 +1,3 @@
-
 #
 from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
@@ -15,26 +14,29 @@ class Keithley6514(Device):
     
     # Ophyd Device for https://gitlab.helmholtz-berlin.de/sissy/support/keithley/-/blob/master/keithleyApp/Db/Keithley6514Main.template
     
-    init_cmd            = Cpt(EpicsSignal, 'cmdStart')
-    abort               = Cpt(EpicsSignal, 'cmdCancel')
-    trigger_cmd         = Cpt(EpicsSignal, 'rdCur.PROC')
+    init_cmd            = Cpt(EpicsSignal, 'cmdStart', kind="omitted")
+    abort               = Cpt(EpicsSignal, 'cmdCancel', kind="omitted")
+    trigger_cmd         = Cpt(EpicsSignal, 'rdCur.PROC', kind="omitted")
     readback            = Cpt(EpicsSignalRO, 'rdCur', kind='hinted', labels={"detectors", "keithley"})
     zero_check  		= Cpt(EpicsSignal, 'cmdZeroCheck', kind='config')
+    mdel                = Cpt(EpicsSignal, 'rdCur.MDEL', kind='config')
     
-    mode    		    = Cpt(EpicsSignal, 'rbkFunc', write_pv='setFunc', string='True', kind='config')
+    func    		    = Cpt(EpicsSignal, 'rbkFunc', write_pv='setFunc', string='True', kind='config')
+
     reset               = Cpt(EpicsSignal, 'cmdReset.PROC', kind='config')
-    scan                = Cpt(EpicsSignal, 'fwdMeas.SCAN', kind='config')                               #the rate at which the PV will update.
+    scan                = Cpt(EpicsSignal, 'fwdMeas.SCAN',string='True', kind='config')                               #the rate at which the PV will update.
     
     ## -----  configuration ------
     
     # range
     rnge                = Cpt(EpicsSignal, 'rbkRangeCur', write_pv='setRangeCur', string='True', kind='config')
+    auto_rnge           = Cpt(EpicsSignal, 'rbkRangeCurAuto', string='True', kind='config')
     auto_rnge_llim      = Cpt(EpicsSignal, 'setRangeCurAutoLLIM', kind='config')
     auto_rnge_ulim      = Cpt(EpicsSignal, 'setRangeCurAutoULIM', kind='config')
     
     # integration time
-    nplc                = Cpt(EpicsSignal, 'setIntegrTime', kind='config') #Number of power line cycles
-    
+    nplc                = Cpt(EpicsSignal, 'rbkIntegrTime',write_pv = 'setIntegrTime', kind='config') #Number of power line cycles
+    int_time            = Cpt(EpicsSignal, 'rbkIntegrTimeSec',write_pv = 'setIntegrTimeSec', kind='config') 
     #Damping            
     analog_dmp_ena      = Cpt(EpicsSignal, 'rbkFiltDampEnable', write_pv='cmdFiltDampEnable', kind='config')
     
@@ -57,27 +59,30 @@ class Keithley6514(Device):
  
     def stage(self):
 
-        self.scan.put('.1 second')      # update the EPICS PV as quick as we can
+        self.scan.put('Passive')      # update the EPICS PV as quick as we can, modified 2.03.2022 to not shift values
         self.front_panel.put('On')      # Turn the front panel on (might be bad for readback)
         self.avg_type.put('Moving')     # Moving average filter, for speed of readback
         self.arm_src.put('Immediate')   # Immediate arm to give the fastest update possible
         self.trig_src.put('Immediate')  # Immediate trigger to give the fastest update possible
-        
+
+
         # deal with zero_check
         if self.zero_check.get() == 1 :
             
             self.zero_check.put(0)
             time.sleep(10) 
         
-        self.mode.put('Current')        # Make sure we are in current mode
+        self.func.put('Current')        # Make sure we are in current mode
         
         self.init_cmd.put(1)            # start the aquisition if it isn't already
 
+        self.mdel.put(-1)
         super().stage()
 
     def unstage(self):
-        
+        self.scan.put('.1 second')
         super().unstage()  
+     
 
     def trigger(self):
            
@@ -95,7 +100,7 @@ class Keithley6514(Device):
         #Connect the callback that will set finished and clear sub
         self.readback.subscribe(new_value,event_type=Signal.SUB_VALUE,run=False)
         
-        #Start the acquisition
+
         self.trigger_cmd.put(1)     # will have started anyway since we set scan to .1 second
         
         return status
@@ -104,6 +109,31 @@ class Keithley6514(Device):
 class Keithley6517(Keithley6514):
 
        
-    vsrc_ena            = Cpt(EpicsSignal, 'cmdVoltSrcEna', kind='config')
+    vsrc_ena            = Cpt(EpicsSignal, 'cmdVoltSrcEna', kind="omitted")
     vsrc                = Cpt(EpicsSignal, 'rbkVoltSrc' , write_pv='setVoltSrc',       kind='config')
     trig_mode    		= Cpt(EpicsSignal, 'rbkTrigCont', write_pv='setTrigCont',        string='True',      kind='config')    #single or continuous mode. Bypasses event detection (trig_src)
+
+    def unstage(self):
+        self.trig_mode.put("Continuous")
+        super().unstage()  
+
+class KeysightB2985A(Keithley6514):
+
+       
+    
+    def stage(self):
+
+        self.scan.put('Passive')      # update the EPICS PV as quick as we can, modified 2.03.2022 to not shift values
+       
+        # deal with zero_check
+        if self.zero_check.get() == 1 :
+            
+            self.zero_check.put(0)
+            time.sleep(10) 
+        
+        self.mdel.put(-1)
+        super().stage()
+
+    def unstage(self):
+        self.scan.put('.1 second')
+        super().unstage()  

@@ -10,6 +10,7 @@ from .flyer import BasicFlyer
 from ophyd import FormattedComponent as FCpt
 from .positioners import PVPositionerComparator
 
+
 class MonoTranslationAxisSelect(PVPositioner):
 
     """
@@ -22,14 +23,12 @@ class MonoTranslationAxisSelect(PVPositioner):
         self._ch_num = ch_num
         super().__init__(prefix, **kwargs)
         
-    setpoint = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_GON')
+    setpoint = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_GON', kind='normal')
     readback = FCpt(EpicsSignalRO, '{self.prefix}PH_{self._ch_num}_GETN',string='True', kind='hinted')
-    done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS.RVAL')
+    done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS.RVAL', kind='omitted')
     done_value = 0.0
        
-      
-        
-        
+                      
 # Note that changing the grating translation DOES NOT change the MONO calculation parameters
 class MonoTranslationAxis(PVPositioner):
 
@@ -40,17 +39,43 @@ class MonoTranslationAxis(PVPositioner):
     """
     This axis is used for moving things inside the mono. It does not change the calc params. They must be changed seperate
     """
-    setpoint = FCpt(EpicsSignal,'{self.prefix}PH_{self._ch_num}_SET')
-    readback = FCpt(EpicsSignalRO,'{self.prefix}PH_{self._ch_num}_GET')
-
-    relative  = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_SETSTEP')
-    jog       = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_SETJOGSPEED')
-    done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS.RVAL')
-    done_value = 0.0
-
+    setpoint = FCpt(EpicsSignal,'{self.prefix}PH_{self._ch_num}_SET', kind='normal')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}PH_{self._ch_num}_GET', kind = 'hinted')
+    done      = FCpt(EpicsSignal, '{self.prefix}PH_{self._ch_num}_STATUS', kind='omitted')
+    done_value = 0
 
 
 class PGMScannableAxis(PVPositioner):
+
+    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}', kind='hinted')
+    done     = FCpt(EpicsSignalRO,'{self.prefix}Status', kind='omitted')
+    
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+
+        
+class MonoComparatorAxis(PVPositionerComparator):
+
+    setpoint    = FCpt(EpicsSignal,    '{self.prefix}Set{self._ch_name}', kind='normal' )
+    readback    = FCpt(EpicsSignalRO,  '{self.prefix}{self._ch_name}', kind='hinted')
+
+
+
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+
+
+    def __init__(self, prefix, ch_name=None, atol=None, **kwargs):
+        self._ch_name = ch_name
+        self.atol = atol
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
+        
+class MonoThetaAxis(PVPositioner):
 
     setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
     readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
@@ -61,9 +86,22 @@ class PGMScannableAxis(PVPositioner):
         self._done_name = done_name
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
+    done_value = 1.0
 
+    
+class MonoAlphaBetaAxis(PVPositioner):
 
+    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}', kind = 'hinted')
+    done     = FCpt(EpicsSignalRO,'{self.prefix}gratingDone', kind='omitted')
+    
+    def __init__(self, prefix, ch_name=None, **kwargs):
+        self._ch_name = ch_name
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
+    done_value = 1.0
 
+    
 class Energy(PVPositioner):
 
     """
@@ -77,9 +115,9 @@ class Energy(PVPositioner):
         self.readback.name = self.name 
 
     # this is an initial API 
-    setpoint        = Cpt(EpicsSignal,      'monoSetEnergy'                                  )
+    setpoint        = Cpt(EpicsSignal,      'monoSetEnergy' , kind='normal'  )
     readback        = Cpt(EpicsSignalRO,    'monoGetEnergy', labels={"pgm"},     kind='hinted') # the main output
-    done            = Cpt(EpicsSignalRO,    'IStatus'                                          )
+    done            = Cpt(EpicsSignalRO,    'IStatus' , kind='omitted'             )
     done_value      = 0
     egu = 'eV'  
     
@@ -102,12 +140,11 @@ class SoftMonoBase(Device):
     """
     en              = Cpt(Energy, '')
     diff_order      = Cpt(EpicsSignal, 'Order',write_pv='SetOrder', kind='config')
-    grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='hinted', labels={"pgm"})
-    grating         = Cpt(EpicsSignalRO, 'lineDensity', kind='hinted') 
+    grating_no      = Cpt(EpicsSignal, 'SetGratingNo', string='True',kind='config', labels={"pgm"})
+    grating         = Cpt(EpicsSignalRO, 'lineDensity', kind='config') 
 
-    eMin_eV         = Cpt(EpicsSignalRO, 'minEnergy', kind='hinted')
-    eMax_eV         = Cpt(EpicsSignalRO, 'maxEnergy', kind='hinted')
-
+    eMin_eV         = Cpt(EpicsSignalRO, 'minEnergy', kind='config')
+    eMax_eV         = Cpt(EpicsSignalRO, 'maxEnergy', kind='config')
 
 
 class UndulatorMonoBase(SoftMonoBase):
@@ -121,6 +158,7 @@ class UndulatorMonoBase(SoftMonoBase):
     table_filename  = Cpt(EpicsSignalRO, 'idFilename', string='True',kind='config') 
     harmonic        = Cpt(EpicsSignal, 'GetIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
     
+    
 class ExitSlitBase(Device):
     """
     Base class stub (also standard API for many soft x-ray monos) for monochromator exit slit control
@@ -131,22 +169,48 @@ class ExitSlitBase(Device):
     # Many monos will allow also set "wish" energy resolution by driving exit slit. This shall be included in this class
 
 
-class ExitSlitEMIL(ExitSlitBase):
+class ExitSlitEMIL(PVPositioner):
     """
     EMIL specific exit slit implementation. EMIL beamlines uses different PV name for setting the slit
-    """
-    slitwidth       = Cpt(EpicsSignal,  'slitwidth', write_pv = 'SlitInput',     kind='config')
 
-# I could not find the PV to set a bandwith. Is it existing? 
-# In case of the slitwist: slitwidth, ES_0_SW is not working 
+    Since we always read ue48_pgm.en and not the entire mono device, making it hinted is acceptable for now. Should be a PVPositioner!
+    """
+    setpoint      = Cpt(EpicsSignal,  'SlitInput', kind='normal')
+    readback =  Cpt(EpicsSignalRO, 'slitwidth', kind='hinted')
+    done =Cpt(EpicsSignalRO, 'ES_STATUS', kind = 'omitted')
+    done_value = 0
+    branch = Cpt(EpicsSignal,  'SetBranch',  string='True',kind='config')
+
+
 class ExitSlitMetrixs(ExitSlitBase):
     """
     Metrixs specific exit slit implementation. Metrixs beamlines uses different PV name for setting the slit
     """
-    slitwidth       = Cpt(EpicsSignal,  'ES_0_SW', write_pv = 'ES_0_SetSW0',     kind='config')
-    bandwidth       = Cpt(EpicsSignal,  'ES_0_BW'                          ,     kind='config')
+    slitwidth       = Cpt(EpicsSignal,  'slitwidth', write_pv = 'SlitInput',     kind='config', labels={'pgm'})
+    bandwidth       = Cpt(EpicsSignalRO,  'bandwidth'                       ,     kind='config')
 
 
+class ExitSlitSlitUE52SGM(PVPositioner):
+    """
+    UE52SGM" specific exit slit implementation. 
+    """
+
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name 
+
+    # this is an initial API 
+    setpoint        = Cpt(EpicsSignal,      'ES_0_Input' , kind='config'                                 )
+    readback        = Cpt(EpicsSignalRO,    'ES_0_SW', labels={"sgm"},     kind='config') # the main output
+    done            = Cpt(EpicsSignalRO,    'ES_0_STATUS' , kind='config'                                         )
+    done_value      = 0
+    
+    # so that you can do for example ue48_pgm.en.get() rather than ue48_pgm.en.readback.get()
+    def get(self):
+        
+        return self.readback.get()
+
+    
 class PGM(SoftMonoBase):
     """
     PGM is a core class for PGM monochromators
@@ -154,7 +218,29 @@ class PGM(SoftMonoBase):
 
     # PGMs has a full control over cff, so override it here
     cff             = Cpt(EpicsSignal, 'cff', write_pv='SetCff', kind='config')
+
     
+class IdSlopeOffset(Device):
+    """
+    For undulator with ID Slope Offset control
+    """
+    energy1_nominal       = Cpt(EpicsSignal, 'Energy1', kind='config')
+    energy1_measured      = Cpt(EpicsSignal, 'Meas1'  , kind='config')
+    energy2_nominal       = Cpt(EpicsSignal, 'Energy2', kind='config')
+    energy2_measured      = Cpt(EpicsSignal, 'Meas2'  , kind='config')
+
+    IdSlope               = Cpt(EpicsSignalRO, 'aiIdSlope', kind='config')
+    IdSlope_old           = Cpt(EpicsSignal  , 'OldSlope' , kind='config')
+    IdSlope_new           = Cpt(EpicsSignal  , 'NewSlope' , kind='config') 
+
+    IdOffset              = Cpt(EpicsSignalRO, 'aiIdOffset', kind='config')
+    IdOffset_old          = Cpt(EpicsSignal  , 'OldOffset' , kind='config')
+    IdOffset_new          = Cpt(EpicsSignal  , 'NewOffset' , kind='config')
+
+    use_current           = Cpt(EpicsSignal  , 'UseCurSO.PROC' , kind='config')
+    calculate             = Cpt(EpicsSignal  , 'CalcSlope.PROC'   , kind='config')
+    accept                = Cpt(EpicsSignal  , 'AcceptSO.PROC' , kind='config')
+
 
 class SGM(SoftMonoBase):
     """
@@ -201,14 +287,17 @@ class FlyingEnergy(BasicFlyer, Energy):
         self.t0 = 0
         self.readback.name = self.name
         
-    read_attrs = ['readback']
+    #read_attrs = ['readback']
           
     #status is an mbbo record, I need to know what the different states are. 
-    sweep_status    = Cpt(EpicsSignalRO, 'GetSweepState')
-    aktion          = Cpt(EpicsSignal, 'MonoAktion.PROC') # writing different values to this pv causes different actions like init, start, stop
+    sweep_status    = Cpt(EpicsSignalRO, 'GetSweepState', kind='config')
+    aktion          = Cpt(EpicsSignal, 'MonoAktion.PROC', kind='config') # writing different values to this pv causes different actions like init, start, stop
     start_pos       = Cpt(EpicsSignal, 'SetSweepStart'   , kind='config')
     end_pos         = Cpt(EpicsSignal, 'SetSweepEnd'   , kind='config')
     velocity        = Cpt(EpicsSignal, 'SetSweepVel', kind='config')
+    
+    
+        
   
     def kickoff(self):
         """
@@ -274,23 +363,46 @@ class FlyingEnergy(BasicFlyer, Energy):
             #Return True when the acquisition is complete, False otherwise.   
             if not self._acquiring:  #But only report done if acquisition was already started 
                 return False
-            return (value == 128)
+            return (value == 255 or value == 128)
 
         self.complete_status = SubscriptionStatus(self.sweep_status,check_value)
 
         return self.complete_status
        
-class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL):
+        
+class PGMEmil(IdSlopeOffset,UndulatorMonoBase,PGM):
     
   
-    positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='hinted')
-    m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"},kind='config')
-    grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"},kind='config')
-    grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"},kind='config')
-    set_branch          = Cpt(EpicsSignal,      'SetBranch',              string='True',kind='config')
-    alpha               = Cpt(EpicsSignal, 'Alpha', write_pv='SetAlpha', kind='config')
-    beta                = Cpt(EpicsSignal, 'Beta',  write_pv='SetBeta', kind='config')
-    theta               = Cpt(EpicsSignal, 'Theta', write_pv='SetTheta', kind='config')
+    positioning         = Cpt(EpicsSignal, 'multiaxis:mbbiMoveMode', write_pv='multiaxis:mbboSetMoveMode', string='True',kind='config')
+    m2_translation      = Cpt(MonoTranslationAxis, '', ch_num='0',labels={"pgm"})
+    grating_translation = Cpt(MonoTranslationAxis, '', ch_num='1',labels={"pgm"})
+    grating_trans_sel   = Cpt(MonoTranslationAxisSelect,'',ch_num='1',labels={"pgm"})
+    slit                = Cpt(ExitSlitEMIL, '')
+
+    alpha               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0)
+    beta                = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta', settle_time=10.0)
+    theta               = Cpt(MonoAlphaBetaAxis, '',  ch_name='Theta', settle_time=10.0)
+
+
+    # experts settings of flyscan
+    offset = Cpt(EpicsSignal,'SetSweepOffset' , kind='config')
+    vmin_fak = Cpt(EpicsSignal,'SetSweepVminFak' , kind='config')
+    vmax_fak = Cpt(EpicsSignal,'SetSweepVmaxFak' , kind='config')
+    max_gain_output = Cpt(EpicsSignal,'SetSweepOutLim' , kind='config')
+    open_loop_pvt =  Cpt(EpicsSignal,'SetSweepPVTM' , kind='config')
+    hold_start = Cpt(EpicsSignal,'SetSweepSUSSTART1' , kind='config')
+    hold_stop = Cpt(EpicsSignal,'SetSweepSUSSTOP1' , kind='config')
+    hold_vel = Cpt(EpicsSignal,'SetSweepSUSVEL1' , kind='config')
+    hold = Cpt(EpicsSignal,'SetSweepSUSM' , kind='config')
+    filt_phi = Cpt(EpicsSignal,'SetSweepMFDly' , kind='config')
+    filt_phi_ena = Cpt(EpicsSignal,'SetSweepMFOnOff' , kind='config')
+    filt_psi = Cpt(EpicsSignal,'SetSweepGFDly' , kind='config')
+    filt_psi_ena = Cpt(EpicsSignal,'SetSweepGFOnOff' , kind='config')
+    cycle_time = Cpt(EpicsSignal,'SetSweepTics' , kind='config')
+    kp_mirror = Cpt(EpicsSignal,'SetKpMirror' , kind='config')
+    kp_grating = Cpt(EpicsSignal,'SetKpGrating' , kind='config')
+    gap_method = Cpt(EpicsSignal,'SetSweepGapMeth' , kind='config')
+
     
     def set_grating_400(self, wait=False):
                 
@@ -306,25 +418,24 @@ class PGMEmil(UndulatorMonoBase,PGM,ExitSlitEMIL):
         
         return(status)
     
+    
 # the name of these two classe has to be changed to be EMIL specific
 class PGMSoft(PGMEmil):
     en = Cpt(FlyingEnergy,'')
-    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', kind='hinted', labels={'pgm'})
-    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', kind='hinted', labels={'pgm'})
-    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1',   kind='hinted', labels={'pgm'})
-    read_attrs          = ['en.readback']
-
+    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating1T1', kind='normal', labels={'pgm'})
+    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY02U112L:Grating2T1', kind='normal', labels={'pgm'})
+    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY02U112L:MirrorT1',   kind='normal', labels={'pgm'})
+    #read_attrs          = ['en.readback']
 
 
 class PGMHard(PGMEmil):
     en = Cpt(FlyingEnergy,'')
-    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', kind='hinted', labels={'pgm'})
-    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating2T1', kind='hinted', labels={'pgm'})
-    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1',   kind='hinted', labels={'pgm'})
-    read_attrs          = ['en.readback']
+    grating_800_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating1T1', kind='normal', labels={'pgm'})
+    grating_400_temp    = FCpt(EpicsSignalRO,  'MONOY01U112L:Grating2T1', kind='normal', labels={'pgm'})
+    mirror_temp         = FCpt(EpicsSignalRO,  'MONOY01U112L:MirrorT1',   kind='normal', labels={'pgm'})
+    #read_attrs          = ['en.readback']
     
-    
-    
+        
 class PGM_Aquarius(UndulatorMonoBase, PGM):
 
     # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
@@ -339,19 +450,61 @@ class PGM_Aquarius(UndulatorMonoBase, PGM):
 
 
 # labels need to be changed from pgm to sgm. How can this be done when importing from Energy and UndulatorMonoBase class?  
+
+
 class SGMMetrixs(UndulatorMonoBase, ExitSlitMetrixs, SGM):    
-    
+
     harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
     #cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
     
     mirror_angle     = Cpt(PGMScannableAxis, '',  ch_name='Phi', settle_time=10.0, kind='config')
     grating_angle    = Cpt(PGMScannableAxis, '',  ch_name='Psi', settle_time=10.0, kind='config')
-    alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
-    beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config', labels={'sgm'})
-    theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', settle_time=10.0, kind='config', labels={'sgm'})
+    alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=2.0, kind='config')
+    beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=0.1, kind='config', labels={'sgm'})
+    theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=0.1, kind='config', labels={'sgm'})
     
     grating_radius   = Cpt(EpicsSignal, 'RG', write_pv = 'SetRG', string='True',kind='config')
     entrancearm      = Cpt(EpicsSignal, 'entrancearm', write_pv = 'SetEntrance', string='True',kind='config')
     zero_order_angle = Cpt(EpicsSignalRO, 'MZeroOrder', string='True',kind='config')
     position_timer   = Cpt(EpicsSignal, 'PositionTimer', write_pv = 'SetPositionTimer', string='True',kind='config')
     
+
+class SGMUE52(IdSlopeOffset, UndulatorMonoBase, PGM):    
+    en = Cpt(FlyingEnergy,'')
+    slitwidth        = Cpt(ExitSlitSlitUE52SGM,'')
+    harmonic         = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config')
+    #cff             = Cpt(EpicsSignalRO, 'c', kind='hinted')
+    
+    mirror_angle     = Cpt(PGMScannableAxis, '',  ch_name='Phi', settle_time=1.0, kind='config')
+    grating_angle    = Cpt(PGMScannableAxis, '',  ch_name='Psi', settle_time=1.0, kind='config')
+
+    #alpha            = Cpt(MonoComparatorAxis, '',  ch_name='Alpha', settle_time=2.0, kind='config')
+    #beta             = Cpt(MonoComparatorAxis, '',  ch_name='Beta',  settle_time=0.1, kind='config', labels={'sgm'})
+    #theta            = Cpt(MonoComparatorAxis, '',  ch_name='Theta', settle_time=0.1, kind='config', labels={'sgm'})
+    
+    #
+    #alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=2.0, kind='config')
+    #beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=0.1, kind='config', labels={'sgm'})
+    #theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=0.1, kind='config', labels={'sgm'})
+        
+    # neverage ?
+    # TouchDiff ?
+    # StopDiff ?
+    # Diff ?     
+    # IdSlope ?
+    # IdOffset ? 
+    #position_timer   = Cpt(EpicsSignal, 'PositionTimer', write_pv = 'SetPositionTimer', string='True',kind='config')
+    
+
+# Needs to be tested by Peter Baumg.    
+class PGMEnergize(PGM, ExitSlitBase):
+
+    # We want to inherit everything from UnUndulatorMonoBase but rewrite these attributes to add settle time and a new attribute fix_theta
+    # the read PV at Aquarius is different compared to UndulatorMonoBase
+    #harmonic        = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config') ? 
+    
+    alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
+    beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config', labels={'pgm'})
+    theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=10.0, kind='config', labels={'pgm'})
+    fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
+    read_attrs       = ['en.readback', 'beta.readback', 'theta.readback']

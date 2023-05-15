@@ -1,53 +1,47 @@
 from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device
 from ophyd import Component as Cpt
+from bessyii_devices.positioners import PVPositionerComparator
 from ophyd import status, DeviceStatus, Signal
 from ophyd.status import SubscriptionStatus, MoveStatus, AndStatus 
 import time
 from types import SimpleNamespace
+
+class ChanneltronHV(PVPositionerComparator):
+
+    """
+    A Positioner to control the HV of the channeltron, useful for commissioning
+    """
+
+    setpoint = Cpt(EpicsSignal, '-SP',   kind='normal')
+    readback = Cpt(EpicsSignal, '-RB',   kind='hinted')
+
+    atol = 1  # tolerance before we set done to be 1 (in um) we should check what this should be!
+
+
+    def done_comparator(self, readback, setpoint):
+        return setpoint-self.atol < readback < setpoint+self.atol
+        
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.readback.name = self.name
 
 class Channeltron(Device):
 
 
     #Define the signals in our component
     
-    read_cmd    = Cpt(EpicsSignal,  'Start-CMD')         # Starts a read
-    count       = Cpt(EpicsSignalRO,'Counter-RB',       kind='hinted') # hinted makes it show up in visualisations.
- 
- 
-    interval    = Cpt(EpicsSignal,  'Interval-SP',      kind='config')
-    threshold   = Cpt(EpicsSignal,  'Threshold-SP',     kind='config')
-    high_voltage = Cpt(EpicsSignal,  'HighVoltage-SP',   kind='config')
-    dead_time    = Cpt(EpicsSignal,  'DeadTime-SP',      kind='config')
-    
-    
-    
+    acq_mode        = Cpt(EpicsSignal, 'Mode-SP', string=True,kind= "config")
+    trigger_cmd = Cpt(EpicsSignal,  'Trigger',put_complete=True, kind='omitted')
+    busy =  Cpt(EpicsSignalRO,  'ActualBusy', kind='omitted')
+    count       = Cpt(EpicsSignalRO,'Counter-RB',   kind='hinted') # hinted makes it show up in visualisations.
+
+    hv          = Cpt(ChanneltronHV,"HighVoltage",  kind='config')
+    interval    = Cpt(EpicsSignal,  'Interval-RB',  write_pv = 'Interval-SP',  kind='config')
+    threshold   = Cpt(EpicsSignal,  'Threshold-RB',  write_pv='Threshold-SP', kind='config')
+    dead_time   = Cpt(EpicsSignal,  'DeadTime-RB',    write_pv = 'DeadTime-SP', string=True,  kind='config')
+
     def trigger(self):
-    
-        #variable used as an event flag
-        acquisition_status = False
-           
-        def acquisition_started():
-            nonlocal acquisition_status #Define as nonlocal as we want to modify it
-            acquisition_status = True
-                
-        def check_value(*, old_value, value, **kwargs):
-            #Return True when the acquisition is complete, False otherwise.
-                                   
-            if not acquisition_status:  #But only report done if acquisition was already started
-                
-                return False
-                       
-            return (old_value != value)
-        
-        # create the status with SubscriptionStatus that add's a callback to check_value.
-        # timeout is set at 1 second + whatever the duration is in ms
-        sta_cnt = SubscriptionStatus(self.count, check_value, timeout=10.0, run=False)
-         
-        # Start the acquisition
-        sta_acq = self.read_cmd.set(1)
-        
-        sta_acq.add_callback(acquisition_started)
-        
-        stat = AndStatus(sta_cnt, sta_acq)
-        
+
+        stat = self.trigger_cmd.set(1)
+
         return stat
