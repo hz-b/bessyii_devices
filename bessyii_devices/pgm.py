@@ -47,14 +47,16 @@ class MonoTranslationAxis(PVPositioner):
 
 class PGMScannableAxis(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
-    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}', kind='hinted')
-    done     = FCpt(EpicsSignalRO,'{self.prefix}Status', kind='omitted')
+    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
+    done     = FCpt(EpicsSignalRO,'{self.prefix}{self._done_name}')
     
-    def __init__(self, prefix, ch_name=None, **kwargs):
+    def __init__(self, prefix, ch_name=None, done_name='Status', **kwargs):
         self._ch_name = ch_name
+        self._done_name = done_name
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
+
 
         
 class MonoComparatorAxis(PVPositionerComparator):
