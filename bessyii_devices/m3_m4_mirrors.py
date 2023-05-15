@@ -1,4 +1,4 @@
-from ophyd import PVPositioner,EpicsMotor, EpicsSignal, EpicsSignalRO, Device
+from ophyd import PVPositioner, EpicsSignal, EpicsSignalRO, Device, EpicsMotor
 from ophyd import Component as Cpt
 from ophyd import FormattedComponent as FCpt
 from bessyii_devices.axes import HexapodAxis, M1AxisAquarius, AxisTypeA
@@ -233,7 +233,8 @@ class SMUMetrixs(Device):
 
 
 class SMUUE52SGM(Device):
-    tx = Cpt(EpicsMotor, "M2", name='tx')
-    rx = Cpt(EpicsMotor, "M3", name='rx')
-    ry = Cpt(EpicsMotor, "M4", name='ry')
-    rz = Cpt(EpicsMotor, "M5", name='rz')
+
+    tx   = Cpt(EpicsMotor, ":M2", name='tx')
+    rx   = Cpt(EpicsMotor, ":M3", name='rx')
+    ry   = Cpt(EpicsMotor, ":M4", name='ry')
+    rz   = Cpt(EpicsMotor, ":M5", name='rz')

@@ -77,12 +77,13 @@ class MonoComparatorAxis(PVPositionerComparator):
         
 class MonoThetaAxis(PVPositioner):
 
-    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}', kind='normal')
-    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}', kind = 'hinted')
-    done     = FCpt(EpicsSignalRO,'{self.prefix}mirrorDone', kind='omitted')
+    setpoint = FCpt(EpicsSignal,'{self.prefix}Set{self._ch_name}')
+    readback = FCpt(EpicsSignalRO,'{self.prefix}{self._ch_name}')
+    done     = FCpt(EpicsSignalRO,'{self.prefix}{self._done_name}')
     
-    def __init__(self, prefix, ch_name=None, **kwargs):
+    def __init__(self, prefix, ch_name=None, done_name='Status', **kwargs):
         self._ch_name = ch_name
+        self._done_name = done_name
         super().__init__(prefix, **kwargs)
         self.readback.name = self.name
     done_value = 1.0
@@ -441,9 +442,9 @@ class PGM_Aquarius(UndulatorMonoBase, PGM):
     # the read PV at Aquarius is different compared to UndulatorMonoBase
     #harmonic        = Cpt(EpicsSignal, 'ShowIdHarmonic', write_pv = 'Harmonic', string='True',kind='config') ? 
     
-    alpha            = Cpt(MonoAlphaBetaAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
-    beta             = Cpt(MonoAlphaBetaAxis, '',  ch_name='Beta',  settle_time=10.0, kind='config', labels={'pgm'})
-    theta            = Cpt(MonoThetaAxis, '',  ch_name='Theta', settle_time=10.0, kind='config', labels={'pgm'})
+    #alpha            = Cpt(PGMScannableAxis, '',  ch_name='Alpha', settle_time=10.0, kind='config')
+    beta             = Cpt(PGMScannableAxis, '',  ch_name='Beta',done_name='gratingDone', settle_time=1.0, kind='config', labels={'pgm'})
+    theta            = Cpt(PGMScannableAxis, '',  ch_name='Theta', done_name='mirrorDone', settle_time=1.0, kind='config', labels={'pgm'})
     fix_theta        = Cpt(EpicsSignal,  'FixThetaAngle', write_pv = 'SetFixThetaAng', kind='config')
     read_attrs       = ['en.readback', 'beta.readback', 'theta.readback']
 
